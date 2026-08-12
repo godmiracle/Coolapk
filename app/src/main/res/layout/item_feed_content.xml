@@ -7,19 +7,19 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.HomeFeedResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Data" />
 
         <variable
             name="likeData"
-            type="com.example.c001apk.logic.model.Like" />
+            type="com.godmiracle.coolapk.logic.model.Like" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
         <variable
             name="followAuthor"
@@ -113,7 +113,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/avatar" />
 
-        <com.example.c001apk.view.LinkTextView
+        <com.godmiracle.coolapk.view.LinkTextView
             android:id="@+id/message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -163,7 +163,7 @@
             app:layout_constraintEnd_toStartOf="@id/like"
             app:layout_constraintTop_toBottomOf="@id/forwarded" />
 
-        <com.example.c001apk.view.ninegridimageview.NineGridImageView
+        <com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
             android:id="@+id/multiImage"
             android:layout_width="match_parent"
             android:layout_height="10dp"
@@ -246,7 +246,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/extraUrlLayout">
 
-            <com.example.c001apk.view.LinkTextView
+            <com.godmiracle.coolapk.view.LinkTextView
                 android:id="@+id/forwardedMess"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -257,7 +257,7 @@
                 android:textSize="15sp"
                 android:visibility="@{data.forwardSourceFeed.message == null || data.forwardSourceFeed.message.isEmpty ? View.GONE : View.VISIBLE}" />
 
-            <com.example.c001apk.view.ninegridimageview.NineGridImageView
+            <com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
                 android:id="@+id/forwardedPic"
                 android:layout_width="match_parent"
                 android:layout_height="10dp"

@@ -6,11 +6,11 @@
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.HomeFeedResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Data" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
     </data>
 

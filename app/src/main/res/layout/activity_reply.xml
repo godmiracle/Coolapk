@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.c001apk.view.SmoothInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.godmiracle.coolapk.view.SmoothInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -280,4 +280,4 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</com.example.c001apk.view.SmoothInputLayout>
+</com.godmiracle.coolapk.view.SmoothInputLayout>

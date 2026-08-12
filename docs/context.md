@@ -11,7 +11,7 @@
 
 ## 项目定位
 
-这是一个个人学习型 Android 客户端，使用包名 `com.example.c001apk`、应用名 `c001apk`。它复现 Coolapk 客户端的部分内容浏览和社区交互流程，重点用于：
+这是一个个人学习型 Android 客户端，使用包名 `com.godmiracle.coolapk`、应用名 `c001apk`。它复现 Coolapk 客户端的部分内容浏览和社区交互流程，重点用于：
 
 1. 学习 Android XML UI、Fragment、ViewModel、RecyclerView 和 Data Binding。
 2. 学习 Retrofit/OkHttp 请求、登录 Cookie、设备参数和分页接口适配。
@@ -95,15 +95,15 @@
 |---|---|
 | `app/build.gradle.kts` | 应用 SDK、签名、版本、ABI、依赖和构建类型 |
 | `app/src/main/AndroidManifest.xml` | 权限、入口 Activity、深链、WebView 进程和 FileProvider |
-| `app/src/main/java/com/example/c001apk/MyApplication.kt` | Hilt 应用入口、主题初始化、Mojito 初始化、未捕获异常处理 |
-| `app/src/main/java/com/example/c001apk/di/NetworkModule.kt` | Hilt Retrofit/OkHttp 服务和请求拦截器 |
-| `app/src/main/java/com/example/c001apk/logic/network/ApiService.kt` | Retrofit 请求定义 |
-| `app/src/main/java/com/example/c001apk/logic/repository/NetworkRepo.kt` | 当前 ViewModel 使用的网络 Repository |
-| `app/src/main/java/com/example/c001apk/logic/dao/`、`logic/database/` | Room DAO、数据库和迁移 |
-| `app/src/main/java/com/example/c001apk/util/PrefManager.kt` | 设置、登录摘要、设备参数和请求版本信息 |
-| `app/src/main/java/com/example/c001apk/util/NetWorkUtil.kt` | 外部链接标准化和内部页面路由 |
-| `app/src/main/java/com/example/c001apk/ui/main/MainActivity.kt` | 首页/关注/我的主导航和搜索动作 |
-| `app/src/main/java/com/example/c001apk/ui/feed/` | 动态详情、评论、投票、回复和图片发布 |
+| `app/src/main/java/com/godmiracle/coolapk/MyApplication.kt` | Hilt 应用入口、主题初始化、Mojito 初始化、未捕获异常处理 |
+| `app/src/main/java/com/godmiracle/coolapk/di/NetworkModule.kt` | Hilt Retrofit/OkHttp 服务和请求拦截器 |
+| `app/src/main/java/com/godmiracle/coolapk/logic/network/ApiService.kt` | Retrofit 请求定义 |
+| `app/src/main/java/com/godmiracle/coolapk/logic/repository/NetworkRepo.kt` | 当前 ViewModel 使用的网络 Repository |
+| `app/src/main/java/com/godmiracle/coolapk/logic/dao/`、`logic/database/` | Room DAO、数据库和迁移 |
+| `app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt` | 设置、登录摘要、设备参数和请求版本信息 |
+| `app/src/main/java/com/godmiracle/coolapk/util/NetWorkUtil.kt` | 外部链接标准化和内部页面路由 |
+| `app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt` | 首页/关注/我的主导航和搜索动作 |
+| `app/src/main/java/com/godmiracle/coolapk/ui/feed/` | 动态详情、评论、投票、回复和图片发布 |
 | `.github/workflows/ci.yml` | GitHub Actions 构建与制品上传 |
 | `gradle/libs.versions.toml` | 依赖版本目录 |
 

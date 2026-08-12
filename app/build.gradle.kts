@@ -98,11 +98,11 @@ val verifyReleaseSigning = tasks.register("verifyReleaseSigning") {
 }
 
 android {
-    namespace = "com.example.c001apk"
+    namespace = "com.godmiracle.coolapk"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.c001apk"
+        applicationId = "com.godmiracle.coolapk"
         minSdk = 24
         targetSdk = 34
         versionCode = gitCommitCount

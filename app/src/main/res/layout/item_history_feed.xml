@@ -6,11 +6,11 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
         <variable
             name="id"
@@ -120,7 +120,7 @@
                 app:layout_constraintStart_toEndOf="@id/pubDate"
                 app:layout_constraintTop_toBottomOf="@id/uname" />
 
-            <com.example.c001apk.view.LinkTextView
+            <com.godmiracle.coolapk.view.LinkTextView
                 android:id="@+id/message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -7,11 +7,11 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="appData"
-            type="com.example.c001apk.logic.model.HomeFeedResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Data" />
 
     </data>
 

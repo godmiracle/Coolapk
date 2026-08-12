@@ -75,6 +75,24 @@
     <string name="feedback">反馈</string>
     <string name="about">关于</string>
     <string name="about_view_source_code"><![CDATA[在 %1$s 查看源码]]></string>
+    <string name="about_project_summary">Coolapk 第三方纯浏览客户端\n由 godmiracle 维护</string>
+    <string name="about_maintainer_name">godmiracle</string>
+    <string name="about_maintainer">当前维护者与开发者</string>
+    <string name="about_maintainer_url" translatable="false">https://github.com/godmiracle</string>
+    <string name="about_upstream_author_name">bggRGjQaUbCoE</string>
+    <string name="about_upstream_author">原项目作者 / 上游贡献者</string>
+    <string name="about_upstream_author_url" translatable="false">https://github.com/bggRGjQaUbCoE</string>
+    <string name="about_upstream_collaborator_name">klxiaoniu</string>
+    <string name="about_upstream_collaborator">上游协作者</string>
+    <string name="about_upstream_collaborator_url" translatable="false">https://github.com/klxiaoniu</string>
+    <string name="about_source">项目来源</string>
+    <string name="about_source_detail"><![CDATA[Fork / 参考来源\n%1$s\n\n原项目仓库\n%2$s]]></string>
+    <string name="about_fork_source_url" translatable="false">https://github.com/HDYOU/c001apk</string>
+    <string name="about_original_repository_url" translatable="false">https://github.com/bggRGjQaUbCoE/c001apk</string>
+    <string name="about_repository"><![CDATA[当前仓库\n%1$s]]></string>
+    <string name="about_repository_url" translatable="false">https://github.com/godmiracle/Coolapk</string>
+    <string name="about_repository_issues_url" translatable="false">https://github.com/godmiracle/Coolapk/issues</string>
+    <string name="about_dialog_info"><![CDATA[维护者：<b>godmiracle</b><br/>当前仓库：<b><a href="%1$s">godmiracle/Coolapk</a></b><br/>Fork / 参考来源：<b><a href="%2$s">HDYOU/c001apk</a></b><br/>原项目仓库：<b><a href="%3$s">bggRGjQaUbCoE/c001apk</a></b>]]></string>
     <string name="others">其他</string>
     <string name="about_open_source">开放源代码许可证</string>
     <string name="replyAndForward">回复并转发</string>

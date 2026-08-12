@@ -6,7 +6,7 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="type"
@@ -14,11 +14,11 @@
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.MessageResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.MessageResponse.Data" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
     </data>
 

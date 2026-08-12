@@ -7,11 +7,11 @@
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.HomeFeedResponse.Entities" />
+            type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Entities" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
     </data>
 

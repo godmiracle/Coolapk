@@ -2,7 +2,7 @@
 
 ## 说明
 
-本文件记录 `app/src/main/java/com/example/c001apk/logic/network/ApiService.kt` 和当前 `NetworkRepo` 的源码契约，便于排查接口漂移。它不是 Coolapk 官方 API 文档，也不是对线上服务稳定性的保证。
+本文件记录 `app/src/main/java/com/godmiracle/coolapk/logic/network/ApiService.kt` 和当前 `NetworkRepo` 的源码契约，便于排查接口漂移。它不是 Coolapk 官方 API 文档，也不是对线上服务稳定性的保证。
 
 - 记录日期：2026-08-12
 - 源码基线：`becc810`

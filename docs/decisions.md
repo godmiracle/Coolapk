@@ -223,6 +223,34 @@ Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；截图确认
 - 下滑恢复底栏后，浮岛仍显示在 `[95,2172][985,2340]`，与系统手势区保持安全距离。
 - Android Studio JDK 21 下 `:app:assembleDebug`、`:app:testDebugUnitTest` 通过；Debug APK 已安装到 Android 16 `emulator-5554` 并完成冷启动、隐藏/恢复回归。
 
+## 2026-08-12 - 统一底栏滚动显示时机
+
+### 决定
+
+底栏不再根据列表的上滑/下滑方向切换显示状态。所有接入主导航的 RecyclerView 在 `SCROLL_STATE_DRAGGING` 或 `SCROLL_STATE_SETTLING` 时隐藏浮岛，在 `SCROLL_STATE_IDLE` 时展示浮岛；返回、切换页面等主动恢复底栏的行为继续保留。
+
+### 原因
+
+方向判断会让一次下滑结束后底栏停留在隐藏状态，必须再次上滑才能恢复，和常见移动端导航栏“滚动中收起、停止后回到可操作状态”的预期不一致。使用 RecyclerView 的状态回调可以覆盖手指拖动和惯性滚动，且不依赖 `dy` 的正负。
+
+### 影响
+
+基础列表在 `BaseViewFragment` 统一转发滚动状态；本地关注、话题、消息和设置等自定义 RecyclerView 复用 `MainActivity.onContentScrollStateChanged`。分页加载仍只在空闲状态执行，内容布局和浮岛层级不变。
+
+### 验证
+
+`:app:assembleDebug`、`:app:testDebugUnitTest` 和 `:app:connectedDebugAndroidTest` 已通过。最新 Debug APK 安装到 Pixel_10 模拟器后，长滑进行中 UI 层级不包含 `bottomNavContainer`；上滑停止、下滑停止后均恢复为 `[95,2172][985,2340]`。
+
+## 2026-08-12 - 移除首页应用 Tab
+
+### 决定
+
+首页仅保留内容浏览相关 Tab：关注、头条、热榜、话题、数码和酷图。移除“应用”Tab，并在读取首页菜单时过滤/删除已有的本地应用菜单记录；应用详情、搜索和更新相关底层代码暂不删除。
+
+### 原因
+
+用户希望主界面保持纯浏览，不在首页顶部暴露应用列表/管理入口。保留底层应用路径可以避免无关的深链和已有浏览能力发生破坏性变化。
+
 ## 2026-08-12 - 将“我的”和搜索纳入悬浮底栏
 
 ### 决定
@@ -235,7 +263,7 @@ Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；截图确认
 
 ### 验证
 
-最终 Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；底栏截图确认四项为“首页 / 消息 / 我的 / 搜索”，顶部首页搜索图标已移除。点击“搜索”后当前 Activity 为 `com.example.c001apk/.ui.search.SearchActivity`；点击“我的”后页面标题为“我的”且原设置内容可见。`:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过。
+最终 Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；底栏截图确认四项为“首页 / 消息 / 我的 / 搜索”，顶部首页搜索图标已移除。点击“搜索”后当前 Activity 为 `com.godmiracle.coolapk/.ui.search.SearchActivity`；点击“我的”后页面标题为“我的”且原设置内容可见。`:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过。
 
 ## 2026-08-12 - 将关注改为本地话题/数码聚合
 
@@ -293,6 +321,20 @@ Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；截图确认
 
 这只证明当前模拟器和当前时间窗口的匿名浏览链路，不证明 Coolapk API 长期稳定，也不覆盖登录、发布、图片上传、真实设备或 Release 包。不要把任何真实 Cookie、设备码或 Token 写入日志、文档或聊天记录。
 
+## 2026-08-12 - 更新关于页的维护者与 Fork 归属
+
+### 决定
+
+关于页以当前仓库远程地址确定维护者信息：显示 `godmiracle` 和 [godmiracle/Coolapk](https://github.com/godmiracle/Coolapk)。同时保留 [HDYOU/c001apk](https://github.com/HDYOU/c001apk) 的 Fork/参考来源、原项目仓库及原有贡献者信息，并在设置工具栏弹窗和反馈入口中统一使用当前仓库链接。
+
+### 原因
+
+原关于页仍显示旧项目的占位文案、旧 GitHub 仓库和开发者身份，容易把当前维护者与上游贡献混淆。当前仓库远程地址可作为本地可验证的维护者依据；未提供单独的真实姓名或头像，因此使用 GitHub 用户名和应用图标作为保守展示。
+
+### 验证
+
+Debug APK 构建成功，6 个 JVM 单元测试全部通过。Android 16 模拟器 UI 层级已确认完整关于页显示维护者、当前仓库、Fork/参考来源和原项目仓库；设置工具栏简版弹窗也显示相同信息。
+
 ## 2026-08-12 - 修复 Android 16 16 KB 页面大小兼容性
 
 ### 决定
@@ -310,3 +352,21 @@ GIF 播放能力保留，但新版本不再暴露旧的 protected bitmap 生命�
 ### 验证
 
 在 Android Studio JDK 21.0.10、SDK Platform 36.1 和 `emulator-5554`（`PAGE_SIZE=16384`）上，`:app:assembleDebug`、`:app:testDebugUnitTest`、`:app:bundleDebug` 和 `:app:connectedDebugAndroidTest` 均成功；6 个 JVM 单元测试和 2 个 instrumentation tests 全部通过。APK 通过 `zipalign -P 16` 及 ELF LOAD/RELRO 检查，AAB `bundletool dump config` 为 `PAGE_ALIGNMENT_16K`；直接 APK 和 Bundle 生成的 APK 冷启动均未出现 `PageSizeMismatchDialog`，包状态为 `pageSizeCompat=0`。
+
+## 2026-08-12 - 统一 Android 包名
+
+### 决定
+
+将 Android `applicationId`、`namespace`、源码包声明、测试包声明、ProGuard 规则和相关文档统一改为 `com.godmiracle.coolapk`；应用显示名称 `c001apk` 保持不变。
+
+### 原因
+
+原包名 `com.example.c001apk` 使用了示例域名前缀，不适合作为当前维护者的长期应用标识。新包名与当前仓库维护者 `godmiracle` 一致，且不改变现有功能和界面品牌。
+
+### 影响与边界
+
+包名变更会被 Android 视为新应用：旧安装不能直接覆盖升级，旧包的 SharedPreferences、数据库、登录状态和本地关注不会自动迁移。当前阶段仍是 Debug/个人使用，接受新旧包并存；正式发布前应固定该包名，并重新配置需要绑定包名的第三方服务。
+
+### 验证
+
+清理 Gradle/Hilt 增量产物后，`:app:assembleDebug` 和 `:app:testDebugUnitTest` 成功；新 APK 已安装为 `com.godmiracle.coolapk`，Android 16 模拟器冷启动成功，UI 层级确认首页、关注、我的和搜索底栏仍正常。

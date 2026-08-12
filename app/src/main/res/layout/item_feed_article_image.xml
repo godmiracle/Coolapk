@@ -8,7 +8,7 @@
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.FeedArticleContentBean.Data" />
+            type="com.godmiracle.coolapk.logic.model.FeedArticleContentBean.Data" />
 
     </data>
 
@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <com.example.c001apk.view.ninegridimageview.NineGridImageView
+        <com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

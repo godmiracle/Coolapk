@@ -141,7 +141,7 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <com.example.c001apk.view.CustomViewFlipper
+        <com.godmiracle.coolapk.view.CustomViewFlipper
             android:id="@+id/vf_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -162,7 +162,7 @@
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        </com.example.c001apk.view.CustomViewFlipper>
+        </com.godmiracle.coolapk.view.CustomViewFlipper>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

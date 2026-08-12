@@ -6,7 +6,7 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <com.example.c001apk.view.NestedScrollableHost
+    <com.godmiracle.coolapk.view.NestedScrollableHost
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -18,9 +18,9 @@
             android:layout_height="wrap_content"
             android:scrollbars="none" />
 
-    </com.example.c001apk.view.NestedScrollableHost>
+    </com.godmiracle.coolapk.view.NestedScrollableHost>
 
-    <com.example.c001apk.view.circleindicator.CircleIndicator3
+    <com.godmiracle.coolapk.view.circleindicator.CircleIndicator3
         android:id="@+id/indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

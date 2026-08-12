@@ -1,0 +1,115 @@
+package com.godmiracle.coolapk.ui.others
+
+import android.content.Intent
+import android.os.Bundle
+import android.text.Html
+import android.text.TextUtils
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.godmiracle.coolapk.R
+import com.godmiracle.coolapk.databinding.ActivityCopyBinding
+import com.godmiracle.coolapk.logic.model.HomeMenu
+import com.godmiracle.coolapk.ui.base.BaseActivity
+import com.godmiracle.coolapk.ui.home.HomeMenuAdapter
+import com.godmiracle.coolapk.ui.home.HomeViewModel
+import com.godmiracle.coolapk.ui.home.ItemTouchHelperCallback
+import com.godmiracle.coolapk.util.dp
+import com.godmiracle.coolapk.view.LinearItemDecoration2
+import com.google.android.material.color.MaterialColors
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.regex.Pattern
+
+
+@AndroidEntryPoint
+class CopyActivity : BaseActivity<ActivityCopyBinding>() {
+
+    private lateinit var viewModel: HomeViewModel
+    private lateinit var mAdapter: HomeMenuAdapter
+    private lateinit var mLayoutManager: LinearLayoutManager
+    private lateinit var menuList: ArrayList<HomeMenu>
+
+    private fun getAllLinkAndText(str: String): String {
+        return if (TextUtils.isEmpty(str)) "" else
+            Pattern.compile("<a class=\"feed-link-url\"\\s+href=\"([^<>\"]*)\"[^<]*[^>]*>")
+                .matcher(str).replaceAll(" $1 ")
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        intent.getStringExtra("text")?.let {
+            val linkText = getAllLinkAndText(it)
+            binding.textView.apply {
+                text = Html.fromHtml(
+                    linkText.replace("\n", "<br/>"),
+                    Html.FROM_HTML_MODE_COMPACT
+                ).toString()
+                highlightColor = ColorUtils.setAlphaComponent(
+                    MaterialColors.getColor(
+                        this,
+                        com.google.android.material.R.attr.colorPrimaryDark,
+                        0
+                    ), 128
+                )
+            }
+            return
+        }
+
+        val type: String? = intent.getStringExtra("type")
+
+        if (type != null && type == "homeMenu") {
+            viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+            menuList = ArrayList()
+            binding.tabPage.isVisible = true
+            binding.toolBar.apply {
+                title = getString(R.string.edit_tab)
+                setNavigationIcon(R.drawable.ic_back)
+                setNavigationOnClickListener {
+                    finish()
+                }
+            }
+            initObserve()
+        }
+
+    }
+
+    private fun initObserve() {
+        viewModel.tabListLiveData.observe(this) {
+            menuList.addAll(it.filterNot { menu ->
+                menu.title == HomeViewModel.APPLICATION_TAB_TITLE
+            })
+            initView()
+        }
+
+        viewModel.restart.observe(this) {
+            if (it) {
+                val intent = packageManager.getLaunchIntentForPackage(packageName)
+                intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(intent)
+            }
+        }
+    }
+
+    private fun initView() {
+        binding.done.setOnClickListener {
+            viewModel.updateTab(menuList.mapIndexed { index, tab ->
+                tab.copy(position = index)
+            })
+        }
+
+        mLayoutManager = LinearLayoutManager(this)
+        mAdapter = HomeMenuAdapter(menuList)
+        binding.recyclerView.apply {
+            adapter = mAdapter
+            layoutManager = mLayoutManager
+            addItemDecoration(LinearItemDecoration2(10.dp))
+        }
+        val callback: ItemTouchHelper.Callback = ItemTouchHelperCallback(mAdapter)
+        val itemTouchHelper = ItemTouchHelper(callback)
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+    }
+
+}

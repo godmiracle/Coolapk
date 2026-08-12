@@ -6,19 +6,19 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.HomeFeedResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Data" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
         <variable
             name="likeData"
-            type="com.example.c001apk.logic.model.Like" />
+            type="com.godmiracle.coolapk.logic.model.Like" />
 
     </data>
 
@@ -98,7 +98,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/avatar" />
 
-            <com.example.c001apk.view.LinkTextView
+            <com.godmiracle.coolapk.view.LinkTextView
                 android:id="@+id/message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -161,7 +161,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/message">
 
-                <com.example.c001apk.view.LinkTextView
+                <com.godmiracle.coolapk.view.LinkTextView
                     android:id="@+id/feedUname"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -171,7 +171,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <com.example.c001apk.view.LinkTextView
+                <com.godmiracle.coolapk.view.LinkTextView
                     android:id="@+id/feedMessage"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"

@@ -3,7 +3,7 @@
 当前项目的生产 Android 源码不在根目录 `src/`，而在：
 
 ```text
-app/src/main/java/com/example/c001apk/
+app/src/main/java/com/godmiracle/coolapk/
 app/src/main/res/
 app/src/test/
 app/src/androidTest/

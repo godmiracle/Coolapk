@@ -4,6 +4,10 @@
 
 项目中的 `Token/LoginUtil` 实现参考了 [CoolbbsYou](https://github.com/WaitFme/CoolbbsYou)，相关上游代码和许可证应在分发前单独核对。
 
+当前仓库由 `godmiracle` 维护，源码仓库为 [godmiracle/Coolapk](https://github.com/godmiracle/Coolapk)。应用“关于”页同时保留 [HDYOU/c001apk](https://github.com/HDYOU/c001apk) 的 Fork/参考来源和原项目贡献者信息。
+
+当前 Android `applicationId` 与 `namespace` 均为 `com.godmiracle.coolapk`，应用显示名称仍为 `c001apk`。
+
 > 文档基线：根据当前工作区源码整理于 2026-08-12。源码 `HEAD` 为 `becc810`（2024-05-08），外部接口和服务端行为可能已经变化；2026-08-12 已在 Android 16 模拟器完成 API1 首页、动态详情和评论的最小浏览验证，完整业务验收尚未完成。
 
 ## 项目声明
@@ -19,8 +23,8 @@
 
 ### 首页与内容浏览
 
-- 主导航包含首页、关注、我的三项页面，并在右侧提供搜索动作；竖屏底栏采用 Miuix 风格实色悬浮浮岛，关注页展示本地保存的话题/数码关注，“我的”提供本地收藏、浏览历史和设置入口，首页支持自定义 Tab。
-- 首页 Tab：关注、应用、头条、热榜、话题、数码、酷图。
+- 主导航包含首页、关注、我的三项页面，并在右侧提供搜索动作；竖屏底栏采用 Miuix 风格实色悬浮浮岛，滚动时隐藏、停止滚动后展示，关注页展示本地保存的话题/数码关注，“我的”提供本地收藏、浏览历史和设置入口，首页支持自定义 Tab。
+- 首页 Tab：关注、头条、热榜、话题、数码、酷图；首页不再提供应用列表入口，保持纯内容浏览。
 - 支持动态列表、动态详情、评论列表、楼中楼、投票、问答、文章/图文和酷图等内容形态。
 - 支持下拉刷新、分页加载、空数据、加载失败和“没有更多”等列表状态。
 - 支持 HTML/富文本链接、话题/用户/动态/应用跳转及 Coolapk 表情渲染。
@@ -64,7 +68,7 @@
 ```text
 .
 ├── app/                      # 主 Android 应用
-│   └── src/main/java/com/example/c001apk/
+│   └── src/main/java/com/godmiracle/coolapk/
 │       ├── ui/               # Activity、Fragment、ViewModel、Adapter
 │       ├── logic/            # model、network、repository、dao、database
 │       ├── adapter/          # Data Binding Adapter 和列表适配器

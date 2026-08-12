@@ -179,7 +179,7 @@ Fragment/ViewModel
 
 ### 6.1 主导航
 
-`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载 `HomeFragment`、嵌入式 `FollowPagerFragment` 和 `MyFragment`，底部导航的“首页 / 关注 / 我的”切换这三个页面；右侧“搜索”是动作项，启动现有 `SearchActivity`，不占用新的 ViewPager 页面。竖屏底栏以 Miuix 风格实色浮岛 overlay 在内容之上，系统导航 inset 只用于浮岛容器的 bottom margin，`ViewPager2` 不永久预留浮岛高度，避免底栏隐藏后留下内容空区；各列表继续自行处理系统底部安全区和末尾 footer。关注页内部使用 `LocalFollowFragment` 观察 `local_follow.db`，不加载原消息聚合内容；我的页面提供本地收藏、浏览历史和 `SettingsActivity` 二级入口。首页内部再使用可配置的 Tab/ViewPager2。
+`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载 `HomeFragment`、嵌入式 `FollowPagerFragment` 和 `MyFragment`，底部导航的“首页 / 关注 / 我的”切换这三个页面；右侧“搜索”是动作项，启动现有 `SearchActivity`，不占用新的 ViewPager 页面。竖屏底栏以 Miuix 风格实色浮岛 overlay 在内容之上，系统导航 inset 只用于浮岛容器的 bottom margin，`ViewPager2` 不永久预留浮岛高度，避免底栏隐藏后留下内容空区；各列表继续自行处理系统底部安全区和末尾 footer。列表滚动状态统一为“拖动/惯性滚动时隐藏、进入空闲状态后展示”，基础列表和自定义列表均通过 `MainActivity` 的状态入口执行。关注页内部使用 `LocalFollowFragment` 观察 `local_follow.db`，不加载原消息聚合内容；我的页面提供本地收藏、浏览历史和 `SettingsActivity` 二级入口。首页内部再使用可配置的 Tab/ViewPager2，默认及已保存菜单不再展示“应用”Tab。
 
 ### 6.2 外链路由
 

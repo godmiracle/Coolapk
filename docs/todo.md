@@ -18,9 +18,10 @@
 
 - [ ] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
-  - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/java/com/example/c001apk/ui/main/MainActivity.kt`、底栏主题资源
-  - 状态：已按 Miuix 参数和 iOS 酷安参考完成实色悬浮底栏与 Android 16 模拟器基础验收；深色模式、主题色和滚动动画专项待完成
-  - 证据：底栏采用单独浮岛容器绘制 `surfaceContainer` 背景，内部 `BottomNavigationView` 透明；36dp 外侧留白、8dp 视觉底部间距、无额外阴影、1dp 白色细边、大圆角、低对比选中胶囊、28dp 图标和 12sp 标签。浮岛以 overlay 方式覆盖内容，`ViewPager2` 不再永久预留底栏高度；系统 inset 仍由浮岛 bottom margin 和列表自身安全区处理，底栏隐藏后内容可延伸到手势区上方。当前页面导航为首页/关注/我的，搜索作为右侧动作项启动 `SearchActivity`；原消息页不再作为主导航页面，横屏导航栏沿用同一导航菜单。最终包通过首页 → 关注 → 我的切换、底栏搜索启动和 UI 层级确认。Android Studio JDK 21 下 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过；`emulator-5554` 安装成功并冷启动成功。
+  - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、底栏主题资源
+  - 状态：已按 Miuix 参数和 iOS 酷安参考完成实色悬浮底栏与 Android 16 模拟器基础验收；滚动状态逻辑已改为滚动中隐藏、停止后展示；深色模式、主题色和完整滚动动画专项仍待完成
+  - 证据：底栏采用单独浮岛容器绘制 `surfaceContainer` 背景，内部 `BottomNavigationView` 透明；36dp 外侧留白、8dp 视觉底部间距、无额外阴影、1dp 白色细边、大圆角、低对比选中胶囊、28dp 图标和 12sp 标签。浮岛以 overlay 方式覆盖内容，`ViewPager2` 不再永久预留底栏高度；系统 inset 仍由浮岛 bottom margin 和列表自身安全区处理，底栏隐藏后内容可延伸到手势区上方。列表在 `SCROLL_STATE_DRAGGING`/`SCROLL_STATE_SETTLING` 时隐藏，在 `SCROLL_STATE_IDLE` 时展示。首页顶部仅保留关注、头条、热榜、话题、数码和酷图，应用 Tab 已移除；当前页面导航为首页/关注/我的，搜索作为右侧动作项启动 `SearchActivity`；原消息页不再作为主导航页面，横屏导航栏沿用同一导航菜单。最终包通过首页 → 关注 → 我的切换、底栏搜索启动和 UI 层级确认。Android Studio JDK 21 下 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过；`emulator-5554` 安装成功并冷启动成功。
+  - 滚动专项验收：最新 Debug APK 在 Pixel_10 模拟器上长滑进行中不包含 `bottomNavContainer`；上滑停止、下滑停止后均恢复为 `[95,2172][985,2340]`；`connectedDebugAndroidTest` 的 2 个测试通过。
   - 验收标准：竖屏真机/模拟器确认浮岛不覆盖系统手势区，底栏隐藏后内容不被永久截短且末项仍可安全滚动到位，点击和入口行为与改动前一致；深色模式和主题色下保持可读性。
 
 - [x] UI-002 实现本地话题/数码关注聚合
@@ -29,6 +30,13 @@
   - 状态：已完成 Debug 构建、单元测试和 Android 16 模拟器流程验收
   - 证据：关注页无本地记录时显示空状态；话题 Android 和数码“小米17 Pro Max”详情页点击“关注”后写入 `local_follow.db`，同时保存详情 `logo` 头像；应用重启后关注页同时显示“数码”和“话题”记录；删除按钮可移除记录。
   - 验收标准：关注页不请求原消息聚合内容；话题/数码关注统一进入本地列表；取消关注后从列表消失；本地数据不依赖登录状态。
+
+- [x] UI-003 更新设置关于页维护者与 Fork 信息
+  - 优先级：低
+  - 涉及文件：`ui/others/AboutActivity.kt`、`ui/settings/SettingsFragment.kt`、`res/values/strings.xml`
+  - 状态：已完成 Debug 构建、单元测试和 Android 16 模拟器 UI 验收
+  - 证据：完整关于页和工具栏简版弹窗均显示 `godmiracle`、当前仓库、`HDYOU/c001apk` Fork/参考来源及原项目贡献者；反馈入口已切换到当前仓库 Issues。
+  - 验收标准：当前维护者信息清晰可见；上游/Fork 归属不丢失；旧项目占位文案和反馈地址不再作为当前仓库身份显示。
 
 ## 高优先级：发布和安全边界
 
@@ -42,7 +50,7 @@
 - [ ] R-002 评估 Debug BODY 网络日志和凭据暴露
   - 优先级：高
   - 可信度：已确认
-  - 涉及文件：`app/src/main/java/com/example/c001apk/di/NetworkModule.kt`、`logic/network/ApiServiceCreator.kt`、`util/AddCookiesInterceptor.kt`
+  - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/di/NetworkModule.kt`、`logic/network/ApiServiceCreator.kt`、`util/AddCookiesInterceptor.kt`
   - 状态：已修改；Debug 构建和本地单元测试已通过，Release/设备验收待完成
   - 证据：新增统一 `NetworkLogging`；默认日志级别为 `NONE`，仅 `-PenableHttpBodyLogging=true` 且为 Debug 时启用 BODY；Cookie、Token、密码、验证码和 STS 等值经过 `[REDACTED]` 处理。
   - 验收标准：默认日志不输出 Cookie/Token/密码/验证码/STS 信息；必要调试日志有明确开关和脱敏测试；Release 保持无 BODY 日志。
@@ -50,7 +58,7 @@
 - [ ] R-003 评估普通 SharedPreferences 保存登录 Token 和设备参数
   - 优先级：高
   - 可信度：已确认
-  - 涉及文件：`app/src/main/java/com/example/c001apk/util/PrefManager.kt`
+  - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt`
   - 状态：待处理
   - 证据：`settings` 偏好保存 `token`、用户信息、`xAppDevice`、User-Agent 等值。
   - 验收标准：明确个人学习包与发布包的安全边界；如继续保存，至少完成威胁评估和清除/退出登录验证；如改用加密存储，完成旧值迁移和异常回退测试。
@@ -74,7 +82,7 @@
 - [x] R-013 验证 Retrofit Base URL 尾部斜杠
   - 优先级：高
   - 可信度：高概率
-  - 涉及文件：`app/src/main/java/com/example/c001apk/di/NetworkModule.kt`、`logic/network/ApiServiceCreator.kt`
+  - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/di/NetworkModule.kt`、`logic/network/ApiServiceCreator.kt`
   - 状态：已完成；Base URL 尾部斜杠、网络注入、首页和动态详情运行时链路均已验证
   - 证据：API1、API2、Account 的 Base URL 已集中到 `NetworkEndpoints`，统一以 `/` 结尾；新增 Retrofit Base URL 构造测试，并同步覆盖 Hilt 和旧网络封装两套配置。当前 Android Studio JDK 21/SDK Platform 36.1 下 `:app:testDebugUnitTest` 共 6 个用例通过，`:app:assembleDebug` 通过；`emulator-5554` 上应用详情、首页 V8、动态详情和动态评论均收到 `200 OK`，首页真实动态卡片和 `FeedActivity` 正文均已显示。
   - 验收标准：在可用 JDK 环境执行最小构建并启动依赖网络注入的 Activity；若失败，统一修复两套配置并补测试/构建证据；若未失败，记录 Retrofit 版本行为和原因。
@@ -148,6 +156,13 @@
 - [x] D-003 确认实际技术栈、四个 Gradle 模块、Manifest 入口、主要 UI/网络/存储边界
   - 优先级：中
   - 状态：已完成静态分析和 Debug 构建验证
+
+- [x] D-004 统一 Android 包名
+  - 优先级：中
+  - 涉及文件：`app/build.gradle.kts`、`app/src/main/java/com/godmiracle/coolapk/`、`app/src/test/java/com/godmiracle/coolapk/`、`app/src/androidTest/java/com/godmiracle/coolapk/`、`app/proguard-rules.pro`
+  - 状态：已完成清理构建、单元测试、APK 安装和 Android 16 模拟器冷启动验证
+  - 证据：新包名为 `com.godmiracle.coolapk`；源码、测试、Manifest 生成组件和 ProGuard 规则无旧包名残留，历史决策和会话文档保留旧包名作为迁移记录。
+  - 边界：旧包与新包被 Android 视为两个应用，本地数据不会自动迁移。
 
 ## Review Issues 模板
 

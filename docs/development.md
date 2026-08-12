@@ -130,7 +130,7 @@ KEY_PASSWORD=本地别名密码
 - `app/src/test/.../NetworkEndpointsTest.kt`：验证 API1、API2、Account Base URL 尾部斜杠，1 个用例。
 - `app/src/test/.../NetworkLoggingTest.kt`：验证日志级别和敏感字段脱敏，2 个用例。
 - `app/src/test/.../TokenDeviceUtilsTest.kt`：验证整数 Unix 秒时间戳和自定义 Token 覆盖/回退，2 个用例。
-- `app/src/androidTest/.../ExampleInstrumentedTest.kt`：验证包名为 `com.example.c001apk`。
+- `app/src/androidTest/.../ExampleInstrumentedTest.kt`：验证包名为 `com.godmiracle.coolapk`。
 - `app/src/androidTest/.../GifNativeCompatibilityTest.kt`：在设备上创建并释放 `GifDrawable`，验证 GIF native 库可加载。
 
 本轮 `:app:testDebugUnitTest` 共执行 6 个用例，`:app:connectedDebugAndroidTest` 在 `Pixel_10`（Android 16、16 KB）上执行 2 个用例，均 0 failures、0 errors、0 skipped。它们仍不能证明 API、Room、登录、分页、深链或完整图片业务功能。新增业务逻辑时，优先为以下边界增加测试：

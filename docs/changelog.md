@@ -22,6 +22,8 @@
 - 将底栏入口调整为“首页 / 消息 / 我的 / 搜索”：原设置入口改名并复用原设置页，顶部首页搜索按钮移除，底栏搜索复用现有 `SearchActivity`。
 - 将主导航调整为“首页 / 关注 / 我的 / 搜索”：移除原消息页在主导航中的内容入口；关注页改为本地话题/数码合并列表，详情页关注动作写入独立 Room 数据库；我的页面保留本地收藏、浏览历史并新增设置二级入口。
 - 将 `SketchImageViewLoader` 的 GIF native 依赖切换为 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，并将 Android Gradle Plugin 升级到 8.5.1，以支持 16 KB 页面大小打包。
+- 更新设置关于页的维护者、当前仓库和 Fork/参考来源信息；反馈入口统一指向 `godmiracle/Coolapk`。
+- 将 Android `applicationId`、`namespace`、源码/测试包路径和 ProGuard 规则统一迁移到 `com.godmiracle.coolapk`；应用显示名称保持为 `c001apk`。
 
 ### Fixed
 
@@ -39,5 +41,9 @@
 - 本地关注记录补充保存话题/数码详情的 `logo` 头像；旧数据库通过 Room 迁移保留，旧记录无头像时使用类型图标兜底。
 - 整改底栏重复背景与底部距离：新增透明导航内容容器，浮岛背景只绘制一次；视觉底距从 26dp 收紧到 8dp，系统 inset 仍用于安全避让。
 - 修复底栏隐藏后 `ViewPager2` 仍永久保留“底栏高度 + 系统 inset”造成的内容截短；移除主容器底部 padding，浮岛隐藏时内容可继续延伸至手势区上方。
+- 统一底栏滚动状态：拖动或惯性滚动时隐藏，RecyclerView 进入空闲状态后展示，不再按上滑/下滑方向决定显示状态。
+- 移除首页顶部“应用”Tab；默认菜单、已有本地菜单记录和 Tab 编辑器均不再展示应用列表入口，保留应用详情/更新底层代码供深链或其他浏览路径使用。
+- 关于页不再显示旧项目占位文案；完整页与工具栏弹窗均保留上游作者、Fork/参考来源和当前维护者信息。
 - Android 16 16 KB 模拟器曾复现 `libpl_droidsonroids_gif.so` 的 `RELRO segment not aligned`；修复后 Debug APK 通过 `zipalign -P 16`，AAB `bundletool dump config` 为 `PAGE_ALIGNMENT_16K`，APK/Bundle 生成的 APK 冷启动均无 `PageSizeMismatchDialog`，并通过 2 个 instrumentation tests（含 GIF native 加载回归）。
 - 无 Release keystore 时 `:app:assembleRelease` 已按预期由 `:app:verifyReleaseSigning` 阻止，未把 Debug 签名产物误当作 Release。
+- 包名迁移后清理增量产物重新构建成功，6 个 JVM 单元测试通过；新 APK 安装为 `com.godmiracle.coolapk` 并完成 Android 16 模拟器冷启动和主导航 UI 核对。

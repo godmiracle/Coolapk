@@ -7,13 +7,13 @@
 
         <variable
             name="refreshListener"
-            type="com.example.c001apk.ui.feed.reply.reply2reply.ReplyRefreshListener" />
+            type="com.godmiracle.coolapk.ui.feed.reply.reply2reply.ReplyRefreshListener" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <import type="android.view.View" />
 

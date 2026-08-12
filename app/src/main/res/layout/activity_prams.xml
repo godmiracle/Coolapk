@@ -7,7 +7,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/params"
-        android:name="com.example.c001apk.ui.settings.params.ParamsPreferenceFragment"
+        android:name="com.godmiracle.coolapk.ui.settings.params.ParamsPreferenceFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

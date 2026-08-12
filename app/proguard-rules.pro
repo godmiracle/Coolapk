@@ -125,7 +125,7 @@
 -keep,allowobfuscation,allowshrinking class androidx.appcompat.app.AppCompatActivity
 -keep,allowobfuscation,allowshrinking class * extends androidx.appcompat.app.AppCompatActivity
 #-keep,allowoptimization class * extends androidx.preference.PreferenceFragmentCompat
--keepclassmembers class com.example.c001apk.databinding.**  {
+-keepclassmembers class com.godmiracle.coolapk.databinding.**  {
     public <methods>;
 }
 
@@ -158,7 +158,7 @@
 #-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
--keep class com.example.c001apk.logic.model.** { <fields>; }
+-keep class com.godmiracle.coolapk.logic.model.** { <fields>; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)

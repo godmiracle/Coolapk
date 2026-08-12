@@ -56,7 +56,7 @@
                 tools:ignore="RtlSymmetry"
                 tools:text="私信" />
 
-            <com.example.c001apk.view.BadgeTextView
+            <com.godmiracle.coolapk.view.BadgeTextView
                 android:id="@+id/badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

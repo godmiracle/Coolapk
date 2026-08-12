@@ -7,7 +7,7 @@
 
         <import type="android.view.View" />
 
-        <import type="com.example.c001apk.util.DateUtils" />
+        <import type="com.godmiracle.coolapk.util.DateUtils" />
 
         <variable
             name="type"
@@ -15,15 +15,15 @@
 
         <variable
             name="likeData"
-            type="com.example.c001apk.logic.model.Like" />
+            type="com.godmiracle.coolapk.logic.model.Like" />
 
         <variable
             name="data"
-            type="com.example.c001apk.logic.model.MessageResponse.Data" />
+            type="com.godmiracle.coolapk.logic.model.MessageResponse.Data" />
 
         <variable
             name="listener"
-            type="com.example.c001apk.adapter.ItemListener" />
+            type="com.godmiracle.coolapk.adapter.ItemListener" />
 
     </data>
 
@@ -89,7 +89,7 @@
                 app:layout_constraintStart_toEndOf="@id/avatar"
                 app:layout_constraintTop_toBottomOf="@id/uname" />
 
-            <com.example.c001apk.view.LinkTextView
+            <com.godmiracle.coolapk.view.LinkTextView
                 android:id="@+id/message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -154,7 +154,7 @@
                     android:foreground="@drawable/selector_bg_12_trans"
                     android:padding="10dp">
 
-                    <com.example.c001apk.view.LinkTextView
+                    <com.godmiracle.coolapk.view.LinkTextView
                         android:id="@+id/forwardTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -166,7 +166,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <com.example.c001apk.view.LinkTextView
+                    <com.godmiracle.coolapk.view.LinkTextView
                         android:id="@+id/forwardMessage"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -179,7 +179,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/forwardTitle" />
 
-                    <com.example.c001apk.view.ninegridimageview.NineGridImageView
+                    <com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
                         android:id="@+id/multiImage"
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
@@ -238,7 +238,7 @@
                         app:layout_constraintStart_toEndOf="@id/forward1Pic"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <com.example.c001apk.view.LinkTextView
+                    <com.godmiracle.coolapk.view.LinkTextView
                         android:id="@+id/forwardMessage1"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
