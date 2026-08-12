@@ -79,7 +79,7 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
         }
 
         link?.let {
-            loadUrlInWebView(it)
+            loadUrlInWebView(it.http2https)
         }
     }
 
@@ -129,8 +129,9 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
             }
             it.apply {
                 setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
+                    val secureUrl = url.http2https
                     val fileName = URLDecoder.decode(
-                        URLUtil.guessFileName(url, contentDisposition, mimetype),
+                        URLUtil.guessFileName(secureUrl, contentDisposition, mimetype),
                         "UTF-8"
                     )
                     MaterialAlertDialogBuilder(this@WebViewActivity).apply {
@@ -139,7 +140,7 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
                         setNeutralButton("外部打开") { _, _ ->
                             try {
                                 this@WebViewActivity.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(secureUrl))
                                 )
                             } catch (e: ActivityNotFoundException) {
                                 Toast.makeText(this@WebViewActivity, "打开失败", Toast.LENGTH_SHORT)
@@ -151,7 +152,7 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
                         setNegativeButton(android.R.string.cancel, null)
                         setPositiveButton(android.R.string.ok) { _, _ ->
                             try {
-                                val request = DownloadManager.Request(Uri.parse(url))
+                                val request = DownloadManager.Request(Uri.parse(secureUrl))
                                     .setMimeType(mimetype)
                                     .addRequestHeader(
                                         "cookie",
@@ -183,6 +184,10 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
                     ): Boolean {
                         request?.let {
                             try {
+                                if (it.url.scheme.equals("http", ignoreCase = true)) {
+                                    webView?.loadUrl(it.url.toString().http2https)
+                                    return true
+                                }
                                 //处理intent协议
                                 if (request.url.toString().startsWith("intent://")) {
                                     val intent: Intent

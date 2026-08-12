@@ -44,8 +44,11 @@ object TokenDeviceUtils {
         return DeviceCode.encode("$szlmId; ; ; $mac; $manuFactor; $brand; $model; $buildNumber; null")
     }
 
+    internal fun currentUnixTimeSeconds(): String =
+        (System.currentTimeMillis() / 1000L).toString()
+
     fun String.getTokenV2(): String {
-        val timeStamp = (System.currentTimeMillis() / 1000f).toString()
+        val timeStamp = currentUnixTimeSeconds()
 
         val base64TimeStamp = timeStamp.getBase64()
         val md5TimeStamp = timeStamp.getMD5()
@@ -60,6 +63,19 @@ object TokenDeviceUtils {
         val bcryptResult = BCrypt.hashpw(md5Base64Token, bcryptSalt)
 
         return "v2${bcryptResult.replaceRange(0, 3, "$2y").getBase64()}"
+    }
+
+    internal fun resolveAppToken(
+        deviceCode: String,
+        customTokenEnabled: Boolean,
+        customToken: String,
+    ): String {
+        val normalizedCustomToken = customToken.trim()
+        return if (customTokenEnabled && normalizedCustomToken.isNotEmpty()) {
+            normalizedCustomToken
+        } else {
+            deviceCode.getTokenV2()
+        }
     }
 
     fun getLastingDeviceCode(): String {

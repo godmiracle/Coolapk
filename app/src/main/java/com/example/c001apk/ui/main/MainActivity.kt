@@ -173,7 +173,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
 
     // from LibChecker
     /**
-     * 覆盖掉 BottomNavigationView 内部的 OnApplyWindowInsetsListener 并避免其被软键盘顶起来
+     * 覆盖掉 BottomNavigationView 内部的 OnApplyWindowInsetsListener，
+     * 让悬浮底栏保持在透明系统导航栏上方，并避免被软键盘顶起来。
      * @see BottomNavigationView.applyWindowInsets
      */
     private fun fixBottomNavigationViewInsets(view: BottomNavigationView) {
@@ -183,7 +184,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             val navigationBarsInsets =
                 ViewCompat.getRootWindowInsets(view)
                     ?.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(bottom = navigationBarsInsets?.bottom ?: 0)
+            view.updatePadding(bottom = 0)
+
+            val bottomMargin =
+                resources.getDimensionPixelSize(R.dimen.floating_bottom_navigation_margin_bottom) +
+                    (navigationBarsInsets?.bottom ?: 0)
+            (view.layoutParams as? CoordinatorLayout.LayoutParams)?.let { layoutParams ->
+                if (layoutParams.bottomMargin != bottomMargin) {
+                    layoutParams.bottomMargin = bottomMargin
+                    view.layoutParams = layoutParams
+                }
+            }
             windowInsets
         }
     }

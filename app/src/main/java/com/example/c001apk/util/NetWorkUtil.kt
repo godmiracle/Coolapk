@@ -118,10 +118,11 @@ object NetWorkUtil {
         } else if (replace.startsWith("image.coolapk.com")) {
             ImageUtil.startBigImgViewSimple(context, url.http2https)
         } else if (url.startsWith("https://") || url.startsWith("http://")) {
+            val secureUrl = url.http2https
             if (PrefManager.isOpenLinkOutside) {
                 val intent = Intent()
                 intent.action = Intent.ACTION_VIEW
-                intent.data = Uri.parse(url)
+                intent.data = Uri.parse(secureUrl)
                 try {
                     context.startActivity(intent)
                 } catch (e: ActivityNotFoundException) {
@@ -130,7 +131,7 @@ object NetWorkUtil {
                 }
             } else {
                 IntentUtil.startActivity<WebViewActivity>(context) {
-                    putExtra("url", url)
+                    putExtra("url", secureUrl)
                 }
             }
         } else {

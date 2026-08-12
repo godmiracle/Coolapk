@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="floating_bottom_navigation_margin_horizontal">24dp</dimen>
+    <dimen name="floating_bottom_navigation_margin_bottom">18dp</dimen>
+    <dimen name="floating_bottom_navigation_active_indicator_width">96dp</dimen>
+    <dimen name="floating_bottom_navigation_active_indicator_height">64dp</dimen>
+    <dimen name="floating_bottom_navigation_active_indicator_margin_horizontal">4dp</dimen>
+</resources>

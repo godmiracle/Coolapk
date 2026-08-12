@@ -38,12 +38,12 @@ class NetworkRepo @Inject constructor(
         lastItem: String?
     ) = fire {
         Result.success(
-            api2Service.getHomeFeed(page, firstLaunch, installTime, firstItem, lastItem).await()
+            apiService.getHomeFeed(page, firstLaunch, installTime, firstItem, lastItem).await()
         )
     }
 
     suspend fun getFeedContent(id: String, rid: String?) = fire {
-        Result.success(api2Service.getFeedContent(id, rid).await())
+        Result.success(apiService.getFeedContent(id, rid).await())
     }
 
     suspend fun getFeedContentReply(

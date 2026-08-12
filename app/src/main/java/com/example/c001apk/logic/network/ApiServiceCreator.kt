@@ -1,10 +1,8 @@
 package com.example.c001apk.logic.network
 
-import com.example.c001apk.BuildConfig
 import com.example.c001apk.util.AddCookiesInterceptor
 import com.example.c001apk.util.LoginCookiesInterceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -16,10 +14,6 @@ enum class ServiceType {
 
 object ApiServiceCreator {
 
-    private const val API_BASE_URL = "https://api.coolapk.com"
-    private const val API2_BASE_URL = "https://api2.coolapk.com"
-    private const val ACCOUNT_BASE_URL = "https://account.coolapk.com"
-
     private fun getClient(serviceType: ServiceType, followRedirects: Boolean): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(
@@ -28,13 +22,7 @@ object ApiServiceCreator {
                     ServiceType.ACCOUNT_SERVICE -> LoginCookiesInterceptor
                 }
             )
-            .addInterceptor(
-                HttpLoggingInterceptor().setLevel
-                    (
-                    if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
-                )
-            )
+            .addInterceptor(NetworkLogging.createInterceptor())
             .followRedirects(followRedirects)
             .build()
 
@@ -43,9 +31,9 @@ object ApiServiceCreator {
         Retrofit.Builder()
             .baseUrl(
                 when (serviceType) {
-                    ServiceType.API_SERVICE -> API_BASE_URL
-                    ServiceType.API2_SERVICE -> API2_BASE_URL
-                    ServiceType.ACCOUNT_SERVICE -> ACCOUNT_BASE_URL
+                    ServiceType.API_SERVICE -> NetworkEndpoints.API_BASE_URL
+                    ServiceType.API2_SERVICE -> NetworkEndpoints.API2_BASE_URL
+                    ServiceType.ACCOUNT_SERVICE -> NetworkEndpoints.ACCOUNT_BASE_URL
                 }
             )
             .addConverterFactory(GsonConverterFactory.create())

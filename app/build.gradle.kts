@@ -68,6 +68,35 @@ fun String.execute(currentWorkingDir: File = file("./")): String {
 val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
 val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
 
+val localProperties = Properties().also {
+    val properties = rootProject.file("local.properties")
+    if (properties.exists())
+        it.load(properties.inputStream())
+}
+val releaseKeystorePath = localProperties.getProperty("KEYSTORE_PATH")
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+val enableHttpBodyLogging = findProperty("enableHttpBodyLogging")
+    ?.toString()
+    ?.toBooleanStrictOrNull()
+    ?: false
+val verifyReleaseSigning = tasks.register("verifyReleaseSigning") {
+    doLast {
+        val keystorePath = releaseKeystorePath
+            ?: throw GradleException(
+                "Release signing is required. Set KEYSTORE_PATH and signing credentials in local.properties or CI secrets."
+            )
+        check(project.file(keystorePath).isFile) {
+            "Release keystore does not exist: ${project.file(keystorePath).absolutePath}"
+        }
+        listOf("KEYSTORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD").forEach { key ->
+            check(!localProperties.getProperty(key).isNullOrBlank()) {
+                "Missing $key for Release signing."
+            }
+        }
+    }
+}
+
 android {
     namespace = "com.example.c001apk"
     compileSdk = 34
@@ -79,15 +108,12 @@ android {
         versionCode = gitCommitCount
         versionName = gitCommitHash
 
+        buildConfigField("boolean", "ENABLE_HTTP_BODY_LOGGING", enableHttpBodyLogging.toString())
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    val localProperties = Properties().also {
-        val properties = rootProject.file("local.properties")
-        if (properties.exists())
-            it.load(properties.inputStream())
-    }
-    val config = localProperties.getProperty("KEYSTORE_PATH")?.let {
+    val releaseSigningConfig = releaseKeystorePath?.let {
         signingConfigs.create("release") {
             storeFile = file(it)
             storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
@@ -98,10 +124,11 @@ android {
         }
     }
     buildTypes {
-        all {
-            signingConfig = config ?: signingConfigs["debug"]
+        debug {
+            signingConfig = signingConfigs["debug"]
         }
         release {
+            releaseSigningConfig?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -141,6 +168,11 @@ android {
                     "c001apk_$versionName($versionCode).apk"
         }
     }
+}
+
+tasks.configureEach {
+    if (name == "assembleRelease" || name == "bundleRelease" || name.startsWith("packageRelease"))
+        dependsOn(verifyReleaseSigning)
 }
 
 configurations.configureEach {

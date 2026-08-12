@@ -1,7 +1,8 @@
 package com.example.c001apk.di
 
-import com.example.c001apk.BuildConfig
 import com.example.c001apk.logic.network.ApiService
+import com.example.c001apk.logic.network.NetworkEndpoints
+import com.example.c001apk.logic.network.NetworkLogging
 import com.example.c001apk.util.AddCookiesInterceptor
 import com.example.c001apk.util.LoginCookiesInterceptor
 import dagger.Module
@@ -9,7 +10,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Qualifier
@@ -34,10 +34,6 @@ annotation class AccountService
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private const val API_BASE_URL = "https://api.coolapk.com"
-    private const val API2_BASE_URL = "https://api2.coolapk.com"
-    private const val ACCOUNT_BASE_URL = "https://account.coolapk.com"
 
     @Api1Service
     @Singleton
@@ -72,7 +68,7 @@ object NetworkModule {
     @Provides
     fun provideApi1ServiceRetrofit(@Api1Service okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(API_BASE_URL)
+            .baseUrl(NetworkEndpoints.API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
@@ -83,7 +79,7 @@ object NetworkModule {
     @Provides
     fun provideApi1ServiceNoRetrofit(@Api1ServiceNoRedirect okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(API_BASE_URL)
+            .baseUrl(NetworkEndpoints.API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
@@ -94,7 +90,7 @@ object NetworkModule {
     @Provides
     fun provideApi2ServiceRetrofit(@Api1Service okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(API2_BASE_URL)
+            .baseUrl(NetworkEndpoints.API2_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
@@ -105,7 +101,7 @@ object NetworkModule {
     @Provides
     fun provideAccountServiceRetrofit(@AccountService okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(ACCOUNT_BASE_URL)
+            .baseUrl(NetworkEndpoints.ACCOUNT_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
@@ -117,12 +113,7 @@ object NetworkModule {
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(AddCookiesInterceptor)
-            .addInterceptor(
-                HttpLoggingInterceptor().setLevel(
-                    if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
-                )
-            )
+            .addInterceptor(NetworkLogging.createInterceptor())
             .followRedirects(true)
             .build()
     }
@@ -133,12 +124,7 @@ object NetworkModule {
     fun provideNoOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(AddCookiesInterceptor)
-            .addInterceptor(
-                HttpLoggingInterceptor().setLevel(
-                    if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
-                )
-            )
+            .addInterceptor(NetworkLogging.createInterceptor())
             .followRedirects(false)
             .build()
     }
@@ -149,12 +135,7 @@ object NetworkModule {
     fun provideAccountServiceOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(LoginCookiesInterceptor)
-            .addInterceptor(
-                HttpLoggingInterceptor().setLevel(
-                    if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
-                )
-            )
+            .addInterceptor(NetworkLogging.createInterceptor())
             .build()
     }
 

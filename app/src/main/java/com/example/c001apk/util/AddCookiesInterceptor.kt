@@ -7,7 +7,6 @@ import com.example.c001apk.constant.Constants.LOCALE
 import com.example.c001apk.constant.Constants.MODE
 import com.example.c001apk.constant.Constants.REQUEST_WITH
 import com.example.c001apk.util.CookieUtil.SESSID
-import com.example.c001apk.util.TokenDeviceUtils.getTokenV2
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -18,7 +17,11 @@ object AddCookiesInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder: Request.Builder = chain.request().newBuilder()
         val deviceCode = TokenDeviceUtils.getLastingDeviceCode()
-        val token = deviceCode.getTokenV2()
+        val token = TokenDeviceUtils.resolveAppToken(
+            deviceCode = deviceCode,
+            customTokenEnabled = PrefManager.customToken,
+            customToken = PrefManager.xAppToken,
+        )
         builder.apply {
             addHeader("User-Agent", PrefManager.USER_AGENT)
             addHeader("X-Requested-With", REQUEST_WITH)
