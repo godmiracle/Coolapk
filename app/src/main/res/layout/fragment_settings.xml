@@ -19,7 +19,7 @@
             android:id="@+id/toolBar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
-            app:title="@string/tab_setting" />
+            app:title="@string/settings" />
 
         <View
             android:layout_width="match_parent"

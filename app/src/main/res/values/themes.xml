@@ -91,22 +91,29 @@
         <item name="cornerSize">50%</item>
     </style>
 
-    <style name="FloatingBottomNavigationActiveIndicatorShape">
+    <style name="MiuixFloatingNavigationActiveIndicatorShape">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
 
-    <style name="FloatingBottomNavigationActiveIndicator">
-        <item name="android:width">@dimen/floating_bottom_navigation_active_indicator_width</item>
-        <item name="android:height">@dimen/floating_bottom_navigation_active_indicator_height</item>
-        <item name="marginHorizontal">@dimen/floating_bottom_navigation_active_indicator_margin_horizontal</item>
-        <item name="shapeAppearance">@style/FloatingBottomNavigationActiveIndicatorShape</item>
-        <item name="android:color">@color/floating_bottom_navigation_selected</item>
+    <style name="MiuixFloatingNavigationActiveIndicator">
+        <item name="android:width">0dp</item>
+        <item name="android:height">0dp</item>
+        <item name="marginHorizontal">0dp</item>
+        <item name="shapeAppearance">@style/MiuixFloatingNavigationActiveIndicatorShape</item>
+        <item name="android:color">@android:color/transparent</item>
     </style>
 
-    <style name="FloatingBottomNavigationLabel" parent="TextAppearance.Material3.LabelMedium">
+    <style name="MiuixFloatingNavigationLabelActive" parent="TextAppearance.Material3.LabelMedium">
         <item name="android:fontFamily">sans</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="MiuixFloatingNavigationLabelInactive" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="UserTextColor">

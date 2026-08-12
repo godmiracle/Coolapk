@@ -142,7 +142,7 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
 
             menuBlock = menu.findItem(R.id.block)
             subscribe = menu.findItem(R.id.subscribe)
-            subscribe.isVisible = PrefManager.isLogin
+            subscribe.isVisible = viewModel.type == "topic" || viewModel.type == "product"
 
             viewModel.checkMenuState()
 
@@ -206,33 +206,7 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
                     }
 
                     R.id.subscribe -> {
-                        when (viewModel.type) {
-                            "topic" -> {
-                                val followUrl =
-                                    if (viewModel.isFollow) "/v6/feed/unFollowTag"
-                                    else "/v6/feed/followTag"
-                                val tag = viewModel.url.replace("/t/", "")
-                                viewModel.onGetFollow(followUrl, tag, null)
-                            }
-
-                            "product" -> {
-                                if (viewModel.postFollowData.isNullOrEmpty())
-                                    viewModel.postFollowData = HashMap()
-                                viewModel.postFollowData?.let { map ->
-                                    map["id"] = viewModel.id
-                                    map["status"] =
-                                        if (viewModel.isFollow) "0"
-                                        else "1"
-                                }
-                                viewModel.onPostFollow()
-                            }
-
-                            else -> Toast.makeText(
-                                requireContext(),
-                                "type error: ${viewModel.type}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        viewModel.toggleFollow()
                     }
 
                 }

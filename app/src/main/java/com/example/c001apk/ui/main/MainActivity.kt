@@ -1,6 +1,7 @@
 package com.example.c001apk.ui.main
 
 import android.os.Bundle
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -13,16 +14,15 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.c001apk.R
 import com.example.c001apk.databinding.ActivityMainBinding
 import com.example.c001apk.ui.base.BaseActivity
+import com.example.c001apk.ui.follow.FollowPagerFragment
 import com.example.c001apk.ui.home.HomeFragment
-import com.example.c001apk.ui.message.MessageFragment
-import com.example.c001apk.ui.settings.SettingsFragment
+import com.example.c001apk.ui.my.MyFragment
+import com.example.c001apk.ui.search.SearchActivity
 import com.example.c001apk.util.ActivityCollector
-import com.example.c001apk.util.CookieUtil
+import com.example.c001apk.util.IntentUtil
 import com.example.c001apk.util.PrefManager
-import com.google.android.material.badge.BadgeDrawable
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContainer {
 
     private val viewModel by viewModels<MainViewModel>()
-    private val navViewBehavior by lazy { HideBottomViewOnScrollBehavior<BottomNavigationView>() }
+    private val navViewBehavior by lazy { HideBottomViewOnScrollBehavior<FrameLayout>() }
     override var controller: IOnBottomClickListener? = null
     private lateinit var navView: NavigationBarView
     private val isLogin by lazy { PrefManager.isLogin }
@@ -46,9 +46,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
         if (viewModel.isInit) {
             viewModel.isInit = false
             genData()
-            initObserve()
-        } else if (CookieUtil.badge != 0) {
-            setBadge()
         }
 
         binding.viewPager.apply {
@@ -58,8 +55,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                 override fun createFragment(position: Int): Fragment {
                     return when (position) {
                         0 -> HomeFragment()
-                        1 -> MessageFragment()
-                        else -> SettingsFragment()
+                        1 -> FollowPagerFragment.newInstance(
+                            uid = PrefManager.uid,
+                            type = "follow",
+                            embedded = true
+                        )
+                        else -> MyFragment()
                     }
                 }
             }
@@ -75,14 +76,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                 }
             })
             isUserInputEnabled = false
-            fixViewPager2Insets(this)
         }
 
         navView.apply {
-            if (this is BottomNavigationView) {
-                (layoutParams as CoordinatorLayout.LayoutParams).behavior = navViewBehavior
-            }
-
             setOnItemSelectedListener {
                 when (it.itemId) {
                     R.id.navigation_home -> {
@@ -90,61 +86,45 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                             controller?.onReturnTop()
                         else
                             binding.viewPager.setCurrentItem(0, true)
+                        true
                     }
 
-                    R.id.navigation_message -> {
+                    R.id.navigation_follow -> {
                         binding.viewPager.setCurrentItem(1, true)
-                        if (CookieUtil.badge != 0) {
-                            navView.removeBadge(R.id.navigation_message)
-                        }
+                        true
                     }
 
-                    R.id.navigation_setting -> {
+                    R.id.navigation_me -> {
                         binding.viewPager.setCurrentItem(2, true)
+                        true
                     }
 
+                    R.id.navigation_search -> {
+                        IntentUtil.startActivity<SearchActivity>(this@MainActivity) {}
+                        false
+                    }
+
+                    else -> false
                 }
-                true
             }
             setOnClickListener { /*Do nothing*/ }
-            if (this is BottomNavigationView) {
-                fixBottomNavigationViewInsets(this)
-            }
         }
 
-    }
-
-    private fun initObserve() {
-        viewModel.setBadge.observe(this) { event ->
-            event.getContentIfNotHandledOrReturnNull()?.let {
-                if (it)
-                    setBadge()
-            }
+        (binding.bottomNavContainer.layoutParams as? CoordinatorLayout.LayoutParams)?.let {
+            it.behavior = navViewBehavior
+            binding.bottomNavContainer.layoutParams = it
+            fixNavigationContainerInsets(binding.bottomNavContainer)
         }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { view, windowInsets ->
+            if (view is BottomNavigationView)
+                view.updatePadding(bottom = 0)
+            windowInsets
+        }
+
     }
 
     private fun genData() {
         viewModel.fetchAppInfo("com.coolapk.market")
-    }
-
-    private fun setBadge() {
-        val badge = navView.getOrCreateBadge(R.id.navigation_message)
-        badge.number = CookieUtil.badge
-        badge.backgroundColor =
-            MaterialColors.getColor(
-                this,
-                com.google.android.material.R.attr.colorPrimary,
-                0
-            )
-        badge.badgeTextColor =
-            MaterialColors.getColor(
-                this,
-                com.google.android.material.R.attr.colorOnPrimary,
-                0
-            )
-        badge.badgeGravity = BadgeDrawable.TOP_END
-        badge.verticalOffset = 5
-        badge.horizontalOffset = 5
     }
 
     private val onBackPressedCallback = object : OnBackPressedCallback(false) {
@@ -158,26 +138,25 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
     }
 
     fun showNavigationView() {
-        if (binding.bottomNav is BottomNavigationView) {
-            if (navViewBehavior.isScrolledDown)
-                navViewBehavior.slideUp(binding.bottomNav as BottomNavigationView, true)
-        }
+        if (binding.bottomNavContainer.layoutParams is CoordinatorLayout.LayoutParams &&
+            navViewBehavior.isScrolledDown
+        )
+            navViewBehavior.slideUp(binding.bottomNavContainer, true)
     }
 
     fun hideNavigationView() {
-        if (binding.bottomNav is BottomNavigationView) {
-            if (navViewBehavior.isScrolledUp)
-                navViewBehavior.slideDown(binding.bottomNav as BottomNavigationView, true)
-        }
+        if (binding.bottomNavContainer.layoutParams is CoordinatorLayout.LayoutParams &&
+            navViewBehavior.isScrolledUp
+        )
+            navViewBehavior.slideDown(binding.bottomNavContainer, true)
     }
 
     // from LibChecker
     /**
-     * 覆盖掉 BottomNavigationView 内部的 OnApplyWindowInsetsListener，
-     * 让悬浮底栏保持在透明系统导航栏上方，并避免被软键盘顶起来。
-     * @see BottomNavigationView.applyWindowInsets
+     * 将系统导航栏 inset 只应用到浮岛容器的 bottom margin，避免 Material 导航内容
+     * 再额外绘制一层背景或把系统 inset 变成可见的底部空白。
      */
-    private fun fixBottomNavigationViewInsets(view: BottomNavigationView) {
+    private fun fixNavigationContainerInsets(view: FrameLayout) {
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
             // 这里不直接使用 windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
             // 因为它的结果可能受到 insets 传播链上层某环节的影响，出现了错误的 navigationBarsInsets
@@ -187,7 +166,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             view.updatePadding(bottom = 0)
 
             val bottomMargin =
-                resources.getDimensionPixelSize(R.dimen.floating_bottom_navigation_margin_bottom) +
+                resources.getDimensionPixelSize(R.dimen.miuix_floating_navigation_bottom_padding) +
                     (navigationBarsInsets?.bottom ?: 0)
             (view.layoutParams as? CoordinatorLayout.LayoutParams)?.let { layoutParams ->
                 if (layoutParams.bottomMargin != bottomMargin) {
@@ -195,13 +174,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                     view.layoutParams = layoutParams
                 }
             }
-            windowInsets
-        }
-    }
-
-    private fun fixViewPager2Insets(view: ViewPager2) {
-        ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-            /* Do nothing */
             windowInsets
         }
     }

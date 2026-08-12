@@ -12,15 +12,17 @@ class FollowPagerFragment : BasePagerFragment() {
 
     private val uid by lazy { arguments?.getString("uid").orEmpty() }
     private val type by lazy { arguments?.getString("type").orEmpty() }
+    private val embedded by lazy { arguments?.getBoolean("embedded") == true }
     private val isMe by lazy { uid == PrefManager.uid }
 
     companion object {
         @JvmStatic
-        fun newInstance(uid: String, type: String) =
+        fun newInstance(uid: String, type: String, embedded: Boolean = false) =
             FollowPagerFragment().apply {
                 arguments = Bundle().apply {
                     putString("uid", uid)
                     putString("type", type)
+                    putBoolean("embedded", embedded)
                 }
             }
     }
@@ -28,7 +30,9 @@ class FollowPagerFragment : BasePagerFragment() {
     override fun getFragment(position: Int): Fragment =
         when (type) {
             "follow" ->
-                if (isMe)
+                if (embedded)
+                    LocalFollowFragment()
+                else if (isMe)
                     when (position) {
                         0 -> FollowFragment.newInstance(type = "follow")
                         1 -> FollowFragment.newInstance(type = "topic")
@@ -51,7 +55,11 @@ class FollowPagerFragment : BasePagerFragment() {
         tabList =
             when (type) {
                 "follow" ->
-                    if (isMe)
+                    if (embedded) {
+                        binding.tabLayout.isVisible = false
+                        listOf("")
+                    }
+                    else if (isMe)
                         listOf("用户", "话题", "数码", "应用")
                     else {
                         binding.tabLayout.isVisible = false
@@ -67,17 +75,24 @@ class FollowPagerFragment : BasePagerFragment() {
     }
 
     override fun onBackClick() {
-        activity?.finish()
+        if (!embedded)
+            activity?.finish()
     }
 
     override fun initBar() {
         super.initBar()
+        if (embedded) {
+            binding.toolBar.navigationIcon = null
+            binding.toolBar.setNavigationOnClickListener(null)
+        }
         binding.collapsingToolbar.isTitleEnabled = false
         binding.toolBar.title = when (type) {
             "feed" -> "我的动态"
 
             "follow" -> {
-                if (isMe)
+                if (embedded)
+                    "关注"
+                else if (isMe)
                     "我的关注"
                 else
                     "TA关注的人"

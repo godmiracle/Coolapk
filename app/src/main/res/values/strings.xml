@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">c001apk</string>
     <string name="tab_home">首页</string>
-    <string name="tab_message">消息</string>
-    <string name="tab_setting">设置</string>
+    <string name="tab_follow">关注</string>
+    <string name="tab_me">我的</string>
+    <string name="my_local_section">本地内容</string>
+    <string name="my_preferences_section">应用设置</string>
+    <string name="settings">设置</string>
+    <string name="local_follow_empty">还没有本地关注</string>
+    <string name="local_follow_empty_hint">在话题或数码页面点击“关注”，内容会显示在这里</string>
+    <string name="remove_local_follow">取消本地关注</string>
     <string name="search">搜索</string>
     <string name="refresh">刷新</string>
     <string name="copy_link">复制链接</string>

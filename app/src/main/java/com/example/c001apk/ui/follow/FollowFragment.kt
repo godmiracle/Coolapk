@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.example.c001apk.ui.base.BaseAppFragment
+import com.example.c001apk.ui.main.MainActivity
 import com.example.c001apk.util.PrefManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -61,6 +62,14 @@ class FollowFragment : BaseAppFragment<FollowViewModel>() {
             event.getContentIfNotHandledOrReturnNull()?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    override fun onScrolled(dy: Int) {
+        super.onScrolled(dy)
+        (activity as? MainActivity)?.let {
+            if (dy > 0) it.hideNavigationView()
+            else if (dy < 0) it.showNavigationView()
         }
     }
 

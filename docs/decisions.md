@@ -178,19 +178,78 @@ Retrofit Base URL 是两套网络封装的共同前置条件，集中维护可�
 
 ### 决定
 
-继续使用 Material 1.10.0 的 `BottomNavigationView` 承载现有三段式主导航，在竖屏布局中按参考图增加 24dp 水平边距、80dp 高度、18dp 基础底部间距、半透明淡紫玻璃背景、2dp 白色描边、阴影和主题色选中态；使用 Material 1.10 支持的 `itemActiveIndicatorStyle` 配置大选中胶囊，图标设为 30dp、标签设为 14sp 并始终展示。横屏继续使用现有 `NavigationRailView`。
+继续使用 Material 1.10.0 的 `BottomNavigationView` 承载现有三页主导航和一个搜索动作，但只把它作为 XML/ViewBinding 的透明内容控件；视觉参数按 Miuix 的 `FloatingNavigationBar` 和 iOS 酷安截图移植：外层使用 `surfaceContainer` 实色背景、36dp 外侧留白、8dp 视觉底部间距、无额外阴影、1dp 白色细边、28dp 图标、12sp 标签和低对比选中胶囊。关闭 Material 默认 active indicator 的绘制，改由自定义 item background 提供选中态。横屏继续使用现有 `NavigationRailView`。
 
 ### 原因
 
-用户希望下方按钮参考截图呈现 Apple 风格的悬浮底栏。复用现有导航控件可以保留 ViewPager 切换、消息角标、滚动隐藏/显示和无障碍点击语义，同时把视觉变化限制在主布局、主题和资源层。截图包含四个视觉入口，但当前应用只有首页、消息、设置三个真实目的地，因此只复刻视觉结构，不凭空增加“超级用户”或“模块”页面。项目当前锁定 Material 1.10.0，使用该版本已提供的 active indicator 样式属性。
+用户希望下方按钮接近 Miuix/ iOS 酷安的轻量浮岛，而不是 Material 3 的高对比导航容器。Miuix 当前浮动导航默认使用 `surfaceContainer`、36dp 外侧留白、低阴影和 28dp 图标；项目是 XML/ViewBinding，直接引入 Compose Miuix 会扩大架构范围，因此只移植可复用的视觉 token。iOS 截图有五个入口和中央加号，但当前应用只有首页、消息、我的三个页面入口，因此继续保留现有功能，不凭空增加页面；搜索另作为底栏动作项处理。
 
 ### 影响
 
-竖屏底栏不再贴满屏幕底部，而是在左右各 24dp、基础底部 18dp 的位置悬浮；透明系统导航栏的 inset 通过动态 bottom margin 叠加处理，不再写入底栏内部 padding。列表和发布按钮沿用现有底部空间预留逻辑，横屏布局不受影响。
+竖屏底栏不再贴满屏幕底部，而是在左右各 36dp、系统手势区上方 8dp 的位置悬浮；系统栏 inset 只通过外层浮岛容器的动态 bottom margin 处理，透明的 `BottomNavigationView` 不再重复绘制背景或吸收可见 inset。ViewPager2 以 overlay 方式承载内容，不永久预留“底栏高度 + 8dp + 系统栏”空间；列表自身的系统底部 inset 和末尾 footer 负责滚动到末尾时的安全距离。横屏沿用同一导航菜单，现有 ViewPager 切换、消息角标、滚动隐藏/显示和无障碍点击语义保持不变。
 
 ### 验证
 
-在 Android Studio JDK 21、SDK Platform 36.1 下，`:app:assembleDebug` 和 `:app:testDebugUnitTest` 均成功；单元测试共 4 个，0 failures、0 errors、0 skipped。Android 16 模拟器 `emulator-5554` 安装成功、冷启动 `MainActivity` 成功，最终截图确认玻璃拟态悬浮栏、选中胶囊和底部手势区安全间距，UI 层级确认“消息 → 设置 → 首页”切换成功。深色模式、主题色和滚动隐藏/显示动画尚未专项验收。
+在 Android Studio JDK 21、SDK Platform 36.1 下，最终资源调整后的 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均成功；单元测试 6 个，0 failures、0 errors、0 skipped。Android 16 模拟器 `emulator-5554` 安装成功、冷启动 `MainActivity` 成功，最终截图确认实色浮岛、细边、选中胶囊、内容安全区和底部手势区；最终包执行“首页 → 消息 → 我的”切换，底栏搜索成功启动 `SearchActivity`，UI 层级确认四项标题和首页选中态。深色模式、主题色和滚动隐藏/显示动画尚未专项验收。
+
+## 2026-08-12 - 整改浮岛重复背景与底部间距
+
+### 决定
+
+将竖屏底栏拆为“单独浮岛容器 + 透明 `BottomNavigationView`”：浮岛容器只绘制一次背景、圆角和边框，Material 导航控件只负责图标、文字和选中项背景。底部视觉间距由 26dp 调整为 8dp，系统导航栏 inset 仍保留为安全区，不参与额外的装饰留白。横屏使用同名容器承载 `NavigationRailView`，但不套用竖屏浮岛行为。
+
+### 原因
+
+原实现把自定义浮岛背景直接挂在 `BottomNavigationView` 上，同时让 Material 导航控件参与自身的背景/inset 处理，容易产生底栏后方的第二层背景；固定 26dp 再叠加系统 inset 也使浮岛离底部过远。
+
+### 验证
+
+Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；截图确认竖屏底栏容器边界为 `[95,2172][985,2340]`，底栏与手势区域的间距已收紧，关注页显示单层浮岛。首页/关注/我的切换、底栏搜索启动 `SearchActivity` 均通过；横竖屏布局均通过构建检查。
+
+## 2026-08-12 - 修复底栏隐藏后的内容截短
+
+### 决定
+
+移除 `MainActivity` 对 `ViewPager2` 的永久底部 padding。浮岛仍由独立 `bottomNavContainer` 负责绘制和滚动隐藏/显示；主页面内容不再因为底栏当前是否可见而被固定截短，系统手势区继续由浮岛容器的 bottom margin 和列表自身 inset 处理。
+
+### 原因
+
+修复前 `ViewPager2` 的内部内容列表固定结束在约 `2172px`，即使底栏已经被 `HideBottomViewOnScrollBehavior` 隐藏，屏幕底部仍保留约 `252px` 空区，表现为内容被下方空白层遮挡。该空区来自主容器 padding，不是第二个浮岛背景。
+
+### 验证
+
+- 修复前上滑隐藏底栏的截图出现内容结束后到手势区之间的整块空白。
+- 修复后 `ViewPager2` 和内部 RecyclerView 均延伸至屏幕高度 `2424px`；上滑隐藏底栏后内容可继续显示到系统手势区上方，空白层消失。
+- 下滑恢复底栏后，浮岛仍显示在 `[95,2172][985,2340]`，与系统手势区保持安全距离。
+- Android Studio JDK 21 下 `:app:assembleDebug`、`:app:testDebugUnitTest` 通过；Debug APK 已安装到 Android 16 `emulator-5554` 并完成冷启动、隐藏/恢复回归。
+
+## 2026-08-12 - 将“我的”和搜索纳入悬浮底栏
+
+### 决定
+
+将竖屏底栏从“首页 / 消息 / 设置”调整为“首页 / 消息 / 我的 / 搜索”。“我的”复用现有 `SettingsFragment` 和设置内容，只更换导航语义、图标和页面标题；“搜索”不新增 ViewPager 页面，直接启动现有 `SearchActivity`。首页顶部的搜索按钮移除，右侧菜单保留。
+
+### 原因
+
+用户希望底栏与 iOS 酷安的入口结构一致，并把搜索从页面顶部移动到底栏。项目没有独立的个人中心页面，复用现有设置页可以完成导航语义调整而不虚构个人资料、账号或社区功能。
+
+### 验证
+
+最终 Debug APK 在 Android 16 `emulator-5554` 安装并冷启动成功；底栏截图确认四项为“首页 / 消息 / 我的 / 搜索”，顶部首页搜索图标已移除。点击“搜索”后当前 Activity 为 `com.example.c001apk/.ui.search.SearchActivity`；点击“我的”后页面标题为“我的”且原设置内容可见。`:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过。
+
+## 2026-08-12 - 将关注改为本地话题/数码聚合
+
+### 决定
+
+主导航不再承载原消息聚合页，改为“首页 / 关注 / 我的 / 搜索”。关注页只读取独立的 `local_follow.db`，以一张合并列表展示用户在话题或数码详情页主动关注的条目；没有本地记录时显示空状态，不请求原消息页数据，也不把服务端的完整关注列表直接当成本地列表。
+
+话题和数码详情页的“关注”动作先写入或删除本地记录，再在登录状态下尽力同步服务端；网络失败不阻断本地关注。记录同时保存详情返回的 `logo` 作为头像，未登录时只维护本地状态，避免本地关注功能被账号状态阻断。记录使用 `(type, targetId)` 作为复合主键，列表按最近操作时间倒序；旧记录没有头像时继续使用类型图标兜底，并在再次打开详情后补齐头像。
+
+“我的”页面只保留本地收藏、浏览历史和设置三个入口；原有设置项通过独立 `SettingsActivity` 作为二级页面承载，避免设置选项与本地内容混在同一层级。
+
+### 验证
+
+在 Android Studio JDK 21、SDK Platform 36.1 下，`:app:assembleDebug` 和 `:app:testDebugUnitTest` 成功，6 个 JVM 测试全部通过。Android 16 `emulator-5554` 已验证：关注页初始空状态、话题 Android 关注、数码“小米17 Pro Max”关注、应用重启后两类记录合并展示；详情页取消本地关注入口和“我的 → 设置”入口已接入。网络详情页是否返回服务端关注成功由外部 API 决定，但本地数据库和列表链路已在模拟器中实测。
 
 ## 现状中的待确认项
 

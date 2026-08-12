@@ -71,13 +71,14 @@ Fragment/ViewModel
 
 | 包 | 主要职责 |
 |---|---|
-| `ui/main` | 三段式主导航、消息角标、初始化账号/应用信息 |
+| `ui/main` | 首页/关注/我的主导航、搜索动作、初始化账号/应用信息 |
 | `ui/home`、`ui/homefeed` | 首页 Tab、关注/头条/热榜/酷图 feed |
 | `ui/applist`、`ui/app`、`ui/appupdate` | 应用列表、应用详情、更新检查 |
 | `ui/feed` | 动态详情、评论分页、投票、问答、分享和回复入口 |
 | `ui/feed/reply` | 回复编辑、@用户/@话题、表情、验证码和图片上传 |
 | `ui/topic`、`ui/hometopic` | 话题/数码页面及其内容列表 |
 | `ui/user`、`ui/follow` | 用户主页、动态、关注、粉丝和相关列表 |
+| `ui/my` | 本地收藏、浏览历史和设置入口 |
 | `ui/search` | 搜索入口、历史、类型/排序和结果页 |
 | `ui/message`、`ui/messagedetail` | 消息汇总、通知、@我、点赞、关注等详情 |
 | `ui/login` | 账号密码登录、验证码、Cookie 和登录状态回写 |
@@ -155,6 +156,7 @@ Fragment/ViewModel
 |---|---|---|---:|
 | `browse_history.db` | `FeedEntity` | 浏览历史 | 1 |
 | `feed_favorite.db` | `FeedEntity` | 本地动态收藏 | 2 |
+| `local_follow.db` | `LocalFollow` | 本地话题/数码关注及头像 | 2 |
 | `home_menu.db` | `HomeMenu` | 首页 Tab 顺序和启用状态 | 5 |
 | `recent_at_user.db` | `RecentAtUser` | 最近 @用户 | 2 |
 | `recent_emoji.db` | `StringEntity` | 最近使用表情 | 2 |
@@ -177,7 +179,7 @@ Fragment/ViewModel
 
 ### 6.1 主导航
 
-`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载 `HomeFragment`、`MessageFragment` 和 `SettingsFragment`，底部导航切换页面。首页内部再使用可配置的 Tab/ViewPager2。
+`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载 `HomeFragment`、嵌入式 `FollowPagerFragment` 和 `MyFragment`，底部导航的“首页 / 关注 / 我的”切换这三个页面；右侧“搜索”是动作项，启动现有 `SearchActivity`，不占用新的 ViewPager 页面。竖屏底栏以 Miuix 风格实色浮岛 overlay 在内容之上，系统导航 inset 只用于浮岛容器的 bottom margin，`ViewPager2` 不永久预留浮岛高度，避免底栏隐藏后留下内容空区；各列表继续自行处理系统底部安全区和末尾 footer。关注页内部使用 `LocalFollowFragment` 观察 `local_follow.db`，不加载原消息聚合内容；我的页面提供本地收藏、浏览历史和 `SettingsActivity` 二级入口。首页内部再使用可配置的 Tab/ViewPager2。
 
 ### 6.2 外链路由
 

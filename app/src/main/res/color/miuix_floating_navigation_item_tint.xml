@@ -3,5 +3,7 @@
     <item
         android:color="?attr/colorPrimary"
         android:state_checked="true" />
-    <item android:color="?attr/colorOnSurfaceVariant" />
+    <item
+        android:alpha="0.40"
+        android:color="?attr/colorOnSurface" />
 </selector>

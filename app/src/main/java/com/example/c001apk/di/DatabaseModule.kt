@@ -6,11 +6,13 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.c001apk.logic.dao.HistoryFavoriteDao
 import com.example.c001apk.logic.dao.HomeMenuDao
+import com.example.c001apk.logic.dao.LocalFollowDao
 import com.example.c001apk.logic.dao.RecentAtUserDao
 import com.example.c001apk.logic.dao.StringEntityDao
 import com.example.c001apk.logic.database.BrowseHistoryDatabase
 import com.example.c001apk.logic.database.FeedFavoriteDatabase
 import com.example.c001apk.logic.database.HomeMenuDatabase
+import com.example.c001apk.logic.database.LocalFollowDatabase
 import com.example.c001apk.logic.database.RecentAtUserDatabase
 import com.example.c001apk.logic.database.RecentEmojiDatabase
 import com.example.c001apk.logic.database.SearchHistoryDatabase
@@ -161,6 +163,21 @@ object DatabaseModule {
 
     @Singleton
     @Provides
+    fun provideLocalFollowDao(database: LocalFollowDatabase): LocalFollowDao {
+        return database.localFollowDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideLocalFollowDatabase(@ApplicationContext context: Context): LocalFollowDatabase {
+        return Room.databaseBuilder(
+            context.applicationContext,
+            LocalFollowDatabase::class.java, "local_follow.db"
+        ).addMigrations(LocalFollowDatabase_MIGRATION_1_2).build()
+    }
+
+    @Singleton
+    @Provides
     fun provideHomeMenuDao(homeMenuDatabase: HomeMenuDatabase): HomeMenuDao {
         return homeMenuDatabase.homeMenuDao()
     }
@@ -196,6 +213,12 @@ object DatabaseModule {
             .build()
     }
 
+}
+
+object LocalFollowDatabase_MIGRATION_1_2 : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE local_follow ADD COLUMN avatar TEXT NOT NULL DEFAULT ''")
+    }
 }
 
 object FeedFavoriteDatabase_MIGRATION_1_2 : Migration(1, 2) {
@@ -250,4 +273,3 @@ object StringEntityDatabase_MIGRATION_1_2 : Migration(1, 2) {
         db.execSQL("ALTER TABLE StringEntity_new RENAME TO StringEntity")
     }
 }
-

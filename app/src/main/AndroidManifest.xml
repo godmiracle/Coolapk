@@ -414,6 +414,9 @@
             android:name=".ui.settings.params.ParamsActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.appupdate.AppUpdateActivity"
             android:exported="false" />
         <activity

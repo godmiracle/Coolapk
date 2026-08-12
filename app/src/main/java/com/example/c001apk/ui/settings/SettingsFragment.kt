@@ -30,6 +30,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
     }
 
     private fun initMenu() {
+        binding.toolBar.setNavigationIcon(R.drawable.ic_back)
+        binding.toolBar.setNavigationOnClickListener { activity?.finish() }
         binding.toolBar.inflateMenu(R.menu.settings_menu)
         binding.toolBar.setOnMenuItemClickListener {
             when (it.itemId) {

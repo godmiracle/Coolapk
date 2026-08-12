@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="floating_bottom_navigation_margin_horizontal">24dp</dimen>
-    <dimen name="floating_bottom_navigation_margin_bottom">18dp</dimen>
-    <dimen name="floating_bottom_navigation_active_indicator_width">96dp</dimen>
-    <dimen name="floating_bottom_navigation_active_indicator_height">64dp</dimen>
-    <dimen name="floating_bottom_navigation_active_indicator_margin_horizontal">4dp</dimen>
+    <dimen name="miuix_floating_navigation_outer_padding">36dp</dimen>
+    <dimen name="miuix_floating_navigation_bottom_padding">8dp</dimen>
+    <dimen name="miuix_floating_navigation_inner_padding">12dp</dimen>
+    <dimen name="miuix_floating_navigation_height">64dp</dimen>
+    <dimen name="miuix_floating_navigation_corner_radius">28dp</dimen>
+    <dimen name="miuix_floating_navigation_border_width">1dp</dimen>
+    <dimen name="miuix_floating_navigation_item_inset_horizontal">4dp</dimen>
+    <dimen name="miuix_floating_navigation_item_inset_vertical">4dp</dimen>
 </resources>

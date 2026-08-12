@@ -12,7 +12,6 @@ import com.example.c001apk.ui.homefeed.HomeFeedFragment
 import com.example.c001apk.ui.hometopic.HomeTopicFragment
 import com.example.c001apk.ui.main.MainActivity
 import com.example.c001apk.ui.others.CopyActivity
-import com.example.c001apk.ui.search.SearchActivity
 import com.example.c001apk.util.IntentUtil
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.Tab
@@ -69,11 +68,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(), IOnTabClickContainer {
     }
 
     private fun initButton() {
-        binding.search.setOnClickListener {
-            IntentUtil.startActivity<SearchActivity>(requireContext()) {
-            }
-        }
-
         binding.menu.setOnClickListener {
             IntentUtil.startActivity<CopyActivity>(requireContext()) {
                 putExtra("type", "homeMenu")

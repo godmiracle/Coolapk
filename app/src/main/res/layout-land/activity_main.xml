@@ -11,19 +11,26 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/bottomNav"
+        app:layout_constraintStart_toEndOf="@+id/bottomNavContainer"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.navigationrail.NavigationRailView
-        android:id="@+id/bottomNav"
+    <FrameLayout
+        android:id="@+id/bottomNavContainer"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:fitsSystemWindowsInsets="start|top|bottom"
-        app:labelVisibilityMode="selected"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:menu="@menu/nav_menu"
-        app:menuGravity="top" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.navigationrail.NavigationRailView
+            android:id="@+id/bottomNav"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:fitsSystemWindowsInsets="start|top|bottom"
+            app:labelVisibilityMode="selected"
+            app:menu="@menu/nav_menu"
+            app:menuGravity="top" />
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

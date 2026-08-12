@@ -19,9 +19,16 @@
 - [ ] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
   - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/java/com/example/c001apk/ui/main/MainActivity.kt`、底栏主题资源
-  - 状态：已按参考图完成玻璃拟态悬浮底栏和 Android 16 模拟器基础验收；深色模式、主题色和滚动动画专项待完成
-  - 证据：底栏使用半透明淡紫玻璃背景、白色描边、阴影、大选中胶囊、30dp 图标和 14sp 标签，并保留系统导航栏上方安全间距；保留原有三段导航、消息角标和滚动隐藏/显示；横屏导航栏未改动。Android Studio JDK 21 下 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过；`emulator-5554` 安装成功、冷启动成功，并通过 UI 层级确认“消息 → 设置 → 首页”切换。
-  - 验收标准：竖屏真机/模拟器确认底栏不遮挡内容、不被手势导航区覆盖，点击和角标行为与改动前一致；深色模式和主题色下保持可读性。
+  - 状态：已按 Miuix 参数和 iOS 酷安参考完成实色悬浮底栏与 Android 16 模拟器基础验收；深色模式、主题色和滚动动画专项待完成
+  - 证据：底栏采用单独浮岛容器绘制 `surfaceContainer` 背景，内部 `BottomNavigationView` 透明；36dp 外侧留白、8dp 视觉底部间距、无额外阴影、1dp 白色细边、大圆角、低对比选中胶囊、28dp 图标和 12sp 标签。浮岛以 overlay 方式覆盖内容，`ViewPager2` 不再永久预留底栏高度；系统 inset 仍由浮岛 bottom margin 和列表自身安全区处理，底栏隐藏后内容可延伸到手势区上方。当前页面导航为首页/关注/我的，搜索作为右侧动作项启动 `SearchActivity`；原消息页不再作为主导航页面，横屏导航栏沿用同一导航菜单。最终包通过首页 → 关注 → 我的切换、底栏搜索启动和 UI 层级确认。Android Studio JDK 21 下 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过；`emulator-5554` 安装成功并冷启动成功。
+  - 验收标准：竖屏真机/模拟器确认浮岛不覆盖系统手势区，底栏隐藏后内容不被永久截短且末项仍可安全滚动到位，点击和入口行为与改动前一致；深色模式和主题色下保持可读性。
+
+- [x] UI-002 实现本地话题/数码关注聚合
+  - 优先级：中
+  - 涉及文件：`logic/model/LocalFollow.kt`、`logic/dao/LocalFollowDao.kt`、`logic/database/LocalFollowDatabase.kt`、`logic/repository/LocalFollowRepo.kt`、`ui/follow/LocalFollowFragment.kt`、话题/数码详情关注逻辑
+  - 状态：已完成 Debug 构建、单元测试和 Android 16 模拟器流程验收
+  - 证据：关注页无本地记录时显示空状态；话题 Android 和数码“小米17 Pro Max”详情页点击“关注”后写入 `local_follow.db`，同时保存详情 `logo` 头像；应用重启后关注页同时显示“数码”和“话题”记录；删除按钮可移除记录。
+  - 验收标准：关注页不请求原消息聚合内容；话题/数码关注统一进入本地列表；取消关注后从列表消失；本地数据不依赖登录状态。
 
 ## 高优先级：发布和安全边界
 

@@ -6,13 +6,18 @@
         android:title="@string/tab_home" />
 
     <item
-        android:id="@+id/navigation_message"
-        android:icon="@drawable/ic_message_selector"
-        android:title="@string/tab_message" />
+        android:id="@+id/navigation_follow"
+        android:icon="@drawable/ic_star"
+        android:title="@string/tab_follow" />
 
     <item
-        android:id="@+id/navigation_setting"
-        android:icon="@drawable/ic_setting_selector"
-        android:title="@string/tab_setting" />
+        android:id="@+id/navigation_me"
+        android:icon="@drawable/ic_account"
+        android:title="@string/tab_me" />
+
+    <item
+        android:id="@+id/navigation_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/search" />
 
 </menu>

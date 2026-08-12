@@ -34,9 +34,9 @@
 ### 已确认
 
 - 主应用模块、三个本地图片相关 library module 和 Gradle 多模块配置存在。
-- 主导航为首页、消息、设置；首页 Tab 可通过 Room 配置。
+- 主导航页面为首页、关注、我的，右侧搜索项启动独立搜索页；关注页是本地话题/数码关注聚合，“我的”包含本地收藏、浏览历史和设置入口，首页 Tab 可通过 Room 配置。
 - 当前 ViewModel 普遍注入 `logic.repository.NetworkRepo`，网络主链路使用 Hilt 提供的三组 Retrofit 服务。
-- 本地数据包括浏览历史、动态收藏、首页菜单、搜索历史、最近 @用户、最近表情、用户黑名单和话题黑名单。
+- 本地数据包括话题/数码关注、浏览历史、动态收藏、首页菜单、搜索历史、最近 @用户、最近表情、用户黑名单和话题黑名单。
 - Manifest 包含主入口、Coolapk/自定义 Scheme 深链、WebView 独立进程、FileProvider、网络状态和已安装应用查询权限；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
 - GitHub Actions 当前只构建 Release 和 Debug APK，并上传 APK/Mapping，没有运行业务测试或 lint。
 
@@ -102,7 +102,7 @@
 | `app/src/main/java/com/example/c001apk/logic/dao/`、`logic/database/` | Room DAO、数据库和迁移 |
 | `app/src/main/java/com/example/c001apk/util/PrefManager.kt` | 设置、登录摘要、设备参数和请求版本信息 |
 | `app/src/main/java/com/example/c001apk/util/NetWorkUtil.kt` | 外部链接标准化和内部页面路由 |
-| `app/src/main/java/com/example/c001apk/ui/main/MainActivity.kt` | 三段式主导航和通知角标 |
+| `app/src/main/java/com/example/c001apk/ui/main/MainActivity.kt` | 首页/关注/我的主导航和搜索动作 |
 | `app/src/main/java/com/example/c001apk/ui/feed/` | 动态详情、评论、投票、回复和图片发布 |
 | `.github/workflows/ci.yml` | GitHub Actions 构建与制品上传 |
 | `gradle/libs.versions.toml` | 依赖版本目录 |
