@@ -78,8 +78,10 @@ class CopyActivity : BaseActivity<ActivityCopyBinding>() {
 
     private fun initObserve() {
         viewModel.tabListLiveData.observe(this) {
+            menuList.clear()
             menuList.addAll(it.filterNot { menu ->
-                menu.title == HomeViewModel.APPLICATION_TAB_TITLE
+                menu.title == HomeViewModel.APPLICATION_TAB_TITLE ||
+                    menu.title == HomeViewModel.COOL_PIC_TAB_TITLE
             })
             initView()
         }

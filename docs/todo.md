@@ -56,6 +56,20 @@
   - 证据：完整关于页和工具栏简版弹窗均显示 `godmiracle`、当前仓库、`HDYOU/c001apk` Fork/参考来源及原项目贡献者；反馈入口已切换到当前仓库 Issues。
   - 验收标准：当前维护者信息清晰可见；上游/Fork 归属不丢失；旧项目占位文案和反馈地址不再作为当前仓库身份显示。
 
+- [x] UI-004 首页顶部新增“快讯”Tab
+  - 优先级：中
+  - 涉及文件：`ui/home/HomeViewModel.kt`、`ui/home/HomeFragment.kt`、`ui/homefeed/HomeFeedFragment.kt`、`ui/homefeed/HomeFeedViewModel.kt`、`logic/repository/HomeMenuRepo.kt`、`ui/others/CopyActivity.kt`
+  - 状态：已完成 Debug 构建、JVM 单元测试、Lint 和已连接 Android 设备首页验收
+  - 证据：默认顺序为“关注、头条、热榜、快讯、话题、数码”；存量 `home_menu.db` 在“话题”前增量插入“快讯”，保留用户原有顺序和启用状态；快讯复用 `/v6/page/dataList`，路由为 `/page?url=V11_HOME_TAB_NEWS`。`a60fe293` 设备 UI 层级确认顺序和选中态，点击后列表实际显示“荣耀Magic9”“酷安手机资讯”等内容；`:app:testDebugUnitTest` 22 个用例全部通过，`:app:assembleDebug` 和 `:app:lintDebug` 成功。
+  - 验收标准：新安装和已有安装均出现快讯；点击后进入数据列表；菜单编辑和原有 Tab 不受影响。
+
+- [x] UI-005 底栏新增“发现”并迁移酷图
+  - 优先级：中
+  - 涉及文件：`ui/main/MainActivity.kt`、`ui/discover/DiscoverFragment.kt`、`res/layout/fragment_discover.xml`、`res/menu/nav_menu_portrait.xml`、`res/menu/nav_menu.xml`、`ui/home/HomeViewModel.kt`、`ui/home/HomeFragment.kt`、`ui/homefeed/HomeFeedFragment.kt`、`ui/homefeed/HomeFeedViewModel.kt`
+  - 状态：已完成 Debug 构建、JVM 单元测试、Lint 和已连接 Android 设备验收；后续顺序调整已同步
+  - 证据：底栏为“首页、关注、发现、我的”；发现顶部仅有“生活、酷图”。生活使用 `/page?url=V15_ZHUANTI_SHENGHUO`，酷图使用 `/page?url=V11_FIND_COOLPIC`；首页打开时默认选中“头条”。设备 `a60fe293` 上两个发现页面均加载真实列表，首页顶部不再显示酷图，已有 `home_menu.db` 中的酷图也会在启动时移除；`:app:testDebugUnitTest` 22 个用例通过，`:app:assembleDebug` 和 `:app:lintDebug` 成功。
+  - 验收标准：底栏可进入发现；生活和酷图均可切换并加载；首页和首页编辑菜单不再出现酷图；关注、我的和搜索入口保持可用。
+
 ## 高优先级：发布和安全边界
 
 - [ ] R-001 建立真实设备和真实接口验收基线

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">c001apk</string>
     <string name="tab_home">首页</string>
+    <string name="tab_discover">发现</string>
     <string name="tab_follow">关注</string>
     <string name="tab_me">我的</string>
     <string name="my_local_section">本地内容</string>

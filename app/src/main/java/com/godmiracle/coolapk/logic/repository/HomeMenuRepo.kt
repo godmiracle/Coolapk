@@ -15,6 +15,10 @@ class HomeMenuRepo @Inject constructor(
         return homeMenuDao.loadAllListLive()
     }
 
+    suspend fun loadAllList(): List<HomeMenu> {
+        return homeMenuDao.loadAllList()
+    }
+
     suspend fun insert(homeMenu: HomeMenu) {
         homeMenuDao.insert(homeMenu)
     }

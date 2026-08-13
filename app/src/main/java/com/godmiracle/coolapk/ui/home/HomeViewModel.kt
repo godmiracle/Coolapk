@@ -18,6 +18,10 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         const val APPLICATION_TAB_TITLE = "应用"
+        const val NEWS_TAB_TITLE = "快讯"
+        const val COOL_PIC_TAB_TITLE = "酷图"
+        const val DEFAULT_TAB_TITLE = "头条"
+        private const val TOPIC_TAB_TITLE = "话题"
     }
 
     var isInit = true
@@ -29,6 +33,18 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             homeMenuRepo.delete(APPLICATION_TAB_TITLE)
+            homeMenuRepo.delete(COOL_PIC_TAB_TITLE)
+
+            val currentList = homeMenuRepo.loadAllList()
+            if (currentList.isNotEmpty() && currentList.none { it.title == NEWS_TAB_TITLE }) {
+                val insertPosition = currentList.indexOfFirst { it.title == TOPIC_TAB_TITLE }
+                    .takeIf { it >= 0 } ?: currentList.size
+                val updatedList = currentList.mapIndexed { index, menu ->
+                    menu.copy(position = if (index >= insertPosition) index + 1 else index)
+                }
+                homeMenuRepo.updateList(updatedList)
+                homeMenuRepo.insert(HomeMenu(insertPosition, NEWS_TAB_TITLE, true))
+            }
         }
     }
 
@@ -37,9 +53,9 @@ class HomeViewModel @Inject constructor(
             HomeMenu(0, "关注", true),
             HomeMenu(1, "头条", true),
             HomeMenu(2, "热榜", true),
-            HomeMenu(3, "话题", true),
-            HomeMenu(4, "数码", true),
-            HomeMenu(5, "酷图", true)
+            HomeMenu(3, NEWS_TAB_TITLE, true),
+            HomeMenu(4, "话题", true),
+            HomeMenu(5, "数码", true)
         )
     }
 

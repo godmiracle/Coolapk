@@ -58,7 +58,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(), IOnTabClickContainer {
                 viewModel.initTab()
             } else {
                 val enableList = tabList
-                    .filter { it.isEnable && it.title != HomeViewModel.APPLICATION_TAB_TITLE }
+                    .filter {
+                        it.isEnable &&
+                            it.title != HomeViewModel.APPLICATION_TAB_TITLE &&
+                            it.title != HomeViewModel.COOL_PIC_TAB_TITLE
+                    }
                     .map { it.title }
                 if (enableList.isEmpty()) {
                     viewModel.updateTab(viewModel.defaultList)
@@ -85,11 +89,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(), IOnTabClickContainer {
             override fun createFragment(position: Int): Fragment {
                 return when (enableList[position]) {
                     "关注" -> HomeFeedFragment.newInstance("follow")
-                    "头条" -> HomeFeedFragment.newInstance("feed")
+                    HomeViewModel.DEFAULT_TAB_TITLE -> HomeFeedFragment.newInstance("feed")
                     "热榜" -> HomeFeedFragment.newInstance("rank")
+                    HomeViewModel.NEWS_TAB_TITLE -> HomeFeedFragment.newInstance("news")
                     "话题" -> HomeTopicFragment.newInstance("topic")
                     "数码" -> HomeTopicFragment.newInstance("product")
-                    "酷图" -> HomeFeedFragment.newInstance("coolPic")
                     else -> throw IllegalArgumentException()
                 }
             }
@@ -102,8 +106,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(), IOnTabClickContainer {
         }.attach()
         if (viewModel.isInit) {
             viewModel.isInit = false
-            if (enableList.contains("头条"))
-                binding.viewPager.setCurrentItem(enableList.indexOf("头条"), false)
+            enableList.indexOf(HomeViewModel.DEFAULT_TAB_TITLE)
+                .takeIf { it >= 0 }
+                ?.let { defaultPosition ->
+                    viewModel.position = defaultPosition
+                    binding.viewPager.setCurrentItem(defaultPosition, false)
+                }
         }
     }
 

@@ -15,6 +15,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.ActivityMainBinding
 import com.godmiracle.coolapk.ui.base.BaseActivity
+import com.godmiracle.coolapk.ui.discover.DiscoverFragment
 import com.godmiracle.coolapk.ui.follow.FollowPagerFragment
 import com.godmiracle.coolapk.ui.home.HomeFragment
 import com.godmiracle.coolapk.ui.my.MyFragment
@@ -74,13 +75,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
         }
 
         binding.viewPager.apply {
-            offscreenPageLimit = 2
+            offscreenPageLimit = 3
             adapter = object : FragmentStateAdapter(this@MainActivity) {
-                override fun getItemCount() = 3
+                override fun getItemCount() = 4
                 override fun createFragment(position: Int): Fragment {
                     return when (position) {
                         0 -> HomeFragment()
-                        1 -> FollowPagerFragment.newInstance(
+                        1 -> DiscoverFragment()
+                        2 -> FollowPagerFragment.newInstance(
                             uid = PrefManager.uid,
                             type = "follow",
                             embedded = true
@@ -97,8 +99,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                     searchActionSurface?.refreshBackdrop()
                     when (position) {
                         0 -> onBackPressedCallback.isEnabled = false
-                        1 -> onBackPressedCallback.isEnabled = true
-                        2 -> onBackPressedCallback.isEnabled = true
+                        else -> onBackPressedCallback.isEnabled = true
                     }
                 }
             })
@@ -116,13 +117,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                         true
                     }
 
-                    R.id.navigation_follow -> {
+                    R.id.navigation_discover -> {
                         binding.viewPager.setCurrentItem(1, true)
                         true
                     }
 
-                    R.id.navigation_me -> {
+                    R.id.navigation_follow -> {
                         binding.viewPager.setCurrentItem(2, true)
+                        true
+                    }
+
+                    R.id.navigation_me -> {
+                        binding.viewPager.setCurrentItem(3, true)
                         true
                     }
 

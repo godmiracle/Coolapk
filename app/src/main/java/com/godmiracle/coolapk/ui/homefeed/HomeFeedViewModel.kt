@@ -54,7 +54,7 @@ class HomeFeedViewModel @AssistedInject constructor(
     override fun fetchData() {
         when (type) {
             "feed" -> fetchHomeFeed()
-            "rank", "follow", "coolPic" -> fetchDataList()
+            "rank", "news", "life", "follow", "coolPic" -> fetchDataList()
         }
     }
 

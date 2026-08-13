@@ -87,6 +87,16 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
                     viewModel.dataListTitle = "热榜"
                 }
 
+                "news" -> {
+                    viewModel.dataListUrl = "/page?url=V11_HOME_TAB_NEWS"
+                    viewModel.dataListTitle = "快讯"
+                }
+
+                "life" -> {
+                    viewModel.dataListUrl = "/page?url=V15_ZHUANTI_SHENGHUO"
+                    viewModel.dataListTitle = "生活"
+                }
+
                 "follow" -> {
                     if (viewModel.dataListUrl.isNullOrEmpty()) {
                         when (PrefManager.FOLLOWTYPE) {

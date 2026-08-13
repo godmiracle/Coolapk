@@ -11,6 +11,11 @@
         android:title="@string/tab_follow" />
 
     <item
+        android:id="@+id/navigation_discover"
+        android:icon="@drawable/ic_explorer"
+        android:title="@string/tab_discover" />
+
+    <item
         android:id="@+id/navigation_me"
         android:icon="@drawable/ic_account"
         android:title="@string/tab_me" />
