@@ -469,3 +469,15 @@ APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` �
 ### 验证
 
 `:app:testDebugUnitTest` 22 个用例通过，`:app:assembleDebug` 和 `:app:lintDebug` 成功。设备 `a60fe293` 确认底栏为“首页、关注、发现、我的”、首页默认选中“头条”、发现页两个 Tab；生活页显示“户外兴趣小组”等真实内容，酷图页显示“#风景#”“AppleOS”等真实内容，首页顶部不再包含酷图。
+
+## 2026-08-13 - 应用显示名称改为“绿友”
+
+### 决定
+
+- 将 `app/src/main/res/values/strings.xml` 中的 `app_name` 更新为“绿友”，让桌面图标、设置和关于页等复用该资源的用户可见位置统一使用新名称。
+- 保留 `applicationId`、`namespace`、包路径、工程名、主题内部标识、历史资源目录和 Release 产物命名中的 `c001apk`，不做与显示名无关的兼容性迁移。
+- README 只保留面向使用者和贡献者的项目定位、能力、构建和必要声明；接口地址、凭证实现、详细测试证据和历史会话索引继续放在 `docs/`。
+
+### 原因
+
+本次需求是调整应用品牌和公开说明，不是迁移 Android 身份或重命名历史代码。只修改显示名可以减少包名、深链、本地数据和已有安装的兼容风险，同时让 README 更适合作为项目入口文档。

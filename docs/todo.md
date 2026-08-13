@@ -35,6 +35,12 @@
   - 状态：已完成，会话、变更和技术决策已同步记录
   - 验收标准：记录本次用户目标、静态分析范围、未执行的验证和后续行动；不把推测写成已验证事实。
 
+- [x] D-005 更新应用显示名和 README 公开范围
+  - 优先级：低
+  - 涉及文件：`app/src/main/res/values/strings.xml`、`README.md`、`docs/context.md`、`docs/architecture.md`、`docs/decisions.md`
+  - 状态：已完成；应用显示名改为“绿友”，README 已移除内部接口、凭证实现、详细审计证据和历史会话索引
+  - 验收标准：用户可见名称统一为“绿友”；包名、工程内部标识和历史兼容边界保持不变；README 保留项目定位、构建和必要许可证/安全声明。
+
 - [x] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
   - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/res/layout/fragment_home.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、`app/src/main/java/com/godmiracle/coolapk/ui/home/HomeFragment.kt`、`app/src/main/java/com/godmiracle/coolapk/view/LiquidGlassFrameLayout.kt`

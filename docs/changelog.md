@@ -23,7 +23,7 @@
 - 将主导航调整为“首页 / 关注 / 我的 / 搜索”：移除原消息页在主导航中的内容入口；关注页改为本地话题/数码合并列表，详情页关注动作写入独立 Room 数据库；我的页面保留本地收藏、浏览历史并新增设置二级入口。
 - 将 `SketchImageViewLoader` 的 GIF native 依赖切换为 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，并将 Android Gradle Plugin 升级到 8.5.1，以支持 16 KB 页面大小打包。
 - 更新设置关于页的维护者、当前仓库和 Fork/参考来源信息；反馈入口统一指向 `godmiracle/Coolapk`。
-- 将 Android `applicationId`、`namespace`、源码/测试包路径和 ProGuard 规则统一迁移到 `com.godmiracle.coolapk`；应用显示名称保持为 `c001apk`。
+- 将 Android `applicationId`、`namespace`、源码/测试包路径和 ProGuard 规则统一迁移到 `com.godmiracle.coolapk`；应用显示名称更新为“绿友”，包名和历史技术标识保持不变。
 
 ### Fixed
 

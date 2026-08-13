@@ -2,7 +2,7 @@
 
 ## 文档基线
 
-- 项目：`c001apk`
+- 项目：`绿友`（技术项目标识仍保留 `c001apk`）
 - 分析日期：2026-08-13
 - 当前分支：`main`
 - 当前 Git HEAD：`d41d41d23f001d85a567a9b75dacbe5949d945ce`（短哈希 `d41d41d`）；S-09 change 的实现、测试和 fixture 仍以当前工作树为准。
@@ -11,7 +11,7 @@
 
 ## 项目定位
 
-这是一个个人学习型 Android 客户端，使用包名 `com.godmiracle.coolapk`、应用名 `c001apk`。它复现 Coolapk 客户端的部分内容浏览和社区交互流程，重点用于：
+这是一个个人学习型 Android 客户端，使用包名 `com.godmiracle.coolapk`、应用名 `绿友`。技术项目标识和部分历史资源仍保留 `c001apk`，以避免不必要的包名、数据和兼容性迁移。它复现 Coolapk 客户端的部分内容浏览和社区交互流程，重点用于：
 
 1. 学习 Android XML UI、Fragment、ViewModel、RecyclerView 和 Data Binding。
 2. 学习 Retrofit/OkHttp 请求、登录 Cookie、设备参数和分页接口适配。

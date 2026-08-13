@@ -2,7 +2,7 @@
 
 ## 1. 总览
 
-`c001apk` 是一个传统 Android 多模块应用。`app` 是可运行的主应用，三个本地 library module 负责图片预览及图片加载适配。主应用没有独立 Domain 层或 Compose UI，核心调用关系是：
+`绿友` 是一个传统 Android 多模块应用，技术项目标识仍为 `c001apk`。`app` 是可运行的主应用，三个本地 library module 负责图片预览及图片加载适配。主应用没有独立 Domain 层或 Compose UI，核心调用关系是：
 
 ```mermaid
 flowchart TD
