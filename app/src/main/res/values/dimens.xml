@@ -8,4 +8,8 @@
     <dimen name="miuix_floating_navigation_border_width">1dp</dimen>
     <dimen name="miuix_floating_navigation_item_inset_horizontal">4dp</dimen>
     <dimen name="miuix_floating_navigation_item_inset_vertical">4dp</dimen>
+    <dimen name="liquid_glass_navigation_outer_start">28dp</dimen>
+    <dimen name="liquid_glass_navigation_outer_end">16dp</dimen>
+    <dimen name="liquid_glass_navigation_search_gap">64dp</dimen>
+    <dimen name="liquid_glass_top_outer_padding">8dp</dimen>
 </resources>

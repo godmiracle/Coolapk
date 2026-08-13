@@ -46,7 +46,7 @@
 
 - Coolapk 线上 API 是否仍接受当前路径、Header、版本号、Token 和分页参数。
 - 密码登录、验证码、动态发布、图片 OSS 上传、应用下载和 APK 安装是否能在真实账号/设备上完整走通。
-- 所有页面在 Android 7 至当前系统、横屏、深色模式和低网速下的稳定性。
+- 所有页面在 Android 12 至当前系统、横屏、深色模式和低网速下的稳定性。
 - Release R8/资源压缩后反射、Data Binding、图片库和 WebView 是否仍无问题。
 
 ### 已知维护风险
@@ -80,7 +80,7 @@
 
 | 约束 | 现状 |
 |---|---|
-| 平台 | Android，`minSdk 24`，`target/compileSdk 34` |
+| 平台 | Android，`minSdk 31`（Android 12+），`target/compileSdk 34` |
 | 构建 | Kotlin 1.9.24、Java 17、AGP 8.5.1、Gradle Wrapper 8.14.5 |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64`；未启用 `x86`/`armeabi` |
 | UI | 继续沿用 XML + ViewBinding/Data Binding；没有证据表明要迁移 Compose |

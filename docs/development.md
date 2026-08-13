@@ -12,12 +12,12 @@
 | 项目 | 要求 |
 |---|---|
 | JDK | 项目 Java/Kotlin 编译目标为 17；CI 使用 JDK 17，本轮本地验证使用 Android Studio JDK 21 |
-| Android SDK | 项目声明 compile/target 34；本机当前 SDK Platform 为 36.1，需以实际构建结果确认兼容性；运行设备最低 Android 7.0 / API 24 |
+| Android SDK | 项目声明 compile/target 34；本机当前 SDK Platform 为 36.1，需以实际构建结果确认兼容性；运行设备最低 Android 12 / API 31 |
 | Gradle | 使用仓库 Wrapper 8.14.5；本机另有已校验的 Gradle 8.7 用户缓存 |
 | 网络 | 首次构建需要 Google Maven、Maven Central、JitPack、Sonatype |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64` |
 | 16 KB | `android-gif-drawable` 使用 1.2.32；AAB 构建应保持 `PAGE_ALIGNMENT_16K`，并在 16 KB 模拟器上做启动回归 |
-| 设备 | 建议至少准备一台 API 24+ 真机和一个当前 Android 模拟器 |
+| 设备 | 建议至少准备一台 API 31+ 真机和一个当前 Android 模拟器 |
 
 当前 `gradlew` 文件为非 executable 权限。可在本地执行一次 `chmod +x gradlew`，或者使用 `bash gradlew`；权限是否提交回仓库需由维护者另行决定。
 

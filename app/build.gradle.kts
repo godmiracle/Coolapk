@@ -103,7 +103,7 @@ android {
 
     defaultConfig {
         applicationId = "com.godmiracle.coolapk"
-        minSdk = 24
+        minSdk = 31
         targetSdk = 34
         versionCode = gitCommitCount
         versionName = gitCommitHash

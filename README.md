@@ -23,7 +23,7 @@
 
 ### 首页与内容浏览
 
-- 主导航包含首页、关注、我的三项页面，并在右侧提供搜索动作；竖屏底栏采用 Miuix 风格实色悬浮浮岛，滚动时隐藏、停止滚动后展示，关注页展示本地保存的话题/数码关注，“我的”提供本地收藏、浏览历史和设置入口，首页支持自定义 Tab。
+- 主导航包含首页、关注、我的三项页面，并在右侧提供搜索动作；竖屏底栏采用轻量原生液态玻璃浮岛，搜索使用右下角独立玻璃圆钮，滚动时隐藏、停止滚动后展示，关注页展示本地保存的话题/数码关注，“我的”提供本地收藏、浏览历史和设置入口，首页支持自定义 Tab。
 - 首页 Tab：关注、头条、热榜、话题、数码、酷图；首页不再提供应用列表入口，保持纯内容浏览。
 - 支持动态列表、动态详情、评论列表、楼中楼、投票、问答、文章/图文和酷图等内容形态。
 - 支持下拉刷新、分页加载、空数据、加载失败和“没有更多”等列表状态。
@@ -55,7 +55,7 @@
 | 类别 | 当前实现 |
 |---|---|
 | 语言与构建 | Kotlin 1.9.24、Java 17、Gradle Wrapper 8.14.5、Android Gradle Plugin 8.5.1 |
-| Android | `compileSdk/targetSdk 34`，`minSdk 24` |
+| Android | `compileSdk/targetSdk 34`，`minSdk 31`（Android 12+） |
 | UI | XML Layout、ViewBinding、Data Binding、Fragment、ViewPager2、RecyclerView、Material/Rikka Material；当前没有 Compose |
 | 状态与注入 | Android ViewModel、LiveData、Flow、协程、Hilt 2.51.1 |
 | 网络 | Retrofit 2.11、OkHttp 4.12、Gson；API1（首页/详情）、API2（评论等）和账号服务三组 Retrofit 客户端 |

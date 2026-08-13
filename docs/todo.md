@@ -35,12 +35,11 @@
   - 状态：已完成，会话、变更和技术决策已同步记录
   - 验收标准：记录本次用户目标、静态分析范围、未执行的验证和后续行动；不把推测写成已验证事实。
 
-- [ ] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
+- [x] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
-  - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、底栏主题资源
-  - 状态：已按 Miuix 参数和 iOS 酷安参考完成实色悬浮底栏与 Android 16 模拟器基础验收；滚动状态逻辑已改为滚动中隐藏、停止后展示；深色模式、主题色和完整滚动动画专项仍待完成
-  - 证据：底栏采用单独浮岛容器绘制 `surfaceContainer` 背景，内部 `BottomNavigationView` 透明；36dp 外侧留白、8dp 视觉底部间距、无额外阴影、1dp 白色细边、大圆角、低对比选中胶囊、28dp 图标和 12sp 标签。浮岛以 overlay 方式覆盖内容，`ViewPager2` 不再永久预留底栏高度；系统 inset 仍由浮岛 bottom margin 和列表自身安全区处理，底栏隐藏后内容可延伸到手势区上方。列表在 `SCROLL_STATE_DRAGGING`/`SCROLL_STATE_SETTLING` 时隐藏，在 `SCROLL_STATE_IDLE` 时展示。首页顶部仅保留关注、头条、热榜、话题、数码和酷图，应用 Tab 已移除；当前页面导航为首页/关注/我的，搜索作为右侧动作项启动 `SearchActivity`；原消息页不再作为主导航页面，横屏导航栏沿用同一导航菜单。最终包通过首页 → 关注 → 我的切换、底栏搜索启动和 UI 层级确认。Android Studio JDK 21 下 `:app:assembleDebug` 和 `:app:testDebugUnitTest` 均通过；`emulator-5554` 安装成功并冷启动成功。
-  - 滚动专项验收：最新 Debug APK 在 Pixel_10 模拟器上长滑进行中不包含 `bottomNavContainer`；上滑停止、下滑停止后均恢复为 `[95,2172][985,2340]`；`connectedDebugAndroidTest` 的 2 个测试通过。
+  - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/res/layout/fragment_home.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、`app/src/main/java/com/godmiracle/coolapk/ui/home/HomeFragment.kt`、`app/src/main/java/com/godmiracle/coolapk/view/LiquidGlassFrameLayout.kt`
+  - 状态：已完成液态玻璃代码落地、Android 17 模拟器验收和 Android 16 真机验收；竖屏为三项玻璃底栏 + 右下角独立搜索圆钮，首页顶部无搜索、仅保留 Tab/菜单玻璃区；滚动中隐藏、停止后展示、深色模式和搜索点击均已验证。应用最低基线已提升到 Android 12 / API 31，不再维护 Android 7–11。
+  - 证据：`LiquidGlassFrameLayout` 直接使用 `RenderEffect` 对指定背景 View 做模糊并保留前景控件清晰，不再包含旧系统半透明回退分支；应用层同步移除了 API 24–30 的状态栏、下载、版本号、Tooltip、图库保存和旧文件复制分支；竖屏通过 `nav_menu_portrait.xml` 移除底栏搜索菜单项，顶部布局不包含搜索控件，搜索由独立 `SearchActivity` 点击入口承载；横屏继续使用原 `NavigationRailView` 和四项菜单。Debug APK 构建成功并安装到 OPPO `PGEM10` 真机（Android 16 / API 36、arm64-v8a），`MainActivity` 冷启动状态为 `COLD/ok`；真机浅色/深色截图通过；首页真实动态长滑时底栏和搜索按钮移出屏幕，停止后恢复到 `[84,2112][1032,2304]`；点击搜索后当前 Activity 为 `SearchActivity`；最近 300 行真机日志未发现 `FATAL EXCEPTION` 或 `AndroidRuntime`。`:app:testDebugUnitTest` 共 22 个用例全部通过，`:app:lintDebug` 成功且未发现 `NewApi`/`UnsupportedApiCall`；本次清理后 APK 的 `minSdkVersion=31`，液态玻璃调用无需旧系统 API 守卫。
   - 验收标准：竖屏真机/模拟器确认浮岛不覆盖系统手势区，底栏隐藏后内容不被永久截短且末项仍可安全滚动到位，点击和入口行为与改动前一致；深色模式和主题色下保持可读性。
 
 - [x] UI-002 实现本地话题/数码关注聚合
@@ -64,7 +63,7 @@
   - 可信度：已确认当前未完成
   - 涉及文件：`docs/development.md`、登录/网络/动态/图片相关模块
   - 状态：等待人工验证
-  - 验收标准：在 Android 7+ 真机和当前 Android 设备各完成启动、登录、首页、动态、评论、发布、图片、搜索、消息、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图。
+  - 验收标准：在 Android 12+ 真机和当前 Android 设备各完成启动、登录、首页、动态、评论、发布、图片、搜索、消息、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图。
 
 - [ ] R-002 评估 Debug BODY 网络日志和凭据暴露
   - 优先级：高

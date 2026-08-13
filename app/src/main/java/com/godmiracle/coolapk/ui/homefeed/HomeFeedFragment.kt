@@ -3,7 +3,6 @@ package com.godmiracle.coolapk.ui.homefeed
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -154,8 +153,7 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
                 gravity = Gravity.BOTTOM or Gravity.END
                 behavior = fabViewBehavior
             }
-            if (SDK_INT >= 26)
-                tooltipText = getString(R.string.publishFeed)
+            tooltipText = getString(R.string.publishFeed)
             setOnClickListener {
                 if (PrefManager.SZLMID == "") {
                     Toast.makeText(requireContext(), SZLM_ID, Toast.LENGTH_SHORT).show()

@@ -22,6 +22,7 @@ import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ActivityCollector
 import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.PrefManager
+import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
@@ -41,6 +42,29 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
         ActivityCollector.addActivity(this)
 
         navView = binding.bottomNav as NavigationBarView
+
+        // 竖屏布局提供玻璃底栏，横屏布局继续使用原有 NavigationRailView。
+        val bottomNavSurface = binding.root.findViewById<LiquidGlassFrameLayout>(
+            R.id.bottomNavSurface
+        )
+        val searchActionSurface = binding.root.findViewById<LiquidGlassFrameLayout>(
+            R.id.searchActionSurface
+        )
+        bottomNavSurface?.apply {
+            setBackdropSource(binding.viewPager)
+            setBlurRadiusDp(18f)
+            setSurfaceAlpha(0.28f)
+            setCornerRadiusDp(30f)
+        }
+        searchActionSurface?.apply {
+            setBackdropSource(binding.viewPager)
+            setBlurRadiusDp(20f)
+            setSurfaceAlpha(0.32f)
+            setCornerRadiusDp(28f)
+            setOnClickListener {
+                IntentUtil.startActivity<SearchActivity>(this@MainActivity) {}
+            }
+        }
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
@@ -69,6 +93,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
+                    bottomNavSurface?.refreshBackdrop()
+                    searchActionSurface?.refreshBackdrop()
                     when (position) {
                         0 -> onBackPressedCallback.isEnabled = false
                         1 -> onBackPressedCallback.isEnabled = true

@@ -2,7 +2,6 @@ package com.godmiracle.coolapk.util
 
 import android.content.res.Resources
 import android.graphics.Color
-import android.os.Build
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -21,7 +20,7 @@ object UiUtils {
             window.decorView.systemUiVisibility =
                 window.decorView.systemUiVisibility or WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && needLightStatusBar) {
+            if (needLightStatusBar) {
                 window.decorView.systemUiVisibility = (
                         window.decorView.systemUiVisibility
                                 or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
@@ -29,11 +28,9 @@ object UiUtils {
             if ((window.decorView.rootWindowInsets?.systemWindowInsetBottom
                     ?: 0) >= Resources.getSystem().displayMetrics.density * 40
             ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    window.decorView.systemUiVisibility = (
-                            window.decorView.systemUiVisibility
-                                    or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
-                }
+                window.decorView.systemUiVisibility = (
+                        window.decorView.systemUiVisibility
+                                or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
             }
         }
         setSystemBarTransparent(window)

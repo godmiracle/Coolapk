@@ -1,6 +1,5 @@
 package com.godmiracle.coolapk.ui.base
 
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -62,8 +61,7 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
                 gravity = Gravity.BOTTOM or Gravity.END
                 behavior = fabBehavior
             }
-            if (SDK_INT >= 26)
-                tooltipText = getString(R.string.publishFeed)
+            tooltipText = getString(R.string.publishFeed)
         }
         // https://stackoverflow.com/questions/54062834/setonapplywindowinsetslistener-never-called
         ViewCompat.setOnApplyWindowInsetsListener(binding.collapsingToolbar, null)

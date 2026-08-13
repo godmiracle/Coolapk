@@ -27,6 +27,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(), IOnTabClickContainer {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.topGlassSurface.apply {
+            setBackdropSource(binding.viewPager)
+            setBlurRadiusDp(14f)
+            setSurfaceAlpha(0.24f)
+            setCornerRadiusDp(26f)
+        }
+
         initButton()
 
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {

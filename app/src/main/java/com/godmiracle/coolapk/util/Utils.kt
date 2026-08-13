@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
 import android.net.Uri
-import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import androidx.core.text.HtmlCompat
 import com.godmiracle.coolapk.MyApplication
@@ -32,10 +31,6 @@ object Utils {
             .setTitle(name)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
-        if (SDK_INT < 29) {
-            request.allowScanningByMediaScanner()
-            request.setVisibleInDownloadsUi(true)
-        }
         downloadManager.enqueue(request)
         ClipboardUtil.copyText(context, url, false)
     }

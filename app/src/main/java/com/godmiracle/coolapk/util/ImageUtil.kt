@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.text.TextUtils
@@ -32,8 +31,6 @@ import com.bumptech.glide.request.transition.Transition
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.constant.Constants.USER_AGENT
 import com.godmiracle.coolapk.util.ClipboardUtil.copyText
-import com.godmiracle.coolapk.util.FileUtil.copyFile
-import com.godmiracle.coolapk.util.FileUtil.createFileByDeleteOldFile
 import com.godmiracle.coolapk.view.FileTarget
 import com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
 import com.godmiracle.coolapk.view.ninegridimageview.indicator.CircleIndexIndicator
@@ -124,10 +121,7 @@ object ImageUtil {
                 val values = ContentValues().apply {
                     put(MediaStore.Images.Media.TITLE, image.name)
                     put(MediaStore.Images.Media.DESCRIPTION, image.name)
-                    // 在 Android 10 及更高版本，需要使用 MediaStore.Images.Media.RELATIVE_PATH
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures")
-                    }
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures")
                     put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg") // 根据实际情况设置 MIME 类型
                 }
                 // 将图像插入 MediaStore，并获取插入后的 URI
@@ -428,62 +422,46 @@ object ImageUtil {
     //from BigImageViewPager
     private fun save(context: Context, resource: File, fileName: String, isEnd: Boolean) {
         val mimeType = getImageTypeWithMime(resource.absolutePath)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // 大于等于29版本的保存方法
-            val resolver = context.contentResolver
-            // 设置文件参数到ContentValues中
-            val values = ContentValues()
-            values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            values.put(MediaStore.Images.Media.DESCRIPTION, fileName)
-            values.put(MediaStore.Images.Media.MIME_TYPE, "image/$mimeType")
-            values.put(
-                MediaStore.Images.Media.RELATIVE_PATH,
-                Environment.DIRECTORY_PICTURES + "/c001apk/"
-            )
-            val insertUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            var inputStream: BufferedInputStream? = null
-            var os: OutputStream? = null
-            try {
-                inputStream = BufferedInputStream(FileInputStream(resource.absolutePath))
-                os = insertUri?.let { resolver.openOutputStream(it) }
-                os?.let {
-                    val buffer = ByteArray(1024 * 4)
-                    var len: Int
-                    while (inputStream.read(buffer).also { len = it } != -1) {
-                        os.write(buffer, 0, len)
-                    }
-                    os.flush()
+        val resolver = context.contentResolver
+        // 设置文件参数到ContentValues中
+        val values = ContentValues()
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+        values.put(MediaStore.Images.Media.DESCRIPTION, fileName)
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/$mimeType")
+        values.put(
+            MediaStore.Images.Media.RELATIVE_PATH,
+            Environment.DIRECTORY_PICTURES + "/c001apk/"
+        )
+        val insertUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        var inputStream: BufferedInputStream? = null
+        var os: OutputStream? = null
+        try {
+            inputStream = BufferedInputStream(FileInputStream(resource.absolutePath))
+            os = insertUri?.let { resolver.openOutputStream(it) }
+            os?.let {
+                val buffer = ByteArray(1024 * 4)
+                var len: Int
+                while (inputStream.read(buffer).also { len = it } != -1) {
+                    os.write(buffer, 0, len)
                 }
-                if (isEnd)
-                    Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show()
+                os.flush()
+            }
+            if (isEnd)
+                Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            if (isEnd)
+                Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()
+        } finally {
+            try {
+                os?.close()
             } catch (e: IOException) {
                 e.printStackTrace()
-                if (isEnd)
-                    Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()
-            } finally {
-                try {
-                    os?.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-                try {
-                    inputStream?.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
             }
-        } else {
-            // 低于29版本的保存方法
-            val path = Environment.getExternalStorageDirectory()
-                .toString() + "/c001apk/"
-            createFileByDeleteOldFile(path + filename)
-            val result = copyFile(resource, path, filename)
-            if (result) {
-                if (isEnd)
-                    Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show()
-            } else {
-                if (isEnd)
-                    Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()
+            try {
+                inputStream?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
         }
     }

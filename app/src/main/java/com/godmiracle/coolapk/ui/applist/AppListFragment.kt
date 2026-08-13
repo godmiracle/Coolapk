@@ -1,6 +1,5 @@
 package com.godmiracle.coolapk.ui.applist
 
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -87,8 +86,7 @@ class AppListFragment : BaseViewFragment<AppListViewModel>(), IOnTabClickListene
     private fun initFab() {
         fab.apply {
             setImageResource(R.drawable.ic_update)
-            if (SDK_INT >= 26)
-                tooltipText = getString(R.string.update)
+            tooltipText = getString(R.string.update)
             layoutParams = CoordinatorLayout.LayoutParams(
                 CoordinatorLayout.LayoutParams.WRAP_CONTENT,
                 CoordinatorLayout.LayoutParams.WRAP_CONTENT

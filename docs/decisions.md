@@ -388,3 +388,48 @@ GIF 播放能力保留，但新版本不再暴露旧的 protected bitmap 生命�
 ### 验证
 
 在 Android Studio JDK 21、Pixel_10（Android 17）上，`:app:testDebugUnitTest` 14 个用例、`:app:lintDebug`、`:app:compileDebugAndroidTestKotlin` 和 `:app:connectedDebugAndroidTest` 10 个用例全部通过。Instrumentation 覆盖 5 个 Room migration tests、2 个凭证迁移/备份规则 tests、1 个跨进程 WebView 生命周期 test，以及既有示例/GIF native tests。未验证 Release 签名、真实设备、真实账号和完整线上业务路径。
+
+## 2026-08-13 - 竖屏主界面改为原生液态玻璃层
+
+### 决定
+
+- 参考 [BiliPai](https://github.com/jay3-yy/BiliPai) 的玻璃材质方向，在现有 XML/ViewBinding 架构内新增 `LiquidGlassFrameLayout`，不引入 Compose 或新的 UI 框架。
+- 应用最低基线为 Android 12 / API 31，直接通过 `RenderEffect` 模糊指定的 `ViewPager2` 背景，玻璃容器内部的 Tab、导航文字和图标保持清晰；不再维护 Android 7–11 兼容回退。
+- 竖屏底部拆成“三项玻璃导航条 + 右下角独立玻璃搜索圆钮”，顶部搜索入口不再增加；横屏继续使用原有 `NavigationRailView` 和四项菜单，避免改变横屏布局边界。
+- 首页顶部只给 Tab 和编辑菜单增加玻璃容器，不新增业务标题或假搜索框。
+
+### 原因
+
+用户明确不需要顶部搜索，并希望沿用已有右下角搜索动作。当前项目以 XML/ViewBinding 为主，液态玻璃效果应集中在一个可复用原生容器中，避免为局部视觉改造迁移整套 Compose 依赖；既然维护范围限定为 Android 12+，无需继续保留旧系统降级实现。
+
+### 影响
+
+主导航的页面切换、搜索 Activity、滚动隐藏/停止后展示、系统 inset 和横屏导航逻辑保持原有边界。玻璃背景需要在内容滚动和 ViewPager 页面切换时刷新；Android 12+ 直接执行背景 View 重绘和模糊，仍需通过真实设备观察帧率和功耗。应用层同时移除了 API 24–30 的状态栏、下载、版本号、Tooltip 和旧图库保存分支。
+
+### 验证
+
+已通过变更布局的 `xmllint` 检查、`aapt2` 资源编译和 `LiquidGlassFrameLayout` 的 Android SDK 独立 Kotlin 编译。初次 Gradle 尝试曾因本地 socket 权限被拦截；随后已使用 Android Studio JDK 21 完成 APK 重建、安装、冷启动和 Android 16 真机视觉回归。
+
+## 2026-08-13 - 液态玻璃界面设备验收
+
+### 验证
+
+- 使用 Android Studio JDK 21、Gradle Wrapper 8.14.5 和项目现有离线依赖缓存执行 `:app:assembleDebug :app:testDebugUnitTest --offline --max-workers=1`，构建成功；6 个测试套件共 22 个用例，0 failures、0 errors、0 skipped。
+- 新 APK 已安装到 `emulator-5554`；设备为 Android 17 / API 37.1、16 KB page size。`MainActivity` 冷启动返回 `Status: ok`、`LaunchState: COLD`。
+- 浅色截图确认顶部 Tab 玻璃区、三项底栏和右下角搜索圆钮存在；切换深色模式后重启，顶部文字、选中态、边缘高光、导航图标和搜索按钮仍保持可读，随后已恢复浅色模式。
+- 在真实动态列表上执行持续长滑时，底栏和搜索按钮移出屏幕；停止滚动约 2 秒后底栏恢复，UI 层级边界为 `[74,2172][1038,2340]`。点击右下角搜索后，当前 Activity 确认为 `com.godmiracle.coolapk/.ui.search.SearchActivity`。
+
+### Android 12+ 平台边界
+
+APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` 和 `setRenderEffect`，不再包含 Android 7–11 的 API 守卫或半透明回退路径。`:app:lintDebug` 成功，报告中未出现 `NewApi` 或 `UnsupportedApiCall`；Android 16 / API 36 OPPO `PGEM10` 真机已完成安装、冷启动和液态玻璃界面回归。Android 7–11 已明确移出维护范围，不再安排旧系统构建或视觉验收。
+
+## 2026-08-13 - Android 16 真机验收
+
+### 验证
+
+- 真机型号为 OPPO `PGEM10`，Android 16 / API 36，`arm64-v8a`；最新 Debug APK 安装成功。
+- `MainActivity` 冷启动返回 `Status: ok`、`LaunchState: COLD`，最终 Activity 仍为 `MainActivity`；最近 300 行真机日志未发现 `FATAL EXCEPTION` 或 `AndroidRuntime`。
+- 真机浅色截图确认顶部玻璃 Tab 区、三项玻璃底栏和右下角独立搜索圆钮正常渲染；UI 层级确认 `topGlassSurface`、`bottomNavSurface`、`searchActionSurface` 及首页/关注/我的三个入口均存在。
+- 真机深色模式重启后，顶部玻璃区、底栏边缘高光、选中态、文字、图标和搜索圆钮保持可读；随后已恢复浅色模式。
+- 点击右下角搜索按钮后，当前 Activity 确认为 `com.godmiracle.coolapk/.ui.search.SearchActivity`。
+- 首页真实动态列表持续长滑期间，截图中底栏和搜索按钮均隐藏；停止滚动后恢复，UI 层级边界为 `[84,2112][1032,2304]`。

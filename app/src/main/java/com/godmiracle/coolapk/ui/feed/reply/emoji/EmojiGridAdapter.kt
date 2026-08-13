@@ -1,7 +1,6 @@
 package com.godmiracle.coolapk.ui.feed.reply.emoji
 
 import android.annotation.SuppressLint
-import android.os.Build.VERSION.SDK_INT
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -40,15 +39,13 @@ class EmojiGridAdapter(
             imageView.setImageResource(emoji?.second ?: R.drawable.ic_backspace)
             emoji?.first?.let {
                 view.background = parent.context.getDrawable(R.drawable.selector_emoji)
-                if (SDK_INT >= 26)
-                    view.tooltipText = it.substring(1, it.lastIndex)
+                view.tooltipText = it.substring(1, it.lastIndex)
             }
             view.setOnClickListener {
                 onClickEmoji(emoji?.first ?: "[c001apk]")
             }
             if (position == 27) {
-                if (SDK_INT >= 26)
-                    view.tooltipText = null
+                view.tooltipText = null
                 view.setOnLongClickListener {
                     onCountStart()
                     false

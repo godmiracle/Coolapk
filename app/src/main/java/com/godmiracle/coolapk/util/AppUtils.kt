@@ -8,7 +8,6 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 
 
 @Suppress("DEPRECATION")
@@ -132,12 +131,7 @@ object AppUtils {
     fun getAppVersionCode(context: Context, packageName: String): Long {
         return try {
             val info = context.packageManager.getPackageInfo(packageName, 0)
-            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                info.longVersionCode
-            } else {
-                info.versionCode.toLong()
-            }
-            versionCode
+            info.longVersionCode
         } catch (e: Exception) {
             -1
         }

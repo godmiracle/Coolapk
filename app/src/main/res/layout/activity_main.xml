@@ -14,38 +14,71 @@
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:layout_marginStart="@dimen/miuix_floating_navigation_outer_padding"
-        android:layout_marginEnd="@dimen/miuix_floating_navigation_outer_padding"
+        android:layout_marginStart="@dimen/liquid_glass_navigation_outer_start"
+        android:layout_marginEnd="@dimen/liquid_glass_navigation_outer_end"
         android:layout_marginBottom="@dimen/miuix_floating_navigation_bottom_padding"
-        android:background="@drawable/bg_miuix_floating_navigation"
+        android:background="@android:color/transparent"
         android:elevation="0dp"
         app:layout_anchor="@id/viewPager"
         app:layout_anchorGravity="bottom">
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNav"
+        <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+            android:id="@+id/bottomNavSurface"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/liquid_glass_navigation_search_gap"
             android:background="@android:color/transparent"
-            android:elevation="0dp"
-            android:minHeight="0dp"
-            android:paddingStart="@dimen/miuix_floating_navigation_inner_padding"
-            android:paddingEnd="@dimen/miuix_floating_navigation_inner_padding"
-            android:stateListAnimator="@null"
-            app:itemActiveIndicatorStyle="@style/MiuixFloatingNavigationActiveIndicator"
-            app:itemBackground="@drawable/bg_miuix_floating_navigation_item"
-            app:itemHorizontalTranslationEnabled="false"
-            app:itemIconSize="28dp"
-            app:itemIconTint="@color/miuix_floating_navigation_item_tint"
-            app:itemPaddingBottom="4dp"
-            app:itemPaddingTop="4dp"
-            app:itemRippleColor="@color/miuix_floating_navigation_ripple"
-            app:itemTextColor="@color/miuix_floating_navigation_item_tint"
-            app:itemTextAppearanceActive="@style/MiuixFloatingNavigationLabelActive"
-            app:itemTextAppearanceActiveBoldEnabled="false"
-            app:itemTextAppearanceInactive="@style/MiuixFloatingNavigationLabelInactive"
-            app:labelVisibilityMode="labeled"
-            app:menu="@menu/nav_menu" />
+            android:elevation="0dp">
+
+            <com.google.android.material.bottomnavigation.BottomNavigationView
+                android:id="@+id/bottomNav"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:elevation="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="@dimen/miuix_floating_navigation_inner_padding"
+                android:paddingEnd="@dimen/miuix_floating_navigation_inner_padding"
+                android:stateListAnimator="@null"
+                app:itemActiveIndicatorStyle="@style/MiuixFloatingNavigationActiveIndicator"
+                app:itemBackground="@drawable/bg_miuix_floating_navigation_item"
+                app:itemHorizontalTranslationEnabled="false"
+                app:itemIconSize="28dp"
+                app:itemIconTint="@color/miuix_floating_navigation_item_tint"
+                app:itemPaddingBottom="4dp"
+                app:itemPaddingTop="4dp"
+                app:itemRippleColor="@color/miuix_floating_navigation_ripple"
+                app:itemTextColor="@color/miuix_floating_navigation_item_tint"
+                app:itemTextAppearanceActive="@style/MiuixFloatingNavigationLabelActive"
+                app:itemTextAppearanceActiveBoldEnabled="false"
+                app:itemTextAppearanceInactive="@style/MiuixFloatingNavigationLabelInactive"
+                app:labelVisibilityMode="labeled"
+                app:menu="@menu/nav_menu_portrait" />
+
+        </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
+
+        <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+            android:id="@+id/searchActionSurface"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end|center_vertical"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:contentDescription="@string/search"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:elevation="0dp">
+
+            <ImageView
+                android:id="@+id/searchActionIcon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/search"
+                android:src="@drawable/ic_search"
+                android:tint="?attr/colorOnSurface" />
+
+        </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
 
     </FrameLayout>
 
