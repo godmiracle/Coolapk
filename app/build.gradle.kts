@@ -113,6 +113,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
+    }
+
     val releaseSigningConfig = releaseKeystorePath?.let {
         signingConfigs.create("release") {
             storeFile = file(it)
@@ -182,6 +188,7 @@ configurations.configureEach {
 dependencies {
     androidTestImplementation(libs.androidx.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.android.gif.drawable)
     debugImplementation(libs.leakcanary.android)
     implementation(libs.androidx.appcompat)
@@ -220,6 +227,8 @@ dependencies {
     implementation(libs.jbcrypt)
     implementation(libs.jsoup)
     testImplementation(libs.junit)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
     implementation(libs.oss.android.sdk)
     implementation(libs.utilcode)
 

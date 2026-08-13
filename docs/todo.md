@@ -2,6 +2,25 @@
 
 状态约定：只有代码或文档实际修改、验收标准满足并完成必要验证后，才将 `[ ]` 改为 `[x]`。无法在当前环境验证的事项保持未完成，并标注“等待人工验证”。
 
+## 2026-08-13 本次 Code Review 优先问题
+
+- [x] CR-001 修复 Room 迁移丢数据风险
+  - `FeedFavoriteDatabase` 升至 v3，覆盖历史 v1/v2 到当前 `FeedEntity` 的数据迁移；`HomeMenu`、`RecentAtUser` 迁移改为复制数据后换表。
+  - 已增加历史 schema fixture 和 5 个 Android migration tests；Pixel_10（Android 17）通过。
+- [x] CR-002 收紧带凭证请求的 Host 边界
+  - 仅向 `api.coolapk.com`、`api2.coolapk.com`、`account.coolapk.com` 的 HTTPS 请求添加/保留敏感 Header；外部 `@Url` 和跨 Host 重定向会清理凭证。
+  - `NetworkEndpointsTest` 覆盖全部策略 Header、外部 Host 和非 HTTPS 请求。
+- [x] CR-003 隔离接口/设备凭证并阻止备份外泄
+  - `xAppToken`、`xAppDevice`、会话身份和设备请求状态迁移到 `credentials.xml`；旧 `settings` 键幂等迁移并清理，普通 UI 偏好保留。
+  - `backup_rules.xml` 与 `data_extraction_rules.xml` 均排除 `credentials.xml`；迁移重复执行和规则覆盖测试通过。
+- [x] CR-004 移除 WebView 销毁时的进程退出
+  - `WebViewActivity.onDestroy()` 只释放 WebView 资源；真实跨 `:webview` 进程启动、返回销毁、再次启动测试通过。
+- [x] CR-005 修复 NetworkRepo 的取消与 HTTP 错误语义
+  - Retrofit `Call` 使用可取消挂起适配器；非 2xx、必需空 body、传输失败分别返回明确失败，`CancellationException` 继续传播；下载 302 仅作为显式 `Location` 场景保留。
+  - 6 个 fake-Call 单元测试覆盖成功、空 body、401/403/500、传输失败、取消和重定向。
+
+本轮未处理手工分页/Paging 3 重构、旧网络封装删除、Release 签名、真实账号和完整业务流程；这些仍按下方待办管理。
+
 ## 本次文档整理
 
 - [x] D-001 补全项目上下文、架构、API 和开发文档
@@ -59,8 +78,8 @@
   - 优先级：高
   - 可信度：已确认
   - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt`
-  - 状态：待处理
-  - 证据：`settings` 偏好保存 `token`、用户信息、`xAppDevice`、User-Agent 等值。
+  - 状态：已完成凭证与普通设置隔离、旧键迁移和备份排除；当前仍使用普通 `SharedPreferences`，加密存储不在本次 change 范围内
+  - 证据：`credentials.xml` 保存 API/会话/设备请求状态，首次访问时从旧 `settings` 幂等迁移并清理敏感键；云备份和设备迁移均排除该文件，主题/字体等普通设置仍保留。
   - 验收标准：明确个人学习包与发布包的安全边界；如继续保存，至少完成威胁评估和清除/退出登录验证；如改用加密存储，完成旧值迁移和异常回退测试。
 
 - [ ] R-004 评估 Manifest 广泛权限和明文流量开关

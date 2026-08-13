@@ -38,7 +38,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import java.net.URISyntaxException
 import java.net.URLDecoder
-import kotlin.system.exitProcess
 
 
 class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
@@ -346,7 +345,6 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
             e.printStackTrace()
         }
         super.onDestroy()
-        exitProcess(0)
     }
 
 }

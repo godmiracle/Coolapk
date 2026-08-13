@@ -5,18 +5,13 @@ import com.godmiracle.coolapk.di.Api1Service
 import com.godmiracle.coolapk.di.Api1ServiceNoRedirect
 import com.godmiracle.coolapk.di.Api2Service
 import com.godmiracle.coolapk.logic.network.ApiService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okhttp3.MultipartBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class NetworkRepo @Inject constructor(
@@ -108,7 +103,8 @@ class NetworkRepo @Inject constructor(
     }
 
     suspend fun getAppDownloadLink(pn: String, aid: String, vc: String) = fire {
-        val appResponse = apiServiceNoRedirect.getAppDownloadLink(pn, aid, vc).response()
+        val appResponse = apiServiceNoRedirect.getAppDownloadLink(pn, aid, vc)
+            .response(requireBody = false, allowRedirects = true)
         Result.success(appResponse.headers()["Location"])
     }
 
@@ -261,46 +257,33 @@ class NetworkRepo @Inject constructor(
         Result.success(apiService.checkCount().await())
     }
 
-    private suspend fun <T> Call<T>.await(): T {
-        return suspendCoroutine { continuation ->
-            enqueue(object : Callback<T> {
-                override fun onResponse(call: Call<T>, response: Response<T>) {
-                    val body = response.body()
-                    if (body != null) continuation.resume(body)
-                    else continuation.resumeWithException(
-                        RuntimeException("response body is null")
-                    )
-                }
-
-                override fun onFailure(call: Call<T>, t: Throwable) {
-                    continuation.resumeWithException(t)
-                }
-            })
-        }
-    }
-
-    private suspend fun <T> Call<T>.response(): Response<T> {
-        return suspendCoroutine { continuation ->
-            enqueue(object : Callback<T> {
-                override fun onResponse(call: Call<T>, response: Response<T>) {
-                    continuation.resume(response)
-                }
-
-                override fun onFailure(call: Call<T>, t: Throwable) {
-                    continuation.resumeWithException(t)
-                }
-            })
-        }
-    }
-
     private fun <T> fire(block: suspend () -> Result<T>) =
         flow {
             val result = try {
                 block()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Result.failure(e)
+                Result.failure(e.originalTransportFailure())
             }
             emit(result)
         }.flowOn(Dispatchers.IO)
+
+    /**
+     * kotlinx.coroutines may recover a throwable across a suspension boundary by creating a
+     * same-type copy whose cause is the original throwable. Keep the transport instance in the
+     * repository result so callers retain both identity and the original diagnostic trace.
+     */
+    private fun Throwable.originalTransportFailure(): Throwable {
+        val originalCause = cause ?: return this
+        return if (
+            originalCause.javaClass == javaClass &&
+            stackTrace.any { it.className.startsWith("_COROUTINE.") }
+        ) {
+            originalCause
+        } else {
+            this
+        }
+    }
 
 }

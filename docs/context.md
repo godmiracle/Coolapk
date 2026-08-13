@@ -3,11 +3,11 @@
 ## 文档基线
 
 - 项目：`c001apk`
-- 分析日期：2026-08-11
+- 分析日期：2026-08-13
 - 当前分支：`main`
-- 当前源码基线：`becc810a12c509b4244b0be47bc9457bea0da088`（短哈希 `becc810`）
-- 源码提交时间：2024-05-08 11:55:34 +08:00
-- 工作区状态：源码基线未见已跟踪修改；`AGENTS.md`、`docs/`、`rasen/`、`scripts/`、`src/` 和 `README_副本.md` 当前为未跟踪内容，应在提交前由维护者决定是否纳入版本库。
+- 当前 Git HEAD：`d41d41d23f001d85a567a9b75dacbe5949d945ce`（短哈希 `d41d41d`）；S-09 change 的实现、测试和 fixture 仍以当前工作树为准。
+- 源码提交时间：2026-08-12 17:11:51 +08:00
+- 工作区状态：当前包含该 change 的未提交代码、测试、fixture、文档和 Rasen 流程文件；本轮 docs fixer 只修改本文件及另外三份指定文档，不将工作区视为干净基线。
 
 ## 项目定位
 
@@ -35,9 +35,11 @@
 
 - 主应用模块、三个本地图片相关 library module 和 Gradle 多模块配置存在。
 - 主导航页面为首页、关注、我的，右侧搜索项启动独立搜索页；关注页是本地话题/数码关注聚合，“我的”包含本地收藏、浏览历史和设置入口，首页 Tab 可通过 Room 配置。
-- 当前 ViewModel 普遍注入 `logic.repository.NetworkRepo`，网络主链路使用 Hilt 提供的三组 Retrofit 服务。
+- 当前 ViewModel 普遍注入 `logic.repository.NetworkRepo`，网络主链路使用 Hilt 提供的 API1、API2 和 Account Retrofit 服务；`NetworkRepo` 通过可取消的 Call adapter 处理响应、错误和协程取消。
 - 本地数据包括话题/数码关注、浏览历史、动态收藏、首页菜单、搜索历史、最近 @用户、最近表情、用户黑名单和话题黑名单。
+- `DatabaseModule` 对 `FeedFavorite`、`HomeMenu`、`RecentAtUser`、`LocalFollow` 和四类 `StringEntity` 数据库保留兼容数据的前向迁移；`DatabaseMigrationTest` 使用 `app/src/androidTest/assets/room-migration-fixtures/` 中的自包含历史 fixture 验证关键行和 Room identity。
 - Manifest 包含主入口、Coolapk/自定义 Scheme 深链、WebView 独立进程、FileProvider、网络状态和已安装应用查询权限；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
+- API1、API2 和 Account 客户端均在最终网络发送边界检查 HTTPS 与三个受信任 Host；不可信 `@Url`/重定向会清理凭证，Account 的不可信请求不会消费登录步骤 flag。`WebViewActivity` 销毁时只释放资源，不主动结束进程。
 - GitHub Actions 当前只构建 Release 和 Debug APK，并上传 APK/Mapping，没有运行业务测试或 lint。
 
 ### 源码覆盖但尚未证明
@@ -51,12 +53,12 @@
 
 - `logic/network/Network.kt` 与 `logic/network/Repository.kt` 保留了一套非 Hilt 的旧网络封装；当前 ViewModel 调用的是 `logic/repository/NetworkRepo.kt`，两套代码存在重复漂移风险。
 - `ApiServiceCreator.kt` 只被旧 `Network.kt` 使用，API URL、OkHttp Client 和 Retrofit 配置在两处重复维护。
-- API Base URL 已由 `NetworkEndpoints` 集中维护并统一以 `/` 结尾；构建、单元测试、首页和动态详情 Activity 启动验证已完成。
+- API Base URL 已由 `NetworkEndpoints` 集中维护并统一以 `/` 结尾；API1、API2 和 Account 的敏感请求由 HTTPS + trusted-host 边界统一保护。历史会话记录包含构建、单元测试和首页/动态详情启动证据，但本次文档同步未重跑这些验证。
 - Debug 网络 BODY 日志默认关闭；显式开启时由 `NetworkLogging` 脱敏，请求本身仍会携带 Cookie/Token/设备参数。
-- 登录信息和设备/请求参数由普通 `SharedPreferences` 保存，未见加密存储。
+- 登录信息、接口 Token、设备身份和请求参数已从普通 UI 设置隔离到 `credentials.xml`；`backup_rules.xml` 与 `data_extraction_rules.xml` 排除该文件。当前仍是普通（未加密）SharedPreferences，隔离和备份排除不等于加密存储。
 - `usesCleartextTraffic` 已关闭；`QUERY_ALL_PACKAGES` 因应用列表/更新检查仍保留，发布或分发前需要继续评估其隐私披露和渠道要求。
 - 自定义 Token 设置项在 `PrefManager`/设置界面中存在；当前仅在开关开启且值非空时覆盖自动生成 Token，真实自定义 Token 联调仍待人工验证。
-- 自动化测试仍是模板示例，不能证明业务功能。
+- 自动化测试已包含 Room 迁移、请求 Host 边界、凭证迁移/备份、网络取消/HTTP 错误和 WebView 生命周期回归；它们仍不能替代真实账号、真实设备、实时 API 或完整业务验收。
 
 ## 范围与非目标
 
@@ -85,7 +87,7 @@
 | 服务端 | 依赖 `api.coolapk.com`、`api2.coolapk.com`、`account.coolapk.com` 和相关图片/OSS 地址 |
 | 账号 | 只允许使用个人账号；Cookie、Token、密码、验证码和上传 STS 凭据不得进入仓库或共享日志 |
 | 发布 | Release 密钥从未提交的 `local.properties` 读取；缺省回退 Debug 签名 |
-| 网络 | Manifest 明确允许明文流量，具体实际请求仍由各 URL 和 WebView 行为决定 |
+| 网络 | Manifest 关闭明文流量；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径先升级为 HTTPS；带凭证客户端只保留三个 Coolapk HTTPS Host |
 | 16 KB 页面大小 | Debug APK 的 native 库已通过 16 KB 对齐校验；Debug AAB 已声明 `PAGE_ALIGNMENT_16K`，16 KB 模拟器冷启动和 GIF 原生加载回归通过 |
 | 法律/许可 | 根目录包含 AGPL-3.0 文本；第三方代码、图片、字体和上游库需要单独核对许可证 |
 
@@ -97,10 +99,13 @@
 | `app/src/main/AndroidManifest.xml` | 权限、入口 Activity、深链、WebView 进程和 FileProvider |
 | `app/src/main/java/com/godmiracle/coolapk/MyApplication.kt` | Hilt 应用入口、主题初始化、Mojito 初始化、未捕获异常处理 |
 | `app/src/main/java/com/godmiracle/coolapk/di/NetworkModule.kt` | Hilt Retrofit/OkHttp 服务和请求拦截器 |
+| `app/src/main/java/com/godmiracle/coolapk/logic/network/NetworkEndpoints.kt` | API Base URL、trusted-host 判断和凭证清理策略 |
 | `app/src/main/java/com/godmiracle/coolapk/logic/network/ApiService.kt` | Retrofit 请求定义 |
 | `app/src/main/java/com/godmiracle/coolapk/logic/repository/NetworkRepo.kt` | 当前 ViewModel 使用的网络 Repository |
+| `app/src/main/java/com/godmiracle/coolapk/logic/repository/NetworkCallAdapter.kt` | Retrofit Call 的取消、HTTP、空 body 和异常适配 |
 | `app/src/main/java/com/godmiracle/coolapk/logic/dao/`、`logic/database/` | Room DAO、数据库和迁移 |
-| `app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt` | 设置、登录摘要、设备参数和请求版本信息 |
+| `app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt` | 普通 UI 设置与 `credentials.xml` 中的登录/设备请求状态 |
+| `app/src/main/java/com/godmiracle/coolapk/util/CredentialPreferencesMigration.kt` | 旧 `settings.xml` 敏感键到凭证文件的幂等迁移 |
 | `app/src/main/java/com/godmiracle/coolapk/util/NetWorkUtil.kt` | 外部链接标准化和内部页面路由 |
 | `app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt` | 首页/关注/我的主导航和搜索动作 |
 | `app/src/main/java/com/godmiracle/coolapk/ui/feed/` | 动态详情、评论、投票、回复和图片发布 |
@@ -109,6 +114,6 @@
 
 ## 运行环境记录
 
-本次分析环境：macOS、工作目录 `/Users/v/ABP/Coolapk`、日期 2026-08-12。已确认 Android Studio JDK 21.0.10、SDK Platform 36.1 和 Wrapper Gradle 8.14.5。为修复 Android 16 16 KB 模拟器报告的 GIF native RELRO 未对齐，`SketchImageViewLoader` 已使用 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，AGP 已升至 8.5.1；旧 GIF 依赖提供的 Sketch 私有 bitmap hook 不再使用。Debug APK/AAB 均成功生成，APK `zipalign -P 16` 校验通过，AAB 配置为 `PAGE_ALIGNMENT_16K`；本地 Debug 单元测试 6 个用例和设备 instrumentation tests 2 个用例全部通过。`emulator-5554`（`PAGE_SIZE=16384`）已完成 APK/Bundle 安装、冷启动和 GIF 原生加载验证，未出现 16 KB 兼容性对话框；尚未完成 Release 签名、真实设备和完整业务验收。
+本次分析环境：macOS、工作目录 `/Users/v/ABP/Coolapk`、日期 2026-08-13。仓库已有的历史记录包含 Android Studio JDK 21.0.10、SDK Platform 36.1、Wrapper Gradle 8.14.5、16 KB 模拟器和 Debug 构建证据；这些记录不是本轮文档同步重新执行的结果。当前源码静态计数为 22 个 JVM `@Test` 方法和 21 个 instrumentation `@Test` 方法；本轮未运行 Gradle、设备测试或实时 API，因此不把该计数写成“通过”，也不把历史记录中的 14/10 用例结果当作当前工作树的执行证据。Release 签名、真实设备、真实账号、实时 API 长期稳定性和完整业务验收仍未完成。
 
 后续每次真实验收应记录：Android 版本、设备型号、ABI、网络类型、是否登录、应用构建哈希、服务端响应状态和截图/日志位置。

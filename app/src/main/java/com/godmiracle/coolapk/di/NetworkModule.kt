@@ -1,6 +1,7 @@
 package com.godmiracle.coolapk.di
 
 import com.godmiracle.coolapk.logic.network.ApiService
+import com.godmiracle.coolapk.logic.network.NetworkCredentialBoundaryInterceptor
 import com.godmiracle.coolapk.logic.network.NetworkEndpoints
 import com.godmiracle.coolapk.logic.network.NetworkLogging
 import com.godmiracle.coolapk.util.AddCookiesInterceptor
@@ -9,6 +10,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -111,31 +113,56 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(AddCookiesInterceptor)
-            .addInterceptor(NetworkLogging.createInterceptor())
-            .followRedirects(true)
-            .build()
+        return buildApiOkHttpClient(
+            credentialInterceptor = AddCookiesInterceptor,
+            loggingInterceptor = NetworkLogging.createInterceptor(),
+            followRedirects = true
+        )
     }
 
     @Api1ServiceNoRedirect
     @Singleton
     @Provides
     fun provideNoOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(AddCookiesInterceptor)
-            .addInterceptor(NetworkLogging.createInterceptor())
-            .followRedirects(false)
-            .build()
+        return buildApiOkHttpClient(
+            credentialInterceptor = AddCookiesInterceptor,
+            loggingInterceptor = NetworkLogging.createInterceptor(),
+            followRedirects = false
+        )
     }
 
     @AccountService
     @Singleton
     @Provides
     fun provideAccountServiceOkHttpClient(): OkHttpClient {
+        return buildAccountOkHttpClient(
+            loginInterceptor = LoginCookiesInterceptor,
+            loggingInterceptor = NetworkLogging.createInterceptor()
+        )
+    }
+
+    internal fun buildApiOkHttpClient(
+        credentialInterceptor: Interceptor,
+        loggingInterceptor: Interceptor,
+        followRedirects: Boolean
+    ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(LoginCookiesInterceptor)
-            .addInterceptor(NetworkLogging.createInterceptor())
+            .addNetworkInterceptor(credentialInterceptor)
+            .addNetworkInterceptor(loggingInterceptor)
+            .addNetworkInterceptor(NetworkCredentialBoundaryInterceptor)
+            .followRedirects(followRedirects)
+            .build()
+    }
+
+    internal fun buildAccountOkHttpClient(
+        loginInterceptor: Interceptor,
+        loggingInterceptor: Interceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(loginInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .addNetworkInterceptor(NetworkCredentialBoundaryInterceptor)
+            .followRedirects(true)
             .build()
     }
 

@@ -88,8 +88,8 @@ KEY_PASSWORD=本地别名密码
 项目没有 `.env` 或服务端配置文件。当前运行参数主要来自：
 
 - `Constants.kt` 的默认应用/接口版本和请求标识。
-- `PrefManager` 的 `settings` SharedPreferences。
-- 设置页面的主题、字体、设备参数、`SZLMID`、User-Agent 和 URL 打开方式。
+- `PrefManager` 的 `settings.xml`（普通 UI/API 版本设置）和 `credentials.xml`（登录、Token、设备身份及请求状态）。
+- 设置页面的主题、字体、URL 打开方式，以及受控的设备/请求参数；首次访问时旧 `settings.xml` 敏感键会幂等迁移到 `credentials.xml`。
 - `local.properties` 的 Release 签名配置。
 
 第一次运行时，主界面会请求应用信息并尝试检查登录状态。外部 API 不可达时，页面可能出现加载失败、空列表或登录失效；这不应直接判断为编译问题。
@@ -99,6 +99,9 @@ KEY_PASSWORD=本地别名密码
 - `NetworkLogging` 默认将 OkHttp 日志级别设为 `NONE`，Release 永远不会启用 BODY。
 - 个人 Debug 调试可使用 `-PenableHttpBodyLogging=true` 显式开启 BODY；Cookie、Authorization、设备/应用 Token、密码、验证码和 STS 等字段仍会输出为 `[REDACTED]`。
 - Manifest 已关闭 `usesCleartextTraffic`；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径会先升级为 HTTPS。
+- API1、API2、Account 以及 API1 no-redirect 客户端均在最终网络发送处执行 HTTPS + trusted-host 检查；只有 `api.coolapk.com`、`api2.coolapk.com`、`account.coolapk.com` 保留 Token、Cookie、设备和应用身份 Header。外部 `@Url`、非 HTTPS 请求和跨 Host 重定向会清理凭证。
+- Account 的 `LoginCookiesInterceptor` 在不可信 URL 上先返回清理后的请求，不消费 `CookieUtil` 登录步骤 flag；登录状态机仍要求串行使用。
+- `credentials.xml` 同时被 `backup_rules.xml`、`data_extraction_rules.xml` 排除；这只是隔离和备份策略，当前文件仍未加密。
 - `QUERY_ALL_PACKAGES` 仅因应用列表和更新检查实际需要而保留；`REQUEST_INSTALL_PACKAGES` 已移除。
 
 ## 7. 业务人工验收矩阵
@@ -124,16 +127,12 @@ KEY_PASSWORD=本地别名密码
 
 ## 8. 自动化测试现状
 
-当前本地 JVM 测试包括：
+当前源码中的测试清单（按 `@Test` 方法静态计数，不代表本轮已经执行）包括：
 
-- `app/src/test/.../ExampleUnitTest.kt`：`2 + 2 = 4` 示例，1 个用例。
-- `app/src/test/.../NetworkEndpointsTest.kt`：验证 API1、API2、Account Base URL 尾部斜杠，1 个用例。
-- `app/src/test/.../NetworkLoggingTest.kt`：验证日志级别和敏感字段脱敏，2 个用例。
-- `app/src/test/.../TokenDeviceUtilsTest.kt`：验证整数 Unix 秒时间戳和自定义 Token 覆盖/回退，2 个用例。
-- `app/src/androidTest/.../ExampleInstrumentedTest.kt`：验证包名为 `com.godmiracle.coolapk`。
-- `app/src/androidTest/.../GifNativeCompatibilityTest.kt`：在设备上创建并释放 `GifDrawable`，验证 GIF native 库可加载。
+- JVM 共 22 个：`ExampleUnitTest.kt`（1）、`NetworkEndpointsTest.kt`（3）、`NetworkLoggingTest.kt`（2）、`NetworkRequestBoundaryTest.kt`（4）、`NetworkCallAdapterTest.kt`（10）、`TokenDeviceUtilsTest.kt`（2）。其中网络边界测试覆盖受信任/外部/非 HTTPS/跨 Host 重定向，Call adapter 测试覆盖非 2xx、空 body、transport failure、取消和 `NetworkRepo` Flow 取消语义。
+- instrumentation 共 21 个：`ExampleInstrumentedTest.kt`（1）、`GifNativeCompatibilityTest.kt`（1）、`DatabaseMigrationTest.kt`（11）、`CredentialPreferencesMigrationTest.kt`（6）、`WebViewActivityLifecycleTest.kt`（2）。其中 Room 测试使用 `app/src/androidTest/assets/room-migration-fixtures/` 自包含 fixture，凭证测试覆盖完整键集/重试/两类备份规则，WebView 测试覆盖返回销毁和配置重建。
 
-本轮 `:app:testDebugUnitTest` 共执行 6 个用例，`:app:connectedDebugAndroidTest` 在 `Pixel_10`（Android 16、16 KB）上执行 2 个用例，均 0 failures、0 errors、0 skipped。它们仍不能证明 API、Room、登录、分页、深链或完整图片业务功能。新增业务逻辑时，优先为以下边界增加测试：
+本次 docs fixer 未运行 `:app:testDebugUnitTest`、`lintDebug`、`compileDebugAndroidTestKotlin` 或 `:app:connectedDebugAndroidTest`，也未进行设备/实时 API 验收，因此不能写当前工作树的“通过”结论。`docs/sessions/2026-08-13.md` 中的 14 个 JVM、10 个 instrumentation 用例是更早的执行记录，不能替代当前源码 22/21 的验证结果。无论自动化测试是否通过，它们仍不能证明真实 API、完整登录、分页、深链或完整图片业务功能。新增业务逻辑时，优先为以下边界增加测试：
 
 1. `NetWorkUtil.openLink` 的 URL 到 Activity/参数映射。
 2. `TokenDeviceUtils` 的输入输出稳定性和设备参数变化。
@@ -164,7 +163,7 @@ KEY_PASSWORD=本地别名密码
 
 ### 登录失败或接口返回空
 
-先确认服务端是否仍接受当前 API 路径、版本 Header、设备码和 Cookie，再检查 `api.coolapk.com` 与 `api2.coolapk.com` 是否选对。不要先修改 UI 绕过服务端错误。
+先确认服务端是否仍接受当前 API 路径、版本 Header、设备码和 Cookie，再检查 `api.coolapk.com`、`api2.coolapk.com` 与 `account.coolapk.com` 是否选对，以及最终请求是否仍为 HTTPS trusted host。`NetworkRepo` 会把非 2xx 和必需空 body 作为失败，取消会继续传播；不要先修改 UI 绕过服务端错误。
 
 ### 应用启动时 Retrofit 初始化失败
 
@@ -186,7 +185,7 @@ Gradle 分发包已安装并不代表 Android Gradle Plugin、Kotlin 插件和�
 
 ### Room 升级崩溃
 
-同步检查数据库版本、Entity、Migration 和生成的 schema。不要通过清空数据库掩盖迁移问题，除非这是明确的用户数据迁移策略。
+同步检查数据库版本、Entity、Migration 和 `app/src/androidTest/assets/room-migration-fixtures/` 中的历史 fixture。当前迁移测试使用 `MigrationTestHelper.runMigrationsAndValidate`，覆盖 FeedFavorite、HomeMenu、RecentAtUser、LocalFollow 和 StringEntity 数据保留；不要通过清空数据库掩盖迁移问题，除非这是明确的用户数据迁移策略。
 
 ## 11. 提交前检查
 

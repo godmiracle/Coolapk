@@ -83,7 +83,7 @@
 └── src/、scripts/            # 当前仅保留说明文档，不是主源码目录
 ```
 
-当前主应用约有 255 个 Kotlin/Java 源文件、418 个 Android 资源文件；本地单元测试当前执行 6 个用例（含网络 Base URL、Token 设备参数和日志脱敏测试），instrumentation 仍是模板级测试，尚未形成完整业务回归套件。
+当前主应用约有 255 个 Kotlin/Java 源文件、418 个 Android 资源文件；本地单元测试当前执行 14 个用例（含 Room/网络凭证边界、网络取消与 HTTP 错误、Token 设备参数和日志脱敏测试），instrumentation 已包含 10 个迁移、备份、WebView 和原生兼容性回归，但尚未形成完整业务回归套件。
 
 ## 构建与运行
 
@@ -144,11 +144,11 @@ KEY_PASSWORD=请填入本地值
 - `https://account.coolapk.com`：登录、验证码和账号页面。
 - Coolapk 图片、移动网页和 OSS 上传回调相关地址。
 
-Manifest 声明网络、网络状态、Wi-Fi 状态和查询已安装应用权限；未发现应用内安装调用，因此已移除 `REQUEST_INSTALL_PACKAGES`，并关闭 `android:usesCleartextTraffic`。WebView 运行在 `:webview` 独立进程，内部会写入 Coolapk Cookie；登录 Token、用户名、设备参数等目前保存在普通 `SharedPreferences`。网络 BODY 日志默认关闭，只有 Debug 显式开关开启时才输出，且敏感字段脱敏。以上行为均应视为敏感边界，不能把调试包、日志或本地配置当作安全发布产物。
+Manifest 声明网络、网络状态、Wi-Fi 状态和查询已安装应用权限；未发现应用内安装调用，因此已移除 `REQUEST_INSTALL_PACKAGES`，并关闭 `android:usesCleartextTraffic`。WebView 运行在 `:webview` 独立进程，内部会写入 Coolapk Cookie；API Token、会话身份和设备请求状态保存在独立的 `credentials.xml`，该文件不参与云备份或设备迁移，普通主题/字体等偏好仍保留。API1/API2 客户端只有在三个 Coolapk HTTPS Host 上携带凭证，外部 `@Url` 和跨 Host 重定向会清理敏感 Header。网络 BODY 日志默认关闭，只有 Debug 显式开关开启时才输出，且敏感字段脱敏。以上行为均应视为敏感边界，不能把调试包、日志或本地配置当作安全发布产物。
 
 ## 验证状态
 
-当前项目 Wrapper 使用维护者主动设置的 Gradle 8.14.5；在 Android Studio JDK 21.0.10、SDK Platform 36.1 下，已将旧 GIF 原生库切换为 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，并将 Android Gradle Plugin 升至 8.5.1，以修复 Android 16 16 KB 模拟器报告的 `libpl_droidsonroids_gif.so` RELRO 未对齐。`bash gradlew :app:testDebugUnitTest :app:assembleDebug :app:bundleDebug --max-workers=1` 已成功，6 个本地单元测试全部通过；APK 通过 `zipalign -P 16` 校验，AAB 配置为 `PAGE_ALIGNMENT_16K`。在 `emulator-5554`（`PAGE_SIZE=16384`）上，直接 APK 和 Bundle 生成的 APK 均冷启动成功，没有出现 `PageSizeMismatchDialog`，包状态为 `pageSizeCompat=0`；2 个 instrumentation tests（含 GIF 原生加载回归）通过。Release 签名、真实设备、账号和完整人工业务路径仍未验收。完整验收步骤见 [`docs/development.md`](docs/development.md)，待确认项见 [`docs/todo.md`](docs/todo.md)。
+当前项目 Wrapper 使用维护者主动设置的 Gradle 8.14.5；在 Android Studio JDK 21.0.10、SDK Platform 36.1 下，`:app:testDebugUnitTest`（14 tests）、`:app:lintDebug`、`:app:compileDebugAndroidTestKotlin` 和 `:app:connectedDebugAndroidTest`（Pixel_10，10 tests）均成功。Room 历史迁移、凭证迁移/备份规则、WebView 跨进程重开、网络取消/HTTP 错误和原有 GIF native 回归均有证据。APK 通过 `zipalign -P 16` 校验，AAB 配置为 `PAGE_ALIGNMENT_16K`；Release 签名、真实设备、账号和完整人工业务路径仍未验收。完整验收步骤见 [`docs/development.md`](docs/development.md)，待确认项见 [`docs/todo.md`](docs/todo.md)。
 
 ## 文档索引
 
@@ -160,3 +160,4 @@ Manifest 声明网络、网络状态、Wi-Fi 状态和查询已安装应用权�
 - [`docs/todo.md`](docs/todo.md)：按优先级管理的未完成事项和验收标准。
 - [`docs/sessions/2026-08-11.md`](docs/sessions/2026-08-11.md)：本次文档整理记录。
 - [`docs/sessions/2026-08-12.md`](docs/sessions/2026-08-12.md)：社区 API 对照和模拟器浏览验证记录。
+- [`docs/sessions/2026-08-13.md`](docs/sessions/2026-08-13.md)：Code Review 五项优先问题的实施和验证记录。

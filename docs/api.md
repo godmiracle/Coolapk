@@ -4,11 +4,12 @@
 
 本文件记录 `app/src/main/java/com/godmiracle/coolapk/logic/network/ApiService.kt` 和当前 `NetworkRepo` 的源码契约，便于排查接口漂移。它不是 Coolapk 官方 API 文档，也不是对线上服务稳定性的保证。
 
-- 记录日期：2026-08-12
-- 源码基线：`becc810`
+- 记录日期：2026-08-13
+- Git HEAD 基线：`d41d41d`；本 change 的实现和文档仍以当前工作树为准
 - 主调用入口：`logic.repository.NetworkRepo`
 - 旧调用入口：`logic.network.Network` + `logic.network.Repository`，当前静态搜索未发现 UI 调用
 - 所有接口的真实可用性、权限和返回字段都必须通过真实网络请求或设备验收确认
+- 本次文档同步只做源码/测试静态核对，未运行 Gradle、设备测试或实时 API；下文带日期的设备/接口结果均为历史记录，不是本轮验证。
 
 ## 1. 服务地址
 
@@ -21,7 +22,13 @@
 
 图片和网页会额外访问 Coolapk 图片域名、`m.coolapk.com`、网页跳转地址及 OSS 上传返回的 Endpoint/Callback URL。
 
-三组 Base URL 已集中在 `NetworkEndpoints`，统一以 `/` 结尾；Hilt 网络模块和旧 `ApiServiceCreator` 共用同一组常量。仍需通过构建、单元测试和依赖网络注入的 Activity 启动完成运行时验证。
+三组 Base URL 已集中在 `NetworkEndpoints`，统一以 `/` 结尾；Hilt 网络模块和旧 `ApiServiceCreator` 共用同一组常量。带凭证的 API1、API2、Account 客户端均使用最终网络边界；是否能访问实时服务仍需单独通过构建、设备和真实请求验证。
+
+### 凭证 Host 边界
+
+`NetworkEndpoints.isTrusted` 只接受 HTTPS 且 Host 为 `api.coolapk.com`、`api2.coolapk.com` 或 `account.coolapk.com`。API1/API2 的 `AddCookiesInterceptor` 仅在该条件满足时添加 `X-App-Token`、Cookie、`X-App-Device` 和应用身份 Header；Account 的 `LoginCookiesInterceptor` 对不可信 URL 先清理并返回，不消费登录步骤 flag。
+
+四个客户端都在 OkHttp 的最终 network interceptor 中挂载 `NetworkCredentialBoundaryInterceptor`。因此 Retrofit `@Url` 解析出的外部/非 HTTPS URL，以及受信任请求跨 Host 重定向后的新请求，都会移除完整敏感 Header 集合；请求本身是否继续作为无凭证公共请求由网络层决定。`@Api1ServiceNoRedirect` 仍不跟随重定向，下载接口只在 Repository 显式允许时读取 3xx `Location`。
 
 ## 1.1 社区 API 参考（非官方）
 
@@ -31,9 +38,9 @@
 
 | 社区资料中的接口 | 认证/必要参数 | 对当前项目的意义 |
 |---|---|---|
-| `https://api.coolapk.com/v6/main/indexV8` | `X-App-Token`；`page` 必填；`firstItem`、`lastItem` 可选 | 社区资料将首页 V8 归到 API1；当前项目已路由到 API1，并在模拟器收到 200 |
+| `https://api.coolapk.com/v6/main/indexV8` | `X-App-Token`；`page` 必填；`firstItem`、`lastItem` 可选 | 社区资料将首页 V8 归到 API1；项目源码已路由到 API1，2026-08-12 的历史记录曾在模拟器收到 200 |
 | `https://api.coolapk.com/v6/page` | `X-App-Token`；`url`、`page` 等分页参数 | 可作为首页其他 Tab 的候选接口；不能直接替换现有 Tab 参数 |
-| `https://api.coolapk.com/v6/feed/detail` | `X-App-Token`；`id` 必填 | 社区资料将动态详情归到 API1；当前项目已路由到 API1，并在模拟器收到 200 |
+| `https://api.coolapk.com/v6/feed/detail` | `X-App-Token`；`id` 必填 | 社区资料将动态详情归到 API1；项目源码已路由到 API1，2026-08-12 的历史记录曾在模拟器收到 200 |
 
 ### 请求身份对照
 
@@ -41,11 +48,11 @@
 - 社区资料的 V2 Token 示例使用整数 Unix 秒（等价于 `ToUnixTimeSeconds()`）。当前 `TokenDeviceUtils` 已改为 `System.currentTimeMillis() / 1000L`；自定义 Token 开关启用且值非空时，`AddCookiesInterceptor` 会使用该值覆盖自动生成值。
 - 社区资料把登录 Cookie 中的 `uid`、`username`、`token` 标为必要、把 `SESSID` 标为非必要。该表不能单独证明匿名浏览必须登录，是否需要登录态必须用同一接口做匿名/登录对照；调试时不得记录真实值。
 
-### 本次对照结论
+### 历史设备对照记录（非本次验证）
 
-在 `emulator-5554` 的 Android 16 模拟器上，采用 API1 Host、整数秒 Token，并保持默认 `13.4.1/2312121` 请求身份后：应用详情、首页 V8、动态详情和动态评论均收到 `200 OK`；UI 层级确认首页显示真实动态内容，点击后 `FeedActivity` 显示动态正文。此前的 `403` 由两个变量共同放大：首页/详情错误地走 API2，以及启动时把接口返回的线上应用版本写入第三方客户端的请求 Header。当前 `MainViewModel` 保持请求身份稳定，不再自动跟随线上应用版本。
+在 2026-08-12 的仓库会话记录中，`emulator-5554` 的 Android 16 模拟器采用 API1 Host、整数秒 Token，并保持默认 `13.4.1/2312121` 请求身份后：应用详情、首页 V8、动态详情和动态评论收到 `200 OK`，UI 层级确认首页动态内容和 `FeedActivity` 正文可见。此前的 `403` 由两个变量共同放大：首页/详情错误地走 API2，以及启动时把接口返回的线上应用版本写入第三方客户端的请求 Header。该段只保留为历史证据，不能当作当前实时 API 保证。
 
-需要区分两类验证：`X-App-Token` 已在请求日志中确认存在，且修正整数秒后首页/详情实测成功；Cookie、Token、设备码仍只在脱敏日志中记录，不能把日志分享给他人。线上边缘策略可能继续变化，因此仍需在真实设备上复验。
+需要区分两类验证：源码/测试可以证明请求身份和 Host 边界规则；历史设备记录曾确认 `X-App-Token` 存在并成功浏览。Cookie、Token、设备码仍只在脱敏日志中记录，不能把日志分享给他人。线上边缘策略可能继续变化，本轮未复验真实设备或实时接口。
 
 ### 同类实现对照
 
@@ -65,15 +72,19 @@
 - `X-App-Channel`、`X-App-Mode`、`X-App-Supported`
 - `Content-Type: application/x-www-form-urlencoded`
 
-登录时 Cookie 由 `uid`、`username`、`token` 组成；未登录时发送 `CookieUtil.SESSID`。`X-App-Token` 由 `TokenDeviceUtils` 基于时间、设备码、MD5、Base64 和 BCrypt 计算。
+登录时 Cookie 由 `uid`、`username`、`token` 组成；未登录时发送 `CookieUtil.SESSID`。`X-App-Token` 由 `TokenDeviceUtils` 基于时间、设备码、MD5、Base64 和 BCrypt 计算。上述 Header 只在三个 Coolapk HTTPS Host 保留，最终 Host 变化后由 network boundary 清理。
 
 ### Account
 
-`LoginCookiesInterceptor` 依赖 `CookieUtil` 的一次性 flag 来决定当前请求属于：预取登录页、读取登录参数、验证码、密码登录或短信登录。修改登录顺序、并发请求或复用 flag 时必须重新验证。
+`LoginCookiesInterceptor` 依赖 `CookieUtil` 的一次性 flag 来决定当前请求属于：预取登录页、读取登录参数、验证码、密码登录或短信登录。对不可信 URL 不消费 flag；受信请求跨 Host 重定向时由最终 network boundary 清理凭证。修改登录顺序、并发请求或复用 flag 时必须重新验证。
 
 ### 敏感信息
 
-Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY 日志不能提交到仓库、Issue、截图或聊天记录。网络 BODY 日志默认关闭；只有显式 Debug 开关开启时才输出，并由 `NetworkLogging` 脱敏。
+Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY 日志不能提交到仓库、Issue、截图或聊天记录。登录摘要、接口 Token、设备身份、`xAppToken`/`xAppDevice` 和 `SZLMID` 存在 `credentials.xml`，普通 UI 偏好仍在 `settings.xml`；两套 Android 备份规则均排除 `credentials.xml`。网络 BODY 日志默认关闭；只有显式 Debug 开关开启时才输出，并由 `NetworkLogging` 脱敏。
+
+### NetworkRepo 的错误与取消语义
+
+`NetworkRepo` 使用 `suspendCancellableCoroutine` 适配 Retrofit `Call`：协程取消会调用底层 `Call.cancel()`，`CancellationException` 继续向上抛出，`Flow` 不发出普通失败结果。非 2xx 响应统一成为带状态码的 `HttpException`；需要实体的 2xx 空 body 成为 `EmptyResponseBodyException`；其他 transport failure 作为保留原始原因的 `Result.failure` 发出。只有 `getAppDownloadLink` 在 no-redirect 客户端中显式允许 3xx 并读取 `Location`。
 
 ## 3. API1 接口
 
@@ -159,7 +170,7 @@ Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY �
 2. 从 HTML 的 `<Body data-request-hash>` 读取 request hash，从 `Set-Cookie` 保存 `SESSID`。
 3. 调用 `getLoginParam` 更新页面参数和 Cookie。
 4. 需要时调用 `getCaptcha`，把图片解码为 Bitmap。
-5. 提交 `tryLogin`；成功后从响应 Cookie 解析 UID、用户名和 Token，写入 `PrefManager`。
+5. 提交 `tryLogin`；成功后从响应 Cookie 解析 UID、用户名和 Token，通过 `PrefManager` 写入 `credentials.xml` 对应的 SharedPreferences。
 6. 再调用 `getProfile` 写入头像、等级和经验，重建主界面。
 
 ### 6.3 动态/回复发布与图片

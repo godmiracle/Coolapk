@@ -16,8 +16,15 @@ object PrefManager {
     private const val UID = "uid"
     private const val NAME = "name"
     private const val TOKEN = "token"
+    private const val SETTINGS_PREFERENCES = "settings"
+    private const val CREDENTIAL_PREFERENCES = "credentials"
 
-    private val pref = context.getSharedPreferences("settings", MODE_PRIVATE)
+    private val pref = context.getSharedPreferences(SETTINGS_PREFERENCES, MODE_PRIVATE)
+    private val credentialPref = context.getSharedPreferences(CREDENTIAL_PREFERENCES, MODE_PRIVATE)
+
+    init {
+        CredentialPreferencesMigration.migrate(pref, credentialPref)
+    }
 
     var darkTheme: Int
         get() = pref.getInt(PREF_DARK_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -40,48 +47,48 @@ object PrefManager {
         set(value) = pref.edit().putBoolean(SHOW_EMOJI, value).apply()
 
     var isLogin: Boolean
-        get() = pref.getBoolean("isLogin", false)
-        set(value) = pref.edit().putBoolean("isLogin", value).apply()
+        get() = credentialPref.getBoolean("isLogin", false)
+        set(value) = credentialPref.edit().putBoolean("isLogin", value).apply()
 
     var uid: String
-        get() = pref.getString(UID, "")!!
-        set(value) = pref.edit().putString(UID, value).apply()
+        get() = credentialPref.getString(UID, "")!!
+        set(value) = credentialPref.edit().putString(UID, value).apply()
 
     var username: String
-        get() = pref.getString(NAME, "")!!
-        set(value) = pref.edit().putString(NAME, value).apply()
+        get() = credentialPref.getString(NAME, "")!!
+        set(value) = credentialPref.edit().putString(NAME, value).apply()
 
     var token: String
-        get() = pref.getString(TOKEN, "")!!
-        set(value) = pref.edit().putString(TOKEN, value).apply()
+        get() = credentialPref.getString(TOKEN, "")!!
+        set(value) = credentialPref.edit().putString(TOKEN, value).apply()
 
     var userAvatar: String
-        get() = pref.getString("userAvatar", "")!!
-        set(value) = pref.edit().putString("userAvatar", value).apply()
+        get() = credentialPref.getString("userAvatar", "")!!
+        set(value) = credentialPref.edit().putString("userAvatar", value).apply()
 
     var level: String
-        get() = pref.getString("level", "")!!
-        set(value) = pref.edit().putString("level", value).apply()
+        get() = credentialPref.getString("level", "")!!
+        set(value) = credentialPref.edit().putString("level", value).apply()
 
     var experience: String
-        get() = pref.getString("experience", "")!!
-        set(value) = pref.edit().putString("experience", value).apply()
+        get() = credentialPref.getString("experience", "")!!
+        set(value) = credentialPref.edit().putString("experience", value).apply()
 
     var nextLevelExperience: String
-        get() = pref.getString("nextLevelExperience", "")!!
-        set(value) = pref.edit().putString("nextLevelExperience", value).apply()
+        get() = credentialPref.getString("nextLevelExperience", "")!!
+        set(value) = credentialPref.edit().putString("nextLevelExperience", value).apply()
 
     var xAppToken: String
-        get() = pref.getString("xAppToken", "")!!
-        set(value) = pref.edit().putString("xAppToken", value).apply()
+        get() = credentialPref.getString("xAppToken", "")!!
+        set(value) = credentialPref.edit().putString("xAppToken", value).apply()
 
     var xAppDevice: String
-        get() = pref.getString("xAppDevice", "")!!
-        set(value) = pref.edit().putString("xAppDevice", value).apply()
+        get() = credentialPref.getString("xAppDevice", "")!!
+        set(value) = credentialPref.edit().putString("xAppDevice", value).apply()
 
     var customToken: Boolean
-        get() = pref.getBoolean("customToken", false)
-        set(value) = pref.edit().putBoolean("customToken", value).apply()
+        get() = credentialPref.getBoolean("customToken", false)
+        set(value) = credentialPref.edit().putBoolean("customToken", value).apply()
 
     var VERSION_NAME: String
         get() = pref.getString("VERSION_NAME", Constants.VERSION_NAME)!!
@@ -96,36 +103,36 @@ object PrefManager {
         set(value) = pref.edit().putString("VERSION_CODE", value).apply()
 
     var MANUFACTURER: String
-        get() = pref.getString("MANUFACTURER", "")!!
-        set(value) = pref.edit().putString("MANUFACTURER", value).apply()
+        get() = credentialPref.getString("MANUFACTURER", "")!!
+        set(value) = credentialPref.edit().putString("MANUFACTURER", value).apply()
 
     var BRAND: String
-        get() = pref.getString("BRAND", "")!!
-        set(value) = pref.edit().putString("BRAND", value).apply()
+        get() = credentialPref.getString("BRAND", "")!!
+        set(value) = credentialPref.edit().putString("BRAND", value).apply()
 
     var MODEL: String
-        get() = pref.getString("MODEL", "")!!
-        set(value) = pref.edit().putString("MODEL", value).apply()
+        get() = credentialPref.getString("MODEL", "")!!
+        set(value) = credentialPref.edit().putString("MODEL", value).apply()
 
     var BUILDNUMBER: String
-        get() = pref.getString("BUILDNUMBER", "")!!
-        set(value) = pref.edit().putString("BUILDNUMBER", value).apply()
+        get() = credentialPref.getString("BUILDNUMBER", "")!!
+        set(value) = credentialPref.edit().putString("BUILDNUMBER", value).apply()
 
     var SDK_INT: String
-        get() = pref.getString("SDK_INT", "")!!
-        set(value) = pref.edit().putString("SDK_INT", value).apply()
+        get() = credentialPref.getString("SDK_INT", "")!!
+        set(value) = credentialPref.edit().putString("SDK_INT", value).apply()
 
     var ANDROID_VERSION: String
-        get() = pref.getString("ANDROID_VERSION", "")!!
-        set(value) = pref.edit().putString("ANDROID_VERSION", value).apply()
+        get() = credentialPref.getString("ANDROID_VERSION", "")!!
+        set(value) = credentialPref.edit().putString("ANDROID_VERSION", value).apply()
 
     var USER_AGENT: String
-        get() = pref.getString("USER_AGENT", "")!!
-        set(value) = pref.edit().putString("USER_AGENT", value).apply()
+        get() = credentialPref.getString("USER_AGENT", "")!!
+        set(value) = credentialPref.edit().putString("USER_AGENT", value).apply()
 
     var SZLMID: String
-        get() = pref.getString("SZLMID", "")!!
-        set(value) = pref.edit().putString("SZLMID", value).apply()
+        get() = credentialPref.getString("SZLMID", "")!!
+        set(value) = credentialPref.edit().putString("SZLMID", value).apply()
 
     var isRecordHistory: Boolean
         get() = pref.getBoolean("isRecordHistory", true)
@@ -165,9 +172,11 @@ object PrefManager {
 
     fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         pref.registerOnSharedPreferenceChangeListener(listener)
+        credentialPref.registerOnSharedPreferenceChangeListener(listener)
     }
 
     fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         pref.unregisterOnSharedPreferenceChangeListener(listener)
+        credentialPref.unregisterOnSharedPreferenceChangeListener(listener)
     }
 }

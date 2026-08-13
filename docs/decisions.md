@@ -102,7 +102,7 @@ Manifest 的 `AppLinkActivity` 只负责接收深链，业务页面中也存在�
 
 ### 影响
 
-调试日志必须脱敏；真实账号只用于授权测试；发布前应重新评估 `QUERY_ALL_PACKAGES`、普通 SharedPreferences 存 Token 和 WebView Cookie。`REQUEST_INSTALL_PACKAGES` 已因未发现应用内安装调用而移除，明文流量开关已关闭。
+调试日志必须脱敏；真实账号只用于授权测试；发布前应重新评估 `QUERY_ALL_PACKAGES`、`credentials.xml` 的加密/备份边界和 WebView Cookie。`REQUEST_INSTALL_PACKAGES` 已因未发现应用内安装调用而移除，明文流量开关已关闭。
 
 ## 2026-08-11 - 默认关闭并脱敏网络 BODY 日志
 
@@ -370,3 +370,21 @@ GIF 播放能力保留，但新版本不再暴露旧的 protected bitmap 生命�
 ### 验证
 
 清理 Gradle/Hilt 增量产物后，`:app:assembleDebug` 和 `:app:testDebugUnitTest` 成功；新 APK 已安装为 `com.godmiracle.coolapk`，Android 16 模拟器冷启动成功，UI 层级确认首页、关注、我的和搜索底栏仍正常。
+
+## 2026-08-13 - 实施 Code Review 五项高优先级修复
+
+### 决定
+
+- Room 迁移采用创建新表、复制兼容字段、删除旧表、重命名的前向迁移；`FeedFavoriteDatabase` 保留已发布 v2 schema，升至 v3 同时兼容历史 v1 `FeedFavorite`、历史 v2 `FeedFavorite` 和当前 v2 `FeedEntity`。
+- API1/API2 的凭证拦截器改为网络拦截器，并按最终 HTTPS Host 做 allowlist；只有三个 Coolapk API Host 允许 Token、Cookie、设备和应用身份 Header，外部 `@Url` 与跨 Host 重定向自动清理。
+- API、会话和设备请求状态从普通 `settings.xml` 隔离到 `credentials.xml`，旧键以同步、幂等方式迁移后清理；普通 UI 偏好不随凭证文件排除。两套 Android 备份规则均排除 `credentials.xml`。
+- `WebViewActivity` 销毁时只执行资源释放，不再调用 `exitProcess(0)`；独立 `:webview` 进程由 Android 生命周期管理。
+- `NetworkRepo` 使用可取消 Retrofit Call 适配器；取消调用底层 `Call.cancel()`，非 2xx 和必需空 body 失败，`CancellationException` 继续向上抛出。下载链接的 3xx 只在 no-redirect 场景显式允许，以保留 `Location` 读取。
+
+### 原因
+
+这五项分别对应数据丢失、凭证外泄、备份恢复泄露、Activity 关闭导致宿主进程退出和页面销毁后网络请求继续运行等高影响问题。修改保持现有 XML/Hilt/Retrofit/Room 架构，不实现登录流程，不移除接口访问所需的 `X-App-Token`，也不扩大到 Paging 3 重构。
+
+### 验证
+
+在 Android Studio JDK 21、Pixel_10（Android 17）上，`:app:testDebugUnitTest` 14 个用例、`:app:lintDebug`、`:app:compileDebugAndroidTestKotlin` 和 `:app:connectedDebugAndroidTest` 10 个用例全部通过。Instrumentation 覆盖 5 个 Room migration tests、2 个凭证迁移/备份规则 tests、1 个跨进程 WebView 生命周期 test，以及既有示例/GIF native tests。未验证 Release 签名、真实设备、真实账号和完整线上业务路径。

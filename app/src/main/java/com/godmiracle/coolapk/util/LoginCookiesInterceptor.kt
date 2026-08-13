@@ -1,5 +1,7 @@
 package com.godmiracle.coolapk.util
 
+import com.godmiracle.coolapk.logic.network.NetworkCredentialPolicy
+import com.godmiracle.coolapk.logic.network.NetworkEndpoints
 import com.godmiracle.coolapk.util.CookieUtil.SESSID
 import com.godmiracle.coolapk.util.CookieUtil.isGetCaptcha
 import com.godmiracle.coolapk.util.CookieUtil.isGetLoginParam
@@ -15,7 +17,12 @@ import java.io.IOException
 object LoginCookiesInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
-        val builder: Request.Builder = chain.request().newBuilder()
+        val request = chain.request()
+        if (!NetworkEndpoints.isTrusted(request.url)) {
+            return chain.proceed(NetworkCredentialPolicy.stripCredentials(request))
+        }
+
+        val builder: Request.Builder = request.newBuilder()
         builder.apply {
             if (isGetLoginParam) {
                 isGetLoginParam = false
