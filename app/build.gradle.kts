@@ -67,6 +67,11 @@ fun String.execute(currentWorkingDir: File = file("./")): String {
 
 val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
 val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
+val versionNameOverride = providers.gradleProperty("versionName")
+    .orNull
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+val appVersionName = versionNameOverride ?: gitCommitHash
 
 val localProperties = Properties().also {
     val properties = rootProject.file("local.properties")
@@ -106,7 +111,7 @@ android {
         minSdk = 31
         targetSdk = 34
         versionCode = gitCommitCount
-        versionName = gitCommitHash
+        versionName = appVersionName
 
         buildConfigField("boolean", "ENABLE_HTTP_BODY_LOGGING", enableHttpBodyLogging.toString())
 

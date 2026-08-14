@@ -533,3 +533,23 @@ APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` �
 
 - 真机 `a60fe293` 的 UI dump 显示底栏图标容器结束于 `y=2221`、标签组起始于 `y=2224`，实际间隔为 3px（约 1dp）；截图确认首页/关注选中胶囊、文字和独立搜索圆钮均正常。
 - 收紧后的 `:app:assembleDebug` 成功；最终全量构建、单元测试和 Lint 继续作为本次交付验证项执行。
+
+## 2026-08-14 - 修复 CI cache 失败并对齐 Tag 版本号
+
+### 决定
+
+- 将 workflow 的 `actions/cache` 从已停用的固定版本 `v4.0.2` 升级到 `v6.1.0`，避免在 Job 初始化阶段被 GitHub 自动拦截。
+- `app/build.gradle.kts` 支持 `-PversionName` 覆盖默认的 Git 短 hash；`v*` Tag 构建把 `GITHUB_REF_NAME` 原样传入，因此 Tag `v1.0.0` 生成的 APK `versionName` 也是 `v1.0.0`。
+- 非 Tag 的本地、`main` Push 和手动构建继续回退到 Git 短 hash，保留现有开发构建命名行为。
+
+### 原因
+
+远端 CI 运行 `31777925879` 在 Job 初始化阶段报告 `actions/cache@v4.0.2` 已停用，Gradle 尚未执行；远端 API 同时确认当前没有 Tag 或 Release。版本号此前只取 Git 短 hash，与 GitHub Release Tag 没有绑定关系。
+
+### 影响与边界
+
+修复提交推送后，需要重新推送一个未占用的 `v*` Tag；如果使用同一个 Tag，必须确认远端没有残留 Tag/Release 或先删除后重建。首次成功运行仍需检查 APK 签名、`versionName`、Release 资产和 `SHA256SUMS`，本次未代替用户执行远端推送。
+
+### 验证
+
+已通过远端 Actions API 和 Check Run annotation 确认失败原因；本地 `:app:assembleRelease -PversionName=v1.0.0 --offline` 构建成功，APK 文件名为 `c001apk_v1.0.0(457).apk`，badging 显示 `versionName='v1.0.0'`，v3 签名和 16 KB 对齐检查通过。GitHub Actions 远端运行仍待修复提交后的新 Tag。

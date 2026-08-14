@@ -62,7 +62,7 @@ Release 构建需要本地签名配置，详细步骤见 [`docs/development.md`]
 
 ## GitHub Actions 发布
 
-推送形如 `v1.0.0` 的 Tag 后，GitHub Actions 会使用仓库 Secrets 构建签名版 Release，并自动创建 GitHub Release，上传 APK 和 `SHA256SUMS`。需要在仓库的 `Settings > Secrets and variables > Actions` 中配置：
+推送形如 `v1.0.0` 的 Tag 后，GitHub Actions 会使用仓库 Secrets 构建签名版 Release，并自动创建同名 GitHub Release，APK 内部 `versionName` 也会固定为该 Tag（例如 `v1.0.0`），同时上传 APK 和 `SHA256SUMS`。需要在仓库的 `Settings > Secrets and variables > Actions` 中配置：
 
 - `SIGN_KEYSTORE_BASE64`：Release keystore 的 Base64 内容
 - `KEYSTORE_PASSWORD`：keystore 密码

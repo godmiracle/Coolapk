@@ -213,7 +213,7 @@ Fragment/ViewModel
 - `gradle/libs.versions.toml` 集中维护依赖版本。
 - `app` 使用 ViewBinding、Data Binding、BuildConfig、Hilt KSP、Room KSP、Glide KSP。
 - Release 开启 `isMinifyEnabled` 和 `isShrinkResources`。
-- GitHub Actions 使用 JDK 17，先验证 Wrapper，然后构建 Release/Debug 并上传 Actions 制品与 Release mapping。`main` Push/手动触发只保留制品流程；推送 `v*` Tag 时使用 CI Secrets 注入签名配置，通过 `gh release create --verify-tag --generate-notes` 创建 GitHub Release，并上传签名 APK 与 `SHA256SUMS`。当前 workflow 没有测试、lint 或设备验收步骤。
+- GitHub Actions 使用 JDK 17，先验证 Wrapper，然后构建 Release/Debug 并上传 Actions 制品与 Release mapping。`main` Push/手动触发只保留制品流程；推送 `v*` Tag 时使用 CI Secrets 注入签名配置，并通过 `-PversionName=$GITHUB_REF_NAME` 让 APK 内部版本与 Tag 一致，再通过 `gh release create --verify-tag --generate-notes` 创建同名 GitHub Release，上传签名 APK 与 `SHA256SUMS`。当前 workflow 没有测试、lint 或设备验收步骤。
 
 ## 8. 安全、隐私和兼容性风险
 

@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: Cache Gradle Dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v6.1.0
         with:
           path: |
             ~/.gradle/caches
@@ -62,7 +62,11 @@ jobs:
       - name: Build release
         id: buildRelease
         run: |
-          ./gradlew :app:assembleRelease
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            ./gradlew :app:assembleRelease "-PversionName=$GITHUB_REF_NAME"
+          else
+            ./gradlew :app:assembleRelease
+          fi
           echo "releaseName=$(ls app/build/outputs/apk/release/*.apk | awk -F '(/|\\.apk)' '{print $6}')" >> $GITHUB_OUTPUT
 
       - name: Upload release
@@ -82,7 +86,11 @@ jobs:
       - name: Build debug
         id: buildDebug
         run: |
-          ./gradlew :app:assembleDebug
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            ./gradlew :app:assembleDebug "-PversionName=$GITHUB_REF_NAME"
+          else
+            ./gradlew :app:assembleDebug
+          fi
           echo "debugName=$(ls app/build/outputs/apk/debug/*.apk | awk -F '(/|\\.apk)' '{print $6}')" >> $GITHUB_OUTPUT
 
       - name: Upload debug

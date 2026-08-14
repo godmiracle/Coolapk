@@ -120,9 +120,9 @@
   - 优先级：高
   - 可信度：已确认
   - 涉及文件：`app/build.gradle.kts`、`.github/workflows/ci.yml`
-  - 状态：签名策略已确定；本地签名 Release 与真机冷启动已验证，CI workflow 已配置 Tag 自动发布，等待首次远端 `v*` Tag 运行验证
-  - 证据：Debug 保持 Debug 签名；Release 缺少 keystore 或签名字段时由 `verifyReleaseSigning` 任务失败；CI 从 `SIGN_KEYSTORE_BASE64` 等 Secrets 写入临时 `local.properties`，Tag 发布自动上传 APK 与 `SHA256SUMS`。
-  - 验收标准：本地与 CI 缺少密钥时均阻止 Release；首次 Tag Actions 成功；Release APK 通过 `apksigner verify --print-certs`，发布页同时包含 APK 和 `SHA256SUMS`。
+  - 状态：已定位首次远端失败原因并修复 cache 版本；Tag 版本号已改为写入 APK 的 `versionName`，等待提交后重新运行 `v*` Tag
+  - 证据：远端运行 `31777925879` 在 Job 初始化阶段报告 `actions/cache@v4.0.2` 已停用；workflow 已升级到 `actions/cache@v6.1.0`，Tag 构建传入 `-PversionName=$GITHUB_REF_NAME`，仍沿用 `verifyReleaseSigning`、APK 上传和 `SHA256SUMS`。
+  - 验收标准：首次 Tag Actions 成功；Release APK 通过 `apksigner verify --print-certs`；`aapt2 dump badging` 的 `versionName` 与 Tag 完全一致；发布页同时包含 APK 和 `SHA256SUMS`。
 
 - [x] R-013 验证 Retrofit Base URL 尾部斜杠
   - 优先级：高
