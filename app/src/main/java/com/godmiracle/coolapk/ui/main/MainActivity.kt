@@ -23,6 +23,7 @@ import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ActivityCollector
 import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.PrefManager
+import com.godmiracle.coolapk.view.AnimatedBottomNavigationView
 import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -36,6 +37,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
     private val navViewBehavior by lazy { HideBottomViewOnScrollBehavior<FrameLayout>() }
     override var controller: IOnBottomClickListener? = null
     private lateinit var navView: NavigationBarView
+    private var animatedBottomNav: AnimatedBottomNavigationView? = null
+    private var navigationChromeVisible = true
     private val isLogin by lazy { PrefManager.isLogin }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +46,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
         ActivityCollector.addActivity(this)
 
         navView = binding.bottomNav as NavigationBarView
+        animatedBottomNav = binding.bottomNav as? AnimatedBottomNavigationView
 
         // 竖屏布局提供玻璃底栏，横屏布局继续使用原有 NavigationRailView。
         val bottomNavSurface = binding.root.findViewById<LiquidGlassFrameLayout>(
@@ -108,6 +112,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
 
         navView.apply {
             setOnItemSelectedListener {
+                if (it.itemId != R.id.navigation_search) {
+                    animatedBottomNav?.animateSelection(it.itemId)
+                }
                 when (it.itemId) {
                     R.id.navigation_home -> {
                         if (binding.viewPager.currentItem == 0)
@@ -143,6 +150,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             setOnClickListener { /*Do nothing*/ }
         }
 
+        animatedBottomNav?.post {
+            animatedBottomNav?.synchronizeSelectionWithoutAnimation()
+        }
+
         (binding.bottomNavContainer.layoutParams as? CoordinatorLayout.LayoutParams)?.let {
             it.behavior = navViewBehavior
             binding.bottomNavContainer.layoutParams = it
@@ -175,6 +186,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             navViewBehavior.isScrolledDown
         )
             navViewBehavior.slideUp(binding.bottomNavContainer, true)
+        animateNavigationChrome(visible = true)
     }
 
     fun hideNavigationView() {
@@ -182,6 +194,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             navViewBehavior.isScrolledUp
         )
             navViewBehavior.slideDown(binding.bottomNavContainer, true)
+        animateNavigationChrome(visible = false)
     }
 
     /**
@@ -193,6 +206,49 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             RecyclerView.SCROLL_STATE_SETTLING -> hideNavigationView()
 
             RecyclerView.SCROLL_STATE_IDLE -> showNavigationView()
+        }
+    }
+
+    /**
+     * BiliPai 的底栏显隐同时包含位移、透明度和从底部的轻微缩放；
+     * Material 的 HideBottomViewOnScrollBehavior 继续负责位移，这里补齐另外两层。
+     * 横屏使用 NavigationRailView，不改变其原有显隐边界。
+     */
+    private fun animateNavigationChrome(visible: Boolean) {
+        if (animatedBottomNav == null) return
+
+        val container = binding.bottomNavContainer
+        if (!container.isLaidOut) {
+            container.post { animateNavigationChrome(visible) }
+            return
+        }
+        if (navigationChromeVisible == visible) return
+        navigationChromeVisible = visible
+
+        container.animate().cancel()
+        container.pivotX = container.width / 2f
+        container.pivotY = container.height.toFloat()
+        if (visible) {
+            if (container.alpha <= 0.01f) {
+                container.alpha = 0f
+                container.scaleX = 0.92f
+                container.scaleY = 0.92f
+            }
+            container.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(255L)
+                .setInterpolator(android.view.animation.OvershootInterpolator(0.7f))
+                .start()
+        } else {
+            container.animate()
+                .alpha(0f)
+                .scaleX(0.92f)
+                .scaleY(0.92f)
+                .setDuration(160L)
+                .setInterpolator(android.view.animation.AccelerateInterpolator(1.5f))
+                .start()
         }
     }
 

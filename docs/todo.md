@@ -76,6 +76,13 @@
   - 证据：底栏为“首页、关注、发现、我的”；发现顶部仅有“生活、酷图”。生活使用 `/page?url=V15_ZHUANTI_SHENGHUO`，酷图使用 `/page?url=V11_FIND_COOLPIC`；首页打开时默认选中“头条”。设备 `a60fe293` 上两个发现页面均加载真实列表，首页顶部不再显示酷图，已有 `home_menu.db` 中的酷图也会在启动时移除；`:app:testDebugUnitTest` 22 个用例通过，`:app:assembleDebug` 和 `:app:lintDebug` 成功。
   - 验收标准：底栏可进入发现；生活和酷图均可切换并加载；首页和首页编辑菜单不再出现酷图；关注、我的和搜索入口保持可用。
 
+- [x] UI-006 按 BiliPai 源码补齐底栏交互动效与内容密度
+  - 优先级：中
+  - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/view/AnimatedBottomNavigationView.kt`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、`app/src/main/res/layout/activity_main.xml`、`app/src/main/res/values/themes.xml`
+  - 状态：已完成源码对照、Debug 构建、JVM 单元测试、Lint 和 Android 设备验收
+  - 证据：对照 BiliPai 的 `FloatingBottomBar.kt`、`DampedDragAnimation.kt` 和底栏 motion spec，将独立选中胶囊、连续槽位移动、落位压缩/回弹，以及底栏显隐的透明度/缩放动画移植到现有 XML/ViewBinding 架构；移除 Material 自动注入的矩形背景，并按 BiliPai 的垂直 `Column` 将 24dp 图标、11sp 文字和约 1dp 间距整体居中；保留 Material 菜单点击、选中态和无障碍语义，横屏仍使用 `NavigationRailView`。设备 `a60fe293` 已安装并实际切换首页/关注，UI dump 确认图标与文字仅相隔 3px；最终 `:app:assembleDebug`、`:app:testDebugUnitTest` 和 `:app:lintDebug` 全部成功。
+  - 验收标准：点击底栏项时选中胶囊连续移动并带落位回弹；图标与文字紧凑居中且无内部白色矩形；列表滚动中底栏退出，停止滚动后从底部带透明度/缩放恢复；四个入口和独立搜索动作保持可用；不改变横屏导航结构。
+
 ## 高优先级：发布和安全边界
 
 - [ ] R-001 建立真实设备和真实接口验收基线

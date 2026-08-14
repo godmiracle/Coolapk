@@ -30,7 +30,7 @@
             android:background="@android:color/transparent"
             android:elevation="0dp">
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
+            <com.godmiracle.coolapk.view.AnimatedBottomNavigationView
                 android:id="@+id/bottomNav"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -40,13 +40,13 @@
                 android:paddingStart="@dimen/miuix_floating_navigation_inner_padding"
                 android:paddingEnd="@dimen/miuix_floating_navigation_inner_padding"
                 android:stateListAnimator="@null"
-                app:itemActiveIndicatorStyle="@style/MiuixFloatingNavigationActiveIndicator"
-                app:itemBackground="@drawable/bg_miuix_floating_navigation_item"
+                app:itemActiveIndicatorStyle="@null"
+                app:itemBackground="@android:color/transparent"
                 app:itemHorizontalTranslationEnabled="false"
-                app:itemIconSize="28dp"
+                app:itemIconSize="24dp"
                 app:itemIconTint="@color/miuix_floating_navigation_item_tint"
-                app:itemPaddingBottom="4dp"
-                app:itemPaddingTop="4dp"
+                app:itemPaddingBottom="0dp"
+                app:itemPaddingTop="0dp"
                 app:itemRippleColor="@color/miuix_floating_navigation_ripple"
                 app:itemTextColor="@color/miuix_floating_navigation_item_tint"
                 app:itemTextAppearanceActive="@style/MiuixFloatingNavigationLabelActive"

@@ -502,3 +502,34 @@ APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` �
 ### 验证
 
 本次完成 workflow 与文档静态检查，未推送 `v*` Tag、未创建远端 Release。GitHub CLI 的参数和 Actions Token 权限依据官方文档配置，远端运行结果待首次发布后确认。
+
+## 2026-08-14 - 按 BiliPai 源码移植底栏动效
+
+### 决定
+
+- 以 BiliPai 仓库中的 `FloatingBottomBar.kt`、`DampedDragAnimation.kt` 和底栏 motion spec 为行为参考，在 Coolapk 现有 XML/ViewBinding 架构内新增 `AnimatedBottomNavigationView`，不引入 Compose。
+- 将底栏拆成 Material 菜单前景和独立绘制的选中胶囊：胶囊在菜单槽位间连续移动，落位时执行横向压缩、纵向补偿和阻尼回弹；底栏显隐在原有 `HideBottomViewOnScrollBehavior` 位移之外补充透明度与从底部的轻微缩放。
+- 关闭 Material 自带 active indicator，避免静态指示器和自定义动效叠加；保留 Material 的菜单、选中态、点击和无障碍语义。横屏不使用该自定义 View，继续使用 `NavigationRailView`。
+
+### 原因
+
+用户需要参考上游项目的实际动效代码，而不是只复刻静态设计图。项目当前以 XML/ViewBinding 为主，独立 View 可以复用现有菜单和页面切换逻辑，同时移植 BiliPai 的动画结构与时长参数，避免引入整套 Compose 依赖。
+
+### 验证
+
+- 真机 `a60fe293` 安装最终 Debug APK，切换“首页 → 关注”后确认选中胶囊准确落在星标项；修复了坐标矩形重复偏移导致胶囊落在“发现”的问题。
+- 80ms 真机截帧确认页面滑动与底栏选中态同步变化；滚动显隐仍由现有 RecyclerView 状态回调驱动。
+- Android Studio JDK 21、离线依赖下 `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug --max-workers=1` 成功；Lint 仅保留项目原有告警，未新增自定义底栏告警。
+
+## 2026-08-14 - 对齐 BiliPai 底栏内容密度
+
+### 决定
+
+- 保留 BiliPai 的 64dp shell 和 56dp 选中指示器，但将 XML 底栏内容调整为 24dp 图标、11sp 标签、0dp Material 上下 padding。
+- 在 `AnimatedBottomNavigationView` 的布局阶段，把 Material 默认“图标置顶、文字置底”的两个子树重新按 BiliPai 的垂直 `Column` 居中，图标与标签之间保持约 1dp；只移动视觉子树，不改变 item 的触摸和无障碍边界。
+- Material `NavigationBarView` 会把透明 XML 背景替换成默认 `MaterialShapeDrawable`，因此显式移除自定义 View 根背景，让外层 `LiquidGlassFrameLayout` 成为唯一浮岛背景，避免内部白色矩形。
+
+### 验证
+
+- 真机 `a60fe293` 的 UI dump 显示底栏图标容器结束于 `y=2221`、标签组起始于 `y=2224`，实际间隔为 3px（约 1dp）；截图确认首页/关注选中胶囊、文字和独立搜索圆钮均正常。
+- 收紧后的 `:app:assembleDebug` 成功；最终全量构建、单元测试和 Lint 继续作为本次交付验证项执行。

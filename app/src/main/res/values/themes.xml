@@ -104,16 +104,18 @@
         <item name="android:color">@android:color/transparent</item>
     </style>
 
-    <style name="MiuixFloatingNavigationLabelActive" parent="TextAppearance.Material3.LabelMedium">
+    <style name="MiuixFloatingNavigationLabelActive" parent="TextAppearance.Material3.LabelSmall">
         <item name="android:fontFamily">sans</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">11sp</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
-    <style name="MiuixFloatingNavigationLabelInactive" parent="TextAppearance.Material3.LabelMedium">
+    <style name="MiuixFloatingNavigationLabelInactive" parent="TextAppearance.Material3.LabelSmall">
         <item name="android:fontFamily">sans</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">11sp</item>
         <item name="android:textStyle">normal</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
     <style name="UserTextColor">
