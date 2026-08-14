@@ -45,7 +45,8 @@ class TopicViewModel @AssistedInject constructor(
 
     var subtitle: String? = null
     var avatar: String? = null
-    var productTitle = "最近回复"
+    var topicData: HomeFeedResponse.Data? = null
+    var discussionSort: TopicSort = TopicSort.DEFAULT
 
     var isAInit: Boolean = true
     var postFollowData: HashMap<String, String>? = null
@@ -66,6 +67,7 @@ class TopicViewModel @AssistedInject constructor(
                             activityState.postValue(LoadingState.LoadingError(data.message))
                             return@collect
                         } else if (data.data != null) {
+                            topicData = data.data
                             isFollow = data.data.userAction?.follow == 1
                             id = data.data.id ?: ""
                             type = data.data.entityType
@@ -94,6 +96,7 @@ class TopicViewModel @AssistedInject constructor(
                             activityState.postValue(LoadingState.LoadingError(data.message))
                             return@collect
                         } else if (data.data != null) {
+                            topicData = data.data
                             isFollow = data.data.userAction?.follow == 1
                             avatar = data.data.logo
                             subtitle = data.data.intro

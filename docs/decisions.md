@@ -553,3 +553,30 @@ APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` �
 ### 验证
 
 已通过远端 Actions API 和 Check Run annotation 确认失败原因；本地 `:app:assembleRelease -PversionName=v1.0.0 --offline` 构建成功，APK 文件名为 `c001apk_v1.0.0(457).apk`，badging 显示 `versionName='v1.0.0'`，v3 签名和 16 KB 对齐检查通过。GitHub Actions 远端运行仍待修复提交后的新 Tag。
+
+## 2026-08-14 - 按推荐结构重做话题和数码详情页
+
+### 决定
+
+- 复用 `BasePagerFragment` 的 Toolbar、TabLayout、ViewPager2 和 `view` 占位，在折叠 AppBar 中注入主题头部；共享布局只新增默认隐藏的 `extraBar`，不改变用户页和应用页的占位替换行为。
+- 关注按钮从 TopicFragment 菜单移动到头部，继续使用 `LocalFollowRepo` 的本地优先状态；点击后先反馈本地状态，再尽力同步服务端。
+- 讨论排序使用当前 Tab 的原始 URL，只增删嵌套请求中的 `listType=dateline_desc` 或 `listType=rank_score`，不再拼接产品专用 `/product/feedList` 路由；切换时清空列表并重置分页游标。
+- 头部只显示接口实际返回的 logo、简介和统计字段；不硬编码截图中的规则卡片、关注者头像或具体文案。
+
+### 原因与边界
+
+用户需要关注入口首屏可见，并能快速切换内容排序。当前真实接口观察到部分话题直接返回“最近回复 / 最新发布 / 热门动态”三个排序 Tab，而不是独立的“讨论”Tab；因此保留服务端 Tab 的兼容展示，只有存在“讨论”Tab 时才显示额外的“默认 / 最新 / 热度”单选栏，避免重复展示或伪造接口能力。
+
+### 验证
+
+Android Studio JDK 21 下，`:app:testDebugUnitTest :app:assembleDebug :app:lintDebug --max-workers=1` 成功；Debug APK 已安装到设备 `a60fe293`。真实详情页确认头部 logo/标题/简介/统计可见，点击“关注”后按钮即时变为“已关注”；切换“最新发布”后首条动态和列表内容刷新；最近 250 行设备日志未发现 `FATAL EXCEPTION` 或 `AndroidRuntime`。尚未在一个明确返回“讨论”Tab 的真实话题上完成额外排序栏及其服务端 `listType` 参数验收；用户确认当前真实接口结构保持不变，因此不再为寻找该样本扩大本次变更范围。
+
+## 2026-08-14 - 接受真实接口的现有排序 Tab 结构
+
+### 决定
+
+话题和数码页以真实接口返回为准：当前页面继续使用“最近回复 / 最新发布 / 热门动态”等服务端排序 Tab，不强行改造成截图中的独立“讨论”Tab。代码保留兼容“讨论”Tab 的默认/最新/热度内嵌排序栏，但不再把它作为当前页面必须出现的 UI。
+
+### 原因
+
+设备实测的真实话题接口没有返回独立“讨论”Tab。继续寻找特定样本会扩大交付范围，且可能制造与服务端数据模型不一致的页面结构；用户已确认保持现状。

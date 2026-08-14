@@ -3,8 +3,6 @@ package com.godmiracle.coolapk.ui.topic
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import com.godmiracle.coolapk.adapter.FooterState
-import com.godmiracle.coolapk.adapter.LoadingState
 import com.godmiracle.coolapk.ui.base.BaseAppFragment
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickContainer
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickListener
@@ -47,20 +45,7 @@ class TopicContentFragment : BaseAppFragment<TopicContentViewModel>(),
     }
 
     override fun onSearch(type: String, value: String, id: String?) {
-        viewModel.title = value
-        when (value) {
-            "最近回复" -> viewModel.url =
-                "/page?url=/product/feedList?type=feed&id=$id&ignoreEntityById=1"
-
-            "热度排序" -> viewModel.url =
-                "/page?url=/product/feedList?type=feed&id=$id&listType=rank_score"
-
-            "最新发布" -> viewModel.url =
-                "/page?url=/product/feedList?type=feed&id=$id&ignoreEntityById=1&listType=dateline_desc"
-        }
-        viewModel.dataList.value = emptyList()
-        viewModel.footerState.value = FooterState.LoadingDone
-        viewModel.loadingState.value = LoadingState.Loading
+        TopicSort.fromLabel(value)?.let(viewModel::applySort)
     }
 
     override fun onResume() {

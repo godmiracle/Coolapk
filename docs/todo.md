@@ -83,6 +83,13 @@
   - 证据：对照 BiliPai 的 `FloatingBottomBar.kt`、`DampedDragAnimation.kt` 和底栏 motion spec，将独立选中胶囊、连续槽位移动、落位压缩/回弹，以及底栏显隐的透明度/缩放动画移植到现有 XML/ViewBinding 架构；移除 Material 自动注入的矩形背景，并按 BiliPai 的垂直 `Column` 将 24dp 图标、11sp 文字和约 1dp 间距整体居中；保留 Material 菜单点击、选中态和无障碍语义，横屏仍使用 `NavigationRailView`。设备 `a60fe293` 已安装并实际切换首页/关注，UI dump 确认图标与文字仅相隔 3px；最终 `:app:assembleDebug`、`:app:testDebugUnitTest` 和 `:app:lintDebug` 全部成功。
   - 验收标准：点击底栏项时选中胶囊连续移动并带落位回弹；图标与文字紧凑居中且无内部白色矩形；列表滚动中底栏退出，停止滚动后从底部带透明度/缩放恢复；四个入口和独立搜索动作保持可用；不改变横屏导航结构。
 
+- [x] UI-007 按推荐结构重做话题和数码详情页
+  - 优先级：中
+  - 涉及文件：`ui/topic/TopicFragment.kt`、`ui/topic/TopicViewModel.kt`、`ui/topic/TopicContentViewModel.kt`、`ui/topic/TopicContentFragment.kt`、`res/layout/base_tablayout_viewpager.xml`、主题头部/排序布局和 URL 单元测试
+  - 状态：已完成；按真实接口保留“最近回复/最新发布/热门动态”排序 Tab，兼容的“讨论”Tab 仍可使用内嵌排序栏
+  - 证据：主题头部已展示真实 logo、标题、简介和可用统计；关注按钮在设备 `a60fe293` 上点击后即时变为“已关注”；真实“数码日常/充电头兴趣小组”详情的“最近回复 → 最新发布”切换成功刷新列表；`:app:testDebugUnitTest`、`:app:assembleDebug`、`:app:lintDebug` 均成功。用户确认当前接口排序结构保持不变。
+  - 验收标准：头部关注无需打开菜单；讨论排序不使用产品专用硬编码路由；切换排序清空旧列表并重置分页；现有 Tab、动态、黑名单、发布入口和其他详情页菜单保持可用；真实 API 不支持的排序参数不得伪造为已验证。
+
 ## 高优先级：发布和安全边界
 
 - [ ] R-001 建立真实设备和真实接口验收基线

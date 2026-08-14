@@ -16,8 +16,26 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+
+internal object TopicSortUrl {
+    private val listTypePattern = Regex("([?&])listType=[^&]*")
+
+    fun forSort(url: String, sort: TopicSort): String {
+        val listType = sort.listType ?: return url
+        val baseUrl = url
+        if (listTypePattern.containsMatchIn(baseUrl))
+            return baseUrl.replace(listTypePattern, "\$1listType=$listType")
+        val separator = when {
+            baseUrl.endsWith('?') || baseUrl.endsWith('&') -> ""
+            baseUrl.contains('?') -> "&"
+            else -> "?"
+        }
+        return "$baseUrl${separator}listType=$listType"
+    }
+}
 
 class TopicContentViewModel @AssistedInject constructor(
     @Assisted("url") var url: String,
@@ -46,7 +64,8 @@ class TopicContentViewModel @AssistedInject constructor(
     }
 
     override fun fetchData() {
-        viewModelScope.launch(Dispatchers.IO) {
+        fetchJob?.cancel()
+        fetchJob = viewModelScope.launch(Dispatchers.IO) {
             networkRepo.getDataList(url, title, "", lastItem, page)
                 .onStart {
                     if (isLoadMore) {
@@ -109,6 +128,28 @@ class TopicContentViewModel @AssistedInject constructor(
                     isLoadMore = false
                 }
         }
+    }
+
+    private val defaultUrl = url
+    var sort: TopicSort = TopicSort.DEFAULT
+        private set
+    private var fetchJob: Job? = null
+
+    fun applySort(nextSort: TopicSort) {
+        if (sort == nextSort)
+            return
+
+        sort = nextSort
+        url = TopicSortUrl.forSort(defaultUrl, nextSort)
+        fetchJob?.cancel()
+        dataList.value = emptyList()
+        listSize = 0
+        lastItem = null
+        page = 1
+        isEnd = false
+        isRefreshing = false
+        isLoadMore = false
+        loadingState.value = LoadingState.Loading
     }
 
 

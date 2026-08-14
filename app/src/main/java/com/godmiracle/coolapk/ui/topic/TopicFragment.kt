@@ -5,18 +5,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.bumptech.glide.Glide
 import com.godmiracle.coolapk.R
+import com.godmiracle.coolapk.databinding.BaseViewTopicBinding
+import com.godmiracle.coolapk.databinding.TopicSortBarBinding
 import com.godmiracle.coolapk.ui.base.BasePagerFragment
 import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.ui.home.IOnTabClickListener
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickContainer
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickListener
 import com.godmiracle.coolapk.ui.search.SearchActivity
+import com.godmiracle.coolapk.util.ImageUtil
 import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.PrefManager
+import com.godmiracle.coolapk.util.ReplaceViewHelper
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.GRAVITY_CENTER
@@ -28,17 +36,118 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
 
     private val viewModel by viewModels<TopicViewModel>(ownerProducer = { requireActivity() })
     override var tabController: IOnTabClickListener? = null
-    private lateinit var subscribe: MenuItem
-    private lateinit var order: MenuItem
+    private lateinit var topicHeader: BaseViewTopicBinding
+    private lateinit var sortBar: TopicSortBarBinding
+    private var updatingSortSelection = false
     private var menuBlock: MenuItem? = null
     override var controller: IOnSearchMenuClickListener? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initTopicHeader()
+        initSortBar()
         initSelected()
+        updateSortBarVisibility(binding.viewPager.currentItem)
         if (PrefManager.isLogin)
             initFab()
         initObserve()
+    }
+
+    private fun initTopicHeader() {
+        topicHeader = BaseViewTopicBinding.inflate(layoutInflater, null, false)
+        ReplaceViewHelper(requireContext()).toReplaceView(binding.view, topicHeader.root)
+        topicHeader.followButton.setOnClickListener {
+            viewModel.toggleFollow()
+        }
+        renderTopicHeader()
+    }
+
+    private fun renderTopicHeader() {
+        topicHeader.type.text = if (viewModel.type == "topic") "话题" else "数码"
+        topicHeader.title.text = topicTitle()
+
+        val intro = viewModel.subtitle?.trim()?.takeIf { it.isNotEmpty() }
+        topicHeader.intro.text = intro.orEmpty()
+        topicHeader.intro.isVisible = intro != null
+
+        val data = viewModel.topicData
+        bindStat(topicHeader.hotNum, data?.hotNumTxt ?: data?.hotNum, "热度")
+        bindStat(
+            topicHeader.discussionNum,
+            data?.feedCommentNumTxt ?: data?.commentnumTxt ?: data?.commentCount,
+            "讨论"
+        )
+        bindStat(topicHeader.followNum, data?.followNum, "关注")
+
+        Glide.with(topicHeader.logo).clear(topicHeader.logo)
+        if (data?.logo.isNullOrBlank()) {
+            topicHeader.logo.setImageResource(
+                if (viewModel.type == "topic") R.drawable.outline_tag_24
+                else R.drawable.ic_phone
+            )
+            topicHeader.logo.setColorFilter(
+                MaterialColors.getColor(
+                    topicHeader.logo,
+                    com.google.android.material.R.attr.colorPrimary
+                )
+            )
+        } else {
+            topicHeader.logo.clearColorFilter()
+            ImageUtil.showIMG(topicHeader.logo, data?.logo)
+        }
+        renderFollowButton(viewModel.isFollow)
+    }
+
+    private fun bindStat(view: TextView, value: String?, suffix: String) {
+        val normalized = value?.trim()?.takeIf { it.isNotEmpty() }
+        view.text = normalized?.let { "$it$suffix" }.orEmpty()
+        view.isVisible = normalized != null
+    }
+
+    private fun renderFollowButton(followed: Boolean) {
+        topicHeader.followButton.text = if (followed) "已关注" else "关注"
+    }
+
+    private fun topicTitle(): String {
+        return if (viewModel.type == "topic")
+            viewModel.url.replace("/t/", "").ifBlank { viewModel.title }
+        else
+            viewModel.title
+    }
+
+    private fun initSortBar() {
+        sortBar = TopicSortBarBinding.inflate(layoutInflater, binding.extraBar, false)
+        binding.extraBar.addView(sortBar.root)
+        sortBar.sortGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || updatingSortSelection)
+                return@addOnButtonCheckedListener
+
+            val sort = sortForButton(checkedId)
+            viewModel.discussionSort = sort
+            controller?.onSearch("sort", sort.label, null)
+        }
+    }
+
+    private fun updateSortBarVisibility(position: Int) {
+        val visible = tabList.getOrNull(position) == "讨论"
+        binding.extraBar.isVisible = visible
+        if (visible) {
+            updatingSortSelection = true
+            sortBar.sortGroup.check(buttonForSort(viewModel.discussionSort))
+            updatingSortSelection = false
+        }
+    }
+
+    private fun sortForButton(buttonId: Int): TopicSort = when (buttonId) {
+        R.id.topicSortLatest -> TopicSort.LATEST
+        R.id.topicSortHot -> TopicSort.HOT
+        else -> TopicSort.DEFAULT
+    }
+
+    private fun buttonForSort(sort: TopicSort): Int = when (sort) {
+        TopicSort.DEFAULT -> R.id.topicSortDefault
+        TopicSort.LATEST -> R.id.topicSortLatest
+        TopicSort.HOT -> R.id.topicSortHot
     }
 
     override fun initFab() {
@@ -84,8 +193,7 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
 
         viewModel.followState.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandledOrReturnNull()?.let {
-                subscribe.title = if (it) "取消关注"
-                else "关注"
+                renderFollowButton(it)
             }
         }
 
@@ -97,7 +205,7 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
     }
 
     override fun iOnTabSelected(tab: TabLayout.Tab?) {
-        order.isVisible = tab?.position == tabList.indexOf("讨论")
+        updateSortBarVisibility(tab?.position ?: -1)
     }
 
     override fun getFragment(position: Int): Fragment =
@@ -122,27 +230,12 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
         super.initBar()
         binding.collapsingToolbar.isTitleEnabled = false
         binding.toolBar.apply {
-            title = if (viewModel.type == "topic") viewModel.url.replace("/t/", "")
-            else viewModel.title
-            viewModel.subtitle?.let { subtitle = it }
+            title = ""
 
             inflateMenu(R.menu.topic_product_menu)
-
-            order = menu.findItem(R.id.order)
-            order.isVisible = viewModel.type == "product"
-                    && binding.viewPager.currentItem == tabList.indexOf("讨论")
-            menu.findItem(
-                when (viewModel.productTitle) {
-                    "最近回复" -> R.id.topicLatestReply
-                    "热度排序" -> R.id.topicHot
-                    "最新发布" -> R.id.topicLatestPublish
-                    else -> throw IllegalArgumentException("type error")
-                }
-            )?.isChecked = true
-
+            menu.findItem(R.id.order).isVisible = false
+            menu.findItem(R.id.subscribe).isVisible = false
             menuBlock = menu.findItem(R.id.block)
-            subscribe = menu.findItem(R.id.subscribe)
-            subscribe.isVisible = viewModel.type == "topic" || viewModel.type == "product"
 
             viewModel.checkMenuState()
 
@@ -166,59 +259,25 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
                         }
                     }
 
-                    R.id.topicLatestReply -> {
-                        viewModel.productTitle = "最近回复"
-                        controller?.onSearch("title", "最近回复", viewModel.id)
-                    }
-
-                    R.id.topicHot -> {
-                        viewModel.productTitle = "热度排序"
-                        controller?.onSearch("title", "热度排序", viewModel.id)
-                    }
-
-                    R.id.topicLatestPublish -> {
-                        viewModel.productTitle = "最新发布"
-                        controller?.onSearch("title", "最新发布", viewModel.id)
-                    }
-
                     R.id.block -> {
                         val isBlocked = menuBlock?.title.toString() == "移除黑名单"
                         MaterialAlertDialogBuilder(requireContext()).apply {
-                            val title =
-                                if (viewModel.type == "topic") viewModel.url
-                                    .replace("/t/", "")
-                                else viewModel.title
-                            setTitle("确定将 $title ${menuBlock?.title}？")
+                            setTitle("确定将 ${topicTitle()} ${menuBlock?.title}？")
                             setNegativeButton(android.R.string.cancel, null)
                             setPositiveButton(android.R.string.ok) { _, _ ->
-                                viewModel.title.let { title ->
-                                    menuBlock?.title = if (isBlocked) {
-                                        viewModel.deleteTopic(title)
-                                        "加入黑名单"
-                                    } else {
-                                        viewModel.saveTopic(title)
-                                        "移除黑名单"
-                                    }
+                                menuBlock?.title = if (isBlocked) {
+                                    viewModel.deleteTopic(viewModel.title)
+                                    "加入黑名单"
+                                } else {
+                                    viewModel.saveTopic(viewModel.title)
+                                    "移除黑名单"
                                 }
                             }
                             show()
                         }
                     }
-
-                    R.id.subscribe -> {
-                        viewModel.toggleFollow()
-                    }
-
                 }
-                menu.findItem(
-                    when (viewModel.productTitle) {
-                        "最近回复" -> R.id.topicLatestReply
-                        "热度排序" -> R.id.topicHot
-                        "最新发布" -> R.id.topicLatestPublish
-                        else -> throw IllegalArgumentException("type error")
-                    }
-                )?.isChecked = true
-                return@setOnMenuItemClickListener true
+                true
             }
         }
     }

@@ -44,6 +44,12 @@
             android:layout_height="wrap_content"
             app:tabTextAppearance="@style/TabText15" />
 
+        <FrameLayout
+            android:id="@+id/extraBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1px"
