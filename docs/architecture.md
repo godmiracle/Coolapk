@@ -213,7 +213,7 @@ Fragment/ViewModel
 - `gradle/libs.versions.toml` 集中维护依赖版本。
 - `app` 使用 ViewBinding、Data Binding、BuildConfig、Hilt KSP、Room KSP、Glide KSP。
 - Release 开启 `isMinifyEnabled` 和 `isShrinkResources`。
-- GitHub Actions 使用 JDK 17，先验证 Wrapper，然后构建 Release/Debug 并上传 APK 与 Release mapping；当前 workflow 没有测试、lint 或设备验收步骤。
+- GitHub Actions 使用 JDK 17，先验证 Wrapper，然后构建 Release/Debug 并上传 Actions 制品与 Release mapping。`main` Push/手动触发只保留制品流程；推送 `v*` Tag 时使用 CI Secrets 注入签名配置，通过 `gh release create --verify-tag --generate-notes` 创建 GitHub Release，并上传签名 APK 与 `SHA256SUMS`。当前 workflow 没有测试、lint 或设备验收步骤。
 
 ## 8. 安全、隐私和兼容性风险
 
@@ -224,7 +224,7 @@ Fragment/ViewModel
 5. `QUERY_ALL_PACKAGES` 会读取已安装应用列表，因应用列表和更新检查功能仍保留；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
 6. 设备码和 Coolapk 版本参数可在设置中修改，改变后可能导致接口拒绝、账号风控或数据错配。
 7. API、登录流程、图片地址、OSS 回调和返回字段依赖第三方服务，必须把线上验证与编译验证分开记录。
-8. 当前源码已有 Room/网络/凭证/WebView 回归测试；静态计数为 JVM 22、instrumentation 21。本轮未运行测试，因此这些数量不代表通过，也不覆盖真实 API、完整登录、分页、深链、图片保存和发布签名。
+8. 当前源码已有 Room/网络/凭证/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。本次已完成本地签名 Release 和 OPPO `PGEM10` 真机冷启动验证，但首次远端 Tag 工作流仍待运行；CI 仍不覆盖真实 API、完整登录、分页、深链、图片保存和设备验收。
 
 ## 9. 维护规则
 

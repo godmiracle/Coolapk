@@ -81,6 +81,8 @@ KEY_PASSWORD=本地别名密码
 - `versionCode` 来自 Git 提交总数，`versionName` 来自当前短 hash。
 - Release APK 改名为 `c001apk_<short-hash>(<commit-count>).apk`。
 
+推送 `v*` Tag 时，GitHub Actions 会从仓库 Secrets 临时生成 `local.properties`，因此不能依赖开发机上的本地文件。需要配置 `SIGN_KEYSTORE_BASE64`、`KEYSTORE_PASSWORD`、`KEY_ALIAS` 和 `KEY_PASSWORD`；构建通过后，workflow 会自动创建同名 GitHub Release，并上传 Release APK 与 `SHA256SUMS`。Job 声明 `contents: write` 供 Tag 发布步骤使用，其他触发路径不会执行 Release 写操作。
+
 发布前必须确认：签名不是 Debug、mapping 已归档、R8 后页面可启动、真实 API 请求正常、隐私/许可证/权限说明已更新。
 
 ## 5. 配置和运行
@@ -144,12 +146,13 @@ KEY_PASSWORD=本地别名密码
 
 `.github/workflows/ci.yml`：
 
-1. 只在 `main` 分支相关 Push 或手动触发时运行。
+1. `main` 分支 Push、`v*` Tag Push 或手动触发时运行。
 2. 使用 JDK 17、Gradle Wrapper validation 和 Gradle 缓存。
-3. 如果主分支配置了 `SIGN_KEYSTORE_BASE64` 等 Secrets，会写入临时 `local.properties`。
+3. `main` 或 `v*` Tag 构建在配置 `SIGN_KEYSTORE_BASE64` 等 Secrets 后，会写入临时 `local.properties`。
 4. 构建并上传 Release APK、Release mapping、Debug APK。
-5. 没有运行 unit test、instrumentation test、lint 或真实设备验收。
-6. 普通 Markdown/文本变更会被 `paths-ignore` 忽略，但 workflow 文件本身保留触发影响。
+5. `v*` Tag 构建还会调用 `gh release create --verify-tag --generate-notes`，自动创建 GitHub Release 并上传 APK、`SHA256SUMS`。
+6. 没有运行 unit test、instrumentation test、lint 或真实设备验收。
+7. 普通 Markdown/文本变更会被 `paths-ignore` 忽略，但 workflow 文件本身保留触发影响。
 
 ## 10. 常见问题
 
@@ -159,7 +162,7 @@ KEY_PASSWORD=本地别名密码
 
 ### Release 可以构建但不能发布
 
-检查 `local.properties` 是否提供完整的 Release 密钥配置；缺少配置时 `verifyReleaseSigning` 应使 Release 任务失败。成功生成 APK 后仍需用 `apksigner verify --print-certs` 检查签名。
+检查本地 `local.properties` 或 GitHub Actions Secrets 是否提供完整的 Release 密钥配置；缺少配置时 `verifyReleaseSigning` 应使 Release 任务失败。成功生成 APK 后仍需用 `apksigner verify --print-certs` 检查签名；Tag 发布还要在 Release 页面核对 APK 与 `SHA256SUMS` 是否存在。
 
 ### 登录失败或接口返回空
 

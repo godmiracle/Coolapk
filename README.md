@@ -60,6 +60,22 @@ bash gradlew :app:testDebugUnitTest :app:lintDebug
 
 Release 构建需要本地签名配置，详细步骤见 [`docs/development.md`](docs/development.md)。
 
+## GitHub Actions 发布
+
+推送形如 `v1.0.0` 的 Tag 后，GitHub Actions 会使用仓库 Secrets 构建签名版 Release，并自动创建 GitHub Release，上传 APK 和 `SHA256SUMS`。需要在仓库的 `Settings > Secrets and variables > Actions` 中配置：
+
+- `SIGN_KEYSTORE_BASE64`：Release keystore 的 Base64 内容
+- `KEYSTORE_PASSWORD`：keystore 密码
+- `KEY_ALIAS`：签名别名
+- `KEY_PASSWORD`：签名别名密码
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+不要把 keystore、`local.properties` 或上述密码提交到仓库。首次发布前应在 Actions 页面确认构建成功，并在 Release 页面核对 APK 签名和 `SHA256SUMS`。
+
 ## 文档
 
 - [`docs/context.md`](docs/context.md)：项目背景、范围、状态和约束

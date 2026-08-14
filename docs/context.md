@@ -40,7 +40,7 @@
 - `DatabaseModule` 对 `FeedFavorite`、`HomeMenu`、`RecentAtUser`、`LocalFollow` 和四类 `StringEntity` 数据库保留兼容数据的前向迁移；`DatabaseMigrationTest` 使用 `app/src/androidTest/assets/room-migration-fixtures/` 中的自包含历史 fixture 验证关键行和 Room identity。
 - Manifest 包含主入口、Coolapk/自定义 Scheme 深链、WebView 独立进程、FileProvider、网络状态和已安装应用查询权限；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
 - API1、API2 和 Account 客户端均在最终网络发送边界检查 HTTPS 与三个受信任 Host；不可信 `@Url`/重定向会清理凭证，Account 的不可信请求不会消费登录步骤 flag。`WebViewActivity` 销毁时只释放资源，不主动结束进程。
-- GitHub Actions 当前只构建 Release 和 Debug APK，并上传 APK/Mapping，没有运行业务测试或 lint。
+- GitHub Actions 在 `main` Push/手动触发时构建 Release/Debug 并上传 Actions 制品；推送 `v*` Tag 时额外创建 GitHub Release，上传签名 APK 与 `SHA256SUMS`。CI 仍没有运行业务测试、lint 或真实设备验收，首次 Tag 发布运行待远端验证。
 
 ### 源码覆盖但尚未证明
 
@@ -86,7 +86,7 @@
 | UI | 继续沿用 XML + ViewBinding/Data Binding；没有证据表明要迁移 Compose |
 | 服务端 | 依赖 `api.coolapk.com`、`api2.coolapk.com`、`account.coolapk.com` 和相关图片/OSS 地址 |
 | 账号 | 只允许使用个人账号；Cookie、Token、密码、验证码和上传 STS 凭据不得进入仓库或共享日志 |
-| 发布 | Release 密钥从未提交的 `local.properties` 读取；缺省回退 Debug 签名 |
+| 发布 | 本地从未提交的 `local.properties` 读取 Release 密钥；CI 从 Secrets 写入临时 `local.properties`；缺少完整配置时 `verifyReleaseSigning` 阻止 Release 打包 |
 | 网络 | Manifest 关闭明文流量；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径先升级为 HTTPS；带凭证客户端只保留三个 Coolapk HTTPS Host |
 | 16 KB 页面大小 | Debug APK 的 native 库已通过 16 KB 对齐校验；Debug AAB 已声明 `PAGE_ALIGNMENT_16K`，16 KB 模拟器冷启动和 GIF 原生加载回归通过 |
 | 法律/许可 | 根目录包含 AGPL-3.0 文本；第三方代码、图片、字体和上游库需要单独核对许可证 |
@@ -114,6 +114,6 @@
 
 ## 运行环境记录
 
-本次分析环境：macOS、工作目录 `/Users/v/ABP/Coolapk`、日期 2026-08-13。仓库已有的历史记录包含 Android Studio JDK 21.0.10、SDK Platform 36.1、Wrapper Gradle 8.14.5、16 KB 模拟器和 Debug 构建证据；这些记录不是本轮文档同步重新执行的结果。当前源码静态计数为 22 个 JVM `@Test` 方法和 21 个 instrumentation `@Test` 方法；本轮未运行 Gradle、设备测试或实时 API，因此不把该计数写成“通过”，也不把历史记录中的 14/10 用例结果当作当前工作树的执行证据。Release 签名、真实设备、真实账号、实时 API 长期稳定性和完整业务验收仍未完成。
+本次分析环境：macOS、工作目录 `/Users/v/ABP/Coolapk`、日期 2026-08-13。此前已使用 Android Studio JDK 21.0.10、SDK Platform 36.1 和 Gradle Wrapper 8.14.5 构建本地签名 Release，完成 APK 签名/16 KB 对齐检查，并安装到 OPPO `PGEM10`（Android 16 / API 36、arm64-v8a）完成 `MainActivity` 冷启动验证。本次 workflow 修改只做静态检查，尚未推送 `v*` Tag 或运行远端 Actions；真实账号、实时 API 长期稳定性和完整业务验收仍未完成。
 
 后续每次真实验收应记录：Android 版本、设备型号、ABI、网络类型、是否登录、应用构建哈希、服务端响应状态和截图/日志位置。

@@ -481,3 +481,24 @@ APK `minSdkVersion=31`，`LiquidGlassFrameLayout` 直接调用 `RenderEffect` �
 ### 原因
 
 本次需求是调整应用品牌和公开说明，不是迁移 Android 身份或重命名历史代码。只修改显示名可以减少包名、深链、本地数据和已有安装的兼容风险，同时让 README 更适合作为项目入口文档。
+
+## 2026-08-13 - GitHub Tag 自动发布签名 Release
+
+### 决定
+
+- 保留 `main` Push 和手动触发的 Actions 制品流程；新增 `v*` Tag 触发，用于正式发布路径。
+- Tag 构建从 `SIGN_KEYSTORE_BASE64`、`KEYSTORE_PASSWORD`、`KEY_ALIAS` 和 `KEY_PASSWORD` 注入临时 `local.properties`，沿用 `verifyReleaseSigning` 阻止未签名或配置不完整的 Release。
+- Tag 构建使用 runner 自带的 `gh release create`，配合 `--verify-tag` 和 `--generate-notes` 创建同名 GitHub Release，并上传 Release APK 与 `SHA256SUMS`。
+- Job 声明 `contents: write`，仅由 `v*` Tag 步骤使用 `GITHUB_TOKEN` 创建 Release；不把 keystore、密码或 Token 写入仓库。
+
+### 原因
+
+将日常 CI 的 Actions 制品与对外 Release 分开，推送版本 Tag 即可得到可追溯的发布页，避免再次手动上传 APK 或忘记生成校验文件。`--verify-tag` 也能避免发布命令意外创建错误 Tag。
+
+### 影响与边界
+
+仓库必须先配置四个签名 Secrets；首次推送 `v*` Tag 后仍需检查远端 Actions、Release 资产和 APK 签名。workflow 目前不运行测试、lint 或真实设备验收；本地签名 Release 和 OPPO `PGEM10` 真机冷启动已单独完成，不能替代首次远端 Tag 验证。
+
+### 验证
+
+本次完成 workflow 与文档静态检查，未推送 `v*` Tag、未创建远端 Release。GitHub CLI 的参数和 Actions Token 权限依据官方文档配置，远端运行结果待首次发布后确认。

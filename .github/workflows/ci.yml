@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
     paths-ignore:
       - '**.md'
       - '**.txt'
@@ -14,6 +15,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -32,7 +35,7 @@ jobs:
           cache: gradle
 
       - name: Write key
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         run: |
           if [ ! -z "${{ secrets.SIGN_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.SIGN_KEYSTORE_BASE64 }}" | base64 --decode > key.jks
@@ -88,3 +91,20 @@ jobs:
         with:
           name: ${{ steps.buildDebug.outputs.debugName }}
           path: "app/build/outputs/apk/debug/*.apk"
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_apk="$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          test -n "$release_apk"
+          release_name="$(basename "$release_apk")"
+          sha256sum "$release_apk" | awk -v name="$release_name" '{print $1 "  " name}' > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "c001apk $GITHUB_REF_NAME" \
+            --generate-notes \
+            "$release_apk" \
+            SHA256SUMS

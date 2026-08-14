@@ -113,9 +113,9 @@
   - 优先级：高
   - 可信度：已确认
   - 涉及文件：`app/build.gradle.kts`、`.github/workflows/ci.yml`
-  - 状态：已修改，Debug APK 签名已通过；无 Release keystore 时 `verifyReleaseSigning` 已按预期阻止打包，等待配置真实 keystore 后验证 Release 签名
-  - 证据：Debug 保持 Debug 签名；Release 缺少 keystore 或签名字段时由 `verifyReleaseSigning` 任务失败，不再把成功的 Debug 签名 Release 当作可发布产物。
-  - 验收标准：决定是保持学习用途回退，还是让 Release 在缺少密钥时失败；CI 与本地行为一致；发布前有 APK 签名检查。
+  - 状态：签名策略已确定；本地签名 Release 与真机冷启动已验证，CI workflow 已配置 Tag 自动发布，等待首次远端 `v*` Tag 运行验证
+  - 证据：Debug 保持 Debug 签名；Release 缺少 keystore 或签名字段时由 `verifyReleaseSigning` 任务失败；CI 从 `SIGN_KEYSTORE_BASE64` 等 Secrets 写入临时 `local.properties`，Tag 发布自动上传 APK 与 `SHA256SUMS`。
+  - 验收标准：本地与 CI 缺少密钥时均阻止 Release；首次 Tag Actions 成功；Release APK 通过 `apksigner verify --print-certs`，发布页同时包含 APK 和 `SHA256SUMS`。
 
 - [x] R-013 验证 Retrofit Base URL 尾部斜杠
   - 优先级：高
