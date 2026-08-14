@@ -15,3 +15,12 @@
 local.properties
 *.log
 .idea
+
+# Local Codex/Rasen state
+.codex/
+.rasen/
+rasen/config.yaml
+
+# Signing credentials
+*.jks
+*.keystore
