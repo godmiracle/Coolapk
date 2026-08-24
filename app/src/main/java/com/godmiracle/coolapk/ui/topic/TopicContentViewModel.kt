@@ -22,9 +22,39 @@ import kotlinx.coroutines.launch
 
 internal object TopicSortUrl {
     private val listTypePattern = Regex("([?&])listType=[^&]*")
+    private val nestedUrlMarker = Regex("(?i)([?&])url=")
+    private val encodedListTypePattern =
+        Regex("(?i)(%26|%3F)listType%3D[^%]*(?=%26|$)")
 
     fun forSort(url: String, sort: TopicSort): String {
         val listType = sort.listType ?: return url
+        forEncodedNestedUrl(url, listType)?.let { return it }
+
+        return forRawUrl(url, listType)
+    }
+
+    private fun forEncodedNestedUrl(url: String, listType: String): String? {
+        val marker = nestedUrlMarker.find(url) ?: return null
+        val valueStart = marker.range.last + 1
+        val valueEnd = url.indexOf('&', valueStart).let { if (it == -1) url.length else it }
+        val encodedValue = url.substring(valueStart, valueEnd)
+        if (!encodedValue.contains("%2F", ignoreCase = true)
+            && !encodedValue.contains("%3F", ignoreCase = true)
+            && !encodedValue.contains("%26", ignoreCase = true)
+        )
+            return null
+
+        val replacedValue = encodedListTypePattern.replace(encodedValue) {
+            "${it.groupValues[1]}listType%3D$listType"
+        }
+        val sortedValue = if (replacedValue == encodedValue)
+            "$encodedValue%26listType%3D$listType"
+        else
+            replacedValue
+        return url.replaceRange(valueStart, valueEnd, sortedValue)
+    }
+
+    private fun forRawUrl(url: String, listType: String): String {
         val baseUrl = url
         if (listTypePattern.containsMatchIn(baseUrl))
             return baseUrl.replace(listTypePattern, "\$1listType=$listType")

@@ -90,6 +90,13 @@
   - 证据：主题头部已展示真实 logo、标题、简介和可用统计；关注按钮在设备 `a60fe293` 上点击后即时变为“已关注”；真实“数码日常/充电头兴趣小组”详情的“最近回复 → 最新发布”切换成功刷新列表；`:app:testDebugUnitTest`、`:app:assembleDebug`、`:app:lintDebug` 均成功。用户确认当前接口排序结构保持不变。
   - 验收标准：头部关注无需打开菜单；讨论排序不使用产品专用硬编码路由；切换排序清空旧列表并重置分页；现有 Tab、动态、黑名单、发布入口和其他详情页菜单保持可用；真实 API 不支持的排序参数不得伪造为已验证。
 
+- [x] UI-008 修复数码讨论“最新/热度”排序参数失效
+  - 优先级：高
+  - 涉及文件：`ui/topic/TopicContentViewModel.kt`、`ui/topic/TopicSortUrlTest.kt`、`docs/decisions.md`、`docs/sessions/2026-08-24.md`
+  - 状态：已完成；兼容服务端返回的 percent-encoded 嵌套 `url`，排序参数现在写入内层 URL
+  - 证据：修复前回归用例证明 `hot` 会把参数追加到外层；修复后最新/热度 URL 单测、`:app:testDebugUnitTest`、`:app:assembleDebug`、`:app:lintDebug` 均通过。`Pixel_10` 模拟器上同一商品详情的默认、最新、热度请求均返回 `200 OK`，内层 `listType` 分别为 `lastupdate_desc`、`dateline_desc`、`rank_score`。
+  - 验收标准：默认排序保持原始内层参数；最新和热度替换内层 `listType`，不再生成外层重复参数；原始未编码 URL 的兼容逻辑和分页刷新行为保持不变。
+
 ## 高优先级：发布和安全边界
 
 - [ ] R-001 建立真实设备和真实接口验收基线

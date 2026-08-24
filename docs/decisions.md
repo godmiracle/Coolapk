@@ -580,3 +580,17 @@ Android Studio JDK 21 下，`:app:testDebugUnitTest :app:assembleDebug :app:lint
 ### 原因
 
 设备实测的真实话题接口没有返回独立“讨论”Tab。继续寻找特定样本会扩大交付范围，且可能制造与服务端数据模型不一致的页面结构；用户已确认保持现状。
+
+## 2026-08-24 - 修复数码讨论排序的编码嵌套 URL
+
+### 决定
+
+`TopicSortUrl` 在处理服务端返回的编码嵌套 `url` 时，优先替换内层编码的 `listType`；仅在没有编码嵌套 URL 时继续使用原始未编码 URL 逻辑。排序值使用 `%26listType%3D...` 写回内层参数，不向外层 `/v6/page/dataList` 的 `url` 值追加未编码的 `listType`。
+
+### 原因与边界
+
+真实请求中的讨论 URL 形如 `/page?url=%2Fproduct%2FfeedList...%26listType%3Dlastupdate_desc`。旧实现只匹配字面量 `?listType=` 或 `&listType=`，因此“最新/热度”会落到嵌套 URL 外层，内层仍保持 `lastupdate_desc`。本次只修复 URL 参数位置，不改变服务端排序名称、分页重置或其他详情页路由。
+
+### 验证
+
+`TopicSortUrlTest` 新增编码嵌套 URL 的最新和热度回归用例；修复前热度用例失败，修复后 `:app:testDebugUnitTest :app:assembleDebug :app:lintDebug --offline --max-workers=1` 成功。`Pixel_10` 模拟器使用真实商品详情复测，默认、最新、热度请求分别携带 `lastupdate_desc`、`dateline_desc`、`rank_score`，均返回 `200 OK`。网络日志只使用项目已有的脱敏 Debug 开关，验证后恢复普通 Debug 构建配置。

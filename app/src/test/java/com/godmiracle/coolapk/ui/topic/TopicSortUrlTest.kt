@@ -9,6 +9,8 @@ class TopicSortUrlTest {
 
     private val discussionUrl =
         "/page?url=/product/feedList?type=feed&id=42&ignoreEntityById=1"
+    private val encodedDiscussionUrl =
+        "/page?url=%2Fproduct%2FfeedList%3FcacheExpires%3D60%26type%3Dfeed%26id%3D42%26listType%3Dlastupdate_desc"
 
     @Test
     fun `default sort keeps the original tab url`() {
@@ -41,5 +43,23 @@ class TopicSortUrlTest {
             "/page?listType=rank_score",
             TopicSortUrl.forSort("/page", TopicSort.HOT)
         )
+    }
+
+    @Test
+    fun `hot sort replaces list type inside an encoded nested url`() {
+        val sorted = TopicSortUrl.forSort(encodedDiscussionUrl, TopicSort.HOT)
+
+        assertTrue(sorted.contains("%26listType%3Drank_score"))
+        assertFalse(sorted.contains("%26listType%3Dlastupdate_desc"))
+        assertFalse(sorted.contains("&listType=rank_score"))
+    }
+
+    @Test
+    fun `latest sort replaces list type inside an encoded nested url`() {
+        val sorted = TopicSortUrl.forSort(encodedDiscussionUrl, TopicSort.LATEST)
+
+        assertTrue(sorted.contains("%26listType%3Ddateline_desc"))
+        assertFalse(sorted.contains("%26listType%3Dlastupdate_desc"))
+        assertFalse(sorted.contains("&listType=dateline_desc"))
     }
 }
