@@ -104,42 +104,6 @@ object Repository {
         Result.success(Network.getFollowList(url, uid, page, lastItem))
     }
 
-    suspend fun postLikeFeed(url: String, id: String) = fire {
-        Result.success(Network.postLikeFeed(url, id))
-    }
-
-    suspend fun postLikeReply(url: String, id: String) = fire {
-        Result.success(Network.postLikeReply(url, id))
-    }
-
-    suspend fun checkLoginInfo() = fire {
-        Result.success(Network.checkLoginInfo())
-    }
-
-    suspend fun preGetLoginParam() = fire {
-        Result.success(Network.preGetLoginParam())
-    }
-
-    suspend fun getLoginParam() = fire {
-        Result.success(Network.getLoginParam())
-    }
-
-    suspend fun tryLogin(data: HashMap<String, String?>) = fire {
-        Result.success(Network.tryLogin(data))
-    }
-
-    suspend fun getCaptcha(url: String) = fire {
-        Result.success(Network.getCaptcha(url))
-    }
-
-    suspend fun getValidateCaptcha(url: String) = fire {
-        Result.success(Network.getValidateCaptcha(url))
-    }
-
-    suspend fun postReply(data: HashMap<String, String>, id: String, type: String) = fire {
-        Result.success(Network.postReply(data, id, type))
-    }
-
     suspend fun getDataList(
         url: String, title: String, subTitle: String?, lastItem: String?, page: Int
     ) = fire {
@@ -148,30 +112,6 @@ object Repository {
 
     suspend fun getDyhDetail(dyhId: String, type: String, page: Int, lastItem: String?) = fire {
         Result.success(Network.getDyhDetail(dyhId, type, page, lastItem))
-    }
-
-    suspend fun getSmsToken(type: String, data: HashMap<String, String?>) = fire(Dispatchers.IO) {
-        Result.success(Network.getSmsToken(type, data))
-    }
-
-    suspend fun getSmsLoginParam(type: String) = fire(Dispatchers.IO) {
-        Result.success(Network.getSmsLoginParam(type))
-    }
-
-    suspend fun getMessage(url: String, page: Int, lastItem: String?) = fire {
-        Result.success(Network.getMessage(url, page, lastItem))
-    }
-
-    suspend fun postFollowUnFollow(url: String, uid: String) = fire {
-        Result.success(Network.postFollowUnFollow(url, uid))
-    }
-
-    suspend fun postCreateFeed(data: HashMap<String, String>) = fire {
-        Result.success(Network.postCreateFeed(data))
-    }
-
-    suspend fun postRequestValidate(data: HashMap<String, String?>) = fire {
-        Result.success(Network.postRequestValidate(data))
     }
 
     suspend fun getVoteComment(
@@ -195,18 +135,6 @@ object Repository {
         fire {
             Result.success(Network.getCollectionList(url, uid, id, showDefault, page, lastItem))
         }
-
-    suspend fun postDelete(url: String, id: String) = fire {
-        Result.success(Network.postDelete(url, id))
-    }
-
-    suspend fun postFollow(data: HashMap<String, String>) = fire {
-        Result.success(Network.postFollow(data))
-    }
-
-    suspend fun getFollow(url: String, tag: String?, id: String?) = fire {
-        Result.success(Network.getFollow(url, tag, id))
-    }
 
     private fun <T> fire(context: CoroutineContext, block: suspend () -> Result<T>) =
         liveData(context) {

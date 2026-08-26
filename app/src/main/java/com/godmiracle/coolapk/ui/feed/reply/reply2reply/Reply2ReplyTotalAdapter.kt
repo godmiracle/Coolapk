@@ -16,7 +16,6 @@ import com.godmiracle.coolapk.adapter.PopClickListener
 import com.godmiracle.coolapk.databinding.ItemReplyToReplyItemBinding
 import com.godmiracle.coolapk.logic.model.Like
 import com.godmiracle.coolapk.logic.model.TotalReplyResponse
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.dp
 
 
@@ -33,26 +32,12 @@ class Reply2ReplyTotalAdapter(
         RecyclerView.ViewHolder(binding.root) {
         private var rId: String = ""
         private var rUid: String = ""
-        private var username: String = ""
 
         init {
-            itemView.setOnClickListener {
-                listener.onReply(
-                    rId,
-                    rUid,
-                    rUid,
-                    username,
-                    bindingAdapterPosition,
-                    null
-                )
-            }
-
             binding.expand.setOnClickListener {
                 PopupMenu(it.context, it).apply {
                     menuInflater.inflate(R.menu.feed_reply_menu, menu).apply {
                         menu.findItem(R.id.copy)?.isVisible = false
-                        menu.findItem(R.id.delete)?.isVisible = PrefManager.uid == rUid
-                        menu.findItem(R.id.report)?.isVisible = PrefManager.isLogin
                     }
                     setOnMenuItemClickListener(
                         PopClickListener(
@@ -73,7 +58,6 @@ class Reply2ReplyTotalAdapter(
 
             rId = reply.id
             rUid = reply.uid
-            username = reply.userInfo.username
 
             binding.setVariable(
                 BR.likeData,

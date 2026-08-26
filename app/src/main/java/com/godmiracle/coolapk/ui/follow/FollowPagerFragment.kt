@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.godmiracle.coolapk.ui.base.BasePagerFragment
-import com.godmiracle.coolapk.util.PrefManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -13,7 +12,6 @@ class FollowPagerFragment : BasePagerFragment() {
     private val uid by lazy { arguments?.getString("uid").orEmpty() }
     private val type by lazy { arguments?.getString("type").orEmpty() }
     private val embedded by lazy { arguments?.getBoolean("embedded") == true }
-    private val isMe by lazy { uid == PrefManager.uid }
 
     companion object {
         @JvmStatic
@@ -32,21 +30,7 @@ class FollowPagerFragment : BasePagerFragment() {
             "follow" ->
                 if (embedded)
                     LocalFollowFragment()
-                else if (isMe)
-                    when (position) {
-                        0 -> FollowFragment.newInstance(type = "follow")
-                        1 -> FollowFragment.newInstance(type = "topic")
-                        2 -> FollowFragment.newInstance(type = "product")
-                        3 -> FollowFragment.newInstance(type = "apk")
-                        else -> throw IllegalArgumentException()
-                    }
                 else FollowFragment.newInstance(uid, "follow")
-
-            "reply" -> when (position) {
-                0 -> FollowFragment.newInstance(type = "reply")
-                1 -> FollowFragment.newInstance(type = "replyToMe")
-                else -> throw IllegalArgumentException()
-            }
 
             else -> FollowFragment.newInstance(uid, type)
         }
@@ -59,14 +43,10 @@ class FollowPagerFragment : BasePagerFragment() {
                         binding.tabLayout.isVisible = false
                         listOf("")
                     }
-                    else if (isMe)
-                        listOf("用户", "话题", "数码", "应用")
                     else {
                         binding.tabLayout.isVisible = false
                         listOf("")
                     }
-
-                "reply" -> listOf("我的回复", "我收到的回复")
                 else -> {
                     binding.tabLayout.isVisible = false
                     listOf("")
@@ -92,24 +72,13 @@ class FollowPagerFragment : BasePagerFragment() {
             "follow" -> {
                 if (embedded)
                     "关注"
-                else if (isMe)
-                    "我的关注"
                 else
                     "TA关注的人"
             }
 
             "fans" -> {
-                if (isMe)
-                    "关注我的人"
-                else
-                    "TA的粉丝"
+                "TA的粉丝"
             }
-
-            "like" -> "我的赞"
-
-            "reply" -> "我的回复"
-
-            "recentHistory" -> "我的常去"
 
             else -> type
 

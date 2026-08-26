@@ -7,4 +7,9 @@
     <color name="ic_launcher_background">#607D8B</color>
     <color name="advanced_menu_item_text_not_checked">#232323</color>
     <color name="advanced_menu_item_text_checked">#ECECEC</color>
+
+    <!-- Fallbacks for the shared native GlassSurface and existing navigation drawables. -->
+    <color name="glass_surface_fallback">#FFF5F5F5</color>
+    <color name="glass_border_fallback">#B3FFFFFF</color>
+    <color name="glass_highlight_fallback">#66FFFFFF</color>
 </resources>

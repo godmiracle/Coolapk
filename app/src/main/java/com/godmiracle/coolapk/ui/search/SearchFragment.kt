@@ -12,13 +12,16 @@ import android.widget.Toast
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.RecyclerView
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.FragmentSearchBinding
 import com.godmiracle.coolapk.ui.base.BaseFragment
 import com.godmiracle.coolapk.ui.blacklist.IOnItemClickListener
+import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +43,28 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(), IOnItemClickListen
     }
     private var mAdapter: HistoryAdapter? = null
     private var mLayoutManager: FlexboxLayoutManager? = null
+    private var toolbarGlassSurface: LiquidGlassFrameLayout? = null
+    private val refreshBackdropRunnable = Runnable {
+        toolbarGlassSurface?.refreshBackdrop()
+    }
+    private val rootAttachStateChangeListener = object : View.OnAttachStateChangeListener {
+        override fun onViewAttachedToWindow(view: View) {
+            refreshBackdropAfterAttach(view)
+        }
+
+        override fun onViewDetachedFromWindow(view: View) {
+            view.removeCallbacks(refreshBackdropRunnable)
+        }
+    }
+    private val recyclerViewScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            toolbarGlassSurface?.refreshBackdrop()
+        }
+    }
+    private val appBarOffsetChangedListener =
+        AppBarLayout.OnOffsetChangedListener { _, _ ->
+            toolbarGlassSurface?.refreshBackdrop()
+        }
 
     companion object {
         @JvmStatic
@@ -57,6 +82,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(), IOnItemClickListen
         super.onViewCreated(view, savedInstanceState)
 
         initView()
+        initToolbarGlassSurface()
         initEditText()
         initButton()
         initClearHistory()
@@ -68,6 +94,11 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(), IOnItemClickListen
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        toolbarGlassSurface?.refreshBackdrop()
+    }
+
     private fun initView() {
         mLayoutManager = FlexboxLayoutManager(requireContext(), FlexDirection.ROW, FlexWrap.WRAP)
         mAdapter = HistoryAdapter()
@@ -76,6 +107,25 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(), IOnItemClickListen
             adapter = mAdapter
             layoutManager = mLayoutManager
         }
+    }
+
+    private fun initToolbarGlassSurface() {
+        toolbarGlassSurface = binding.toolBar.parent as? LiquidGlassFrameLayout
+        toolbarGlassSurface?.setBackdropSource(binding.recyclerView)
+        binding.root.addOnAttachStateChangeListener(rootAttachStateChangeListener)
+        binding.recyclerView.addOnScrollListener(recyclerViewScrollListener)
+        binding.appBar.addOnOffsetChangedListener(appBarOffsetChangedListener)
+        if (binding.root.isAttachedToWindow) {
+            refreshBackdropAfterAttach(binding.root)
+        } else {
+            toolbarGlassSurface?.refreshBackdrop()
+        }
+    }
+
+    private fun refreshBackdropAfterAttach(view: View) {
+        toolbarGlassSurface?.refreshBackdrop()
+        view.removeCallbacks(refreshBackdropRunnable)
+        view.post(refreshBackdropRunnable)
     }
 
     private fun initClearHistory() {
@@ -191,9 +241,15 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(), IOnItemClickListen
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        binding.root.removeCallbacks(refreshBackdropRunnable)
+        binding.root.removeOnAttachStateChangeListener(rootAttachStateChangeListener)
+        binding.recyclerView.removeOnScrollListener(recyclerViewScrollListener)
+        binding.appBar.removeOnOffsetChangedListener(appBarOffsetChangedListener)
+        toolbarGlassSurface?.setBackdropSource(null)
+        toolbarGlassSurface = null
         mLayoutManager = null
         mAdapter = null
+        super.onDestroyView()
     }
 
 }

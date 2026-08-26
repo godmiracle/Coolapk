@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <declare-styleable name="GlassSurface">
+        <!-- A content sibling used as the backdrop. Page code may bind this after inflation. -->
+        <attr name="glassBackdropSource" format="reference" />
+        <attr name="glassSurfaceColor" format="color|reference" />
+        <attr name="glassSurfaceAlpha" format="float" />
+        <attr name="glassBlurRadius" format="dimension" />
+        <attr name="glassCornerRadius" format="dimension" />
+        <attr name="glassBorderColor" format="color|reference" />
+        <attr name="glassBorderWidth" format="dimension" />
+        <attr name="glassHighlightColor" format="color|reference" />
+        <attr name="glassHighlightWidth" format="dimension" />
+    </declare-styleable>
+
     <declare-styleable name="NestedScrollableHost">
         <attr name="sameDirectionWithParent" format="boolean" />
         <attr name="childVerticalScroll" format="boolean" />
@@ -152,14 +165,6 @@
         <attr name="nineImageRadius" format="dimension" />
         <attr name="nineImageRatio" format="float" />
         <attr name="nineImageColumns" format="integer" />
-    </declare-styleable>
-
-    <declare-styleable name="SmoothInputLayout">
-        <attr name="silDefaultKeyboardHeight" format="dimension" />
-        <attr name="silMinKeyboardHeight" format="dimension" />
-        <attr name="silInputView" format="reference" />
-        <attr name="silEmojiPanel" format="reference" />
-        <attr name="silAutoSaveKeyboardHeight" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="BadgeTextView">

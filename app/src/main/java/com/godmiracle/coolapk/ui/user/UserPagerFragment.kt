@@ -11,12 +11,12 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.BaseUserPageBinding
 import com.godmiracle.coolapk.databinding.BaseViewUserBinding
 import com.godmiracle.coolapk.ui.base.BaseFragment
-import com.godmiracle.coolapk.ui.others.WebViewActivity
 import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.DateUtils
 import com.godmiracle.coolapk.util.IntentUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.ReplaceViewHelper
+import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,13 +27,17 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
     private val viewModel by viewModels<UserViewModel>(ownerProducer = { requireActivity() })
     private lateinit var userBinding: BaseViewUserBinding
     private var menuBlock: MenuItem? = null
-    private var menuFollow: MenuItem? = null
+    private var toolbarGlassSurface: LiquidGlassFrameLayout? = null
+    private var toolbarBackdropSource: View? = null
+    private var appBarOffsetChangedListener: AppBarLayout.OnOffsetChangedListener? = null
+    private var rootAttachStateChangeListener: View.OnAttachStateChangeListener? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initBar()
         initPage()
         initUser()
+        initGlassSurface()
         initObserve()
     }
 
@@ -57,15 +61,6 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
             }
         }
 
-        viewModel.followState.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandledOrReturnNull()?.let {
-                menuFollow?.title = getMenuTitle(
-                    if (it == 1) "取消关注"
-                    else "关注"
-                )
-            }
-        }
-
         viewModel.toastText.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandledOrReturnNull()?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
@@ -79,6 +74,62 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
         replaceViewHelper.toReplaceView(binding.view, userBinding.root)
         userBinding.userData = viewModel.userData
         userBinding.listener = viewModel.ItemClickListener()
+    }
+
+    private fun initGlassSurface() {
+        toolbarGlassSurface = binding.toolBar.parent as? LiquidGlassFrameLayout
+        appBarOffsetChangedListener = AppBarLayout.OnOffsetChangedListener { _, _ ->
+            refreshGlassSurface()
+        }.also(binding.appBar::addOnOffsetChangedListener)
+        rootAttachStateChangeListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                refreshGlassSurface()
+                view.post {
+                    if (this@UserPagerFragment.view === view) {
+                        refreshGlassSurface()
+                    }
+                }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                clearGlassSurface()
+            }
+        }.also(binding.root::addOnAttachStateChangeListener)
+
+        val root = binding.root
+        root.post {
+            if (view === root) {
+                refreshGlassSurface()
+            }
+        }
+        refreshGlassSurface()
+    }
+
+    private fun refreshGlassSurface() {
+        val surface = toolbarGlassSurface ?: return
+        val source = binding.collapsingToolbar.run {
+            (0 until childCount)
+                .map(::getChildAt)
+                .filter { child ->
+                    child !== surface &&
+                            child.visibility == View.VISIBLE &&
+                            child.isAttachedToWindow
+                }
+                .let { candidates ->
+                    candidates.firstOrNull { it !== binding.view }
+                        ?: candidates.firstOrNull()
+                }
+        }
+        if (toolbarBackdropSource !== source) {
+            toolbarBackdropSource = source
+            surface.setBackdropSource(source)
+        }
+        surface.refreshBackdrop()
+    }
+
+    private fun clearGlassSurface() {
+        toolbarBackdropSource = null
+        toolbarGlassSurface?.setBackdropSource(null)
     }
 
     private fun getMenuTitle(title: CharSequence?): SpannableString {
@@ -108,16 +159,8 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
             menuBlock = menu?.findItem(R.id.block)
             menuBlock?.title = getMenuTitle(menuBlock?.title)
 
-            menuFollow = menu?.findItem(R.id.subscribe)
-            menuFollow?.title = getMenuTitle(menuFollow?.title)
-            menuFollow?.isVisible = PrefManager.isLogin
-
             val menuShare = menu?.findItem(R.id.share)
             menuShare?.title = getMenuTitle(menuShare?.title)
-
-            val menuReport = menu?.findItem(R.id.report)
-            menuReport?.title = getMenuTitle(menuReport?.title)
-            menuReport?.isVisible = PrefManager.isLogin
 
             menu?.findItem(R.id.check)?.title = getMenuTitle(menu?.findItem(R.id.check)?.title)
 
@@ -144,15 +187,6 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
                             )
                             show()
                         }
-                    }
-
-                    R.id.subscribe -> {
-                        viewModel.onPostFollowUnFollow(
-                            if (viewModel.userData?.isFollow == 1)
-                                "/v6/user/unfollow"
-                            else
-                                "/v6/user/follow"
-                        )
                     }
 
                     R.id.search -> {
@@ -190,17 +224,24 @@ class UserPagerFragment : BaseFragment<BaseUserPageBinding>() {
                         )
                     }
 
-                    R.id.report -> {
-                        IntentUtil.startActivity<WebViewActivity>(requireContext()) {
-                            putExtra(
-                                "url",
-                                "https://m.coolapk.com/mp/do?c=user&m=report&id=${viewModel.uid}"
-                            )
-                        }
-                    }
                 }
                 return@setOnMenuItemClickListener true
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        refreshGlassSurface()
+    }
+
+    override fun onDestroyView() {
+        appBarOffsetChangedListener?.let(binding.appBar::removeOnOffsetChangedListener)
+        rootAttachStateChangeListener?.let(binding.root::removeOnAttachStateChangeListener)
+        clearGlassSurface()
+        appBarOffsetChangedListener = null
+        rootAttachStateChangeListener = null
+        toolbarGlassSurface = null
+        super.onDestroyView()
     }
 }

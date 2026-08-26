@@ -16,7 +16,6 @@ import com.godmiracle.coolapk.logic.model.FeedArticleContentBean
 import com.godmiracle.coolapk.logic.model.HomeFeedResponse
 import com.godmiracle.coolapk.util.ImageUtil
 import com.godmiracle.coolapk.util.NetWorkUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.SpannableStringBuilderUtil
 import com.godmiracle.coolapk.util.dp
 import com.godmiracle.coolapk.view.LinkTextView
@@ -48,35 +47,6 @@ fun setExtraPic(imageView: ImageView, extraPic: String?) {
     else {
         ImageUtil.showIMG(imageView, extraPic)
     }
-}
-
-@BindingAdapter("setFollowText")
-fun setFollowText(textView: TextView, followAuthor: Int) {
-    with(PrefManager.isLogin) {
-        textView.isVisible = this
-        if (this) {
-            when (followAuthor) {
-                0 -> {
-                    textView.text = "关注"
-                    textView.setTextColor(
-                        MaterialColors.getColor(
-                            textView.context,
-                            com.google.android.material.R.attr.colorPrimary,
-                            0
-                        )
-                    )
-                }
-
-                1 -> {
-                    textView.text = "取消关注"
-                    textView.setTextColor(textView.context.getColor(android.R.color.darker_gray))
-                }
-
-                else -> {}
-            }
-        }
-    }
-
 }
 
 @BindingAdapter("setArticleImage")

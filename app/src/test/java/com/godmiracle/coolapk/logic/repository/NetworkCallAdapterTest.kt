@@ -212,7 +212,7 @@ class NetworkCallAdapterTest {
                 throw UnsupportedOperationException("Unexpected ApiService call: ${method.name}")
             }
         } as ApiService
-        return NetworkRepo(service, service, service, service)
+        return NetworkRepo(service, service, service)
     }
 
     private data class TestPayload(val value: String)

@@ -99,12 +99,12 @@
 
 ## 高优先级：发布和安全边界
 
-- [ ] R-001 建立真实设备和真实接口验收基线
+- [ ] R-001 建立真实设备和真实接口只读验收基线
   - 优先级：高
   - 可信度：已确认当前未完成
   - 涉及文件：`docs/development.md`、登录/网络/动态/图片相关模块
   - 状态：等待人工验证
-  - 验收标准：在 Android 12+ 真机和当前 Android 设备各完成启动、登录、首页、动态、评论、发布、图片、搜索、消息、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图。
+  - 验收标准：在 Android 12+ 真机和当前 Android 设备各完成启动、首页、动态、评论只读展示、搜索、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图；不包含已移除的登录、发布、回复编辑和消息路径。
 
 - [ ] R-002 评估 Debug BODY 网络日志和凭据暴露
   - 优先级：高
@@ -114,13 +114,13 @@
   - 证据：新增统一 `NetworkLogging`；默认日志级别为 `NONE`，仅 `-PenableHttpBodyLogging=true` 且为 Debug 时启用 BODY；Cookie、Token、密码、验证码和 STS 等值经过 `[REDACTED]` 处理。
   - 验收标准：默认日志不输出 Cookie/Token/密码/验证码/STS 信息；必要调试日志有明确开关和脱敏测试；Release 保持无 BODY 日志。
 
-- [ ] R-003 评估普通 SharedPreferences 保存登录 Token 和设备参数
+- [ ] R-003 评估普通 SharedPreferences 保存设备/API 身份参数
   - 优先级：高
   - 可信度：已确认
   - 涉及文件：`app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt`
   - 状态：已完成凭证与普通设置隔离、旧键迁移和备份排除；当前仍使用普通 `SharedPreferences`，加密存储不在本次 change 范围内
   - 证据：`credentials.xml` 保存 API/会话/设备请求状态，首次访问时从旧 `settings` 幂等迁移并清理敏感键；云备份和设备迁移均排除该文件，主题/字体等普通设置仍保留。
-  - 验收标准：明确个人学习包与发布包的安全边界；如继续保存，至少完成威胁评估和清除/退出登录验证；如改用加密存储，完成旧值迁移和异常回退测试。
+  - 验收标准：明确个人学习包与发布包的安全边界；如继续保存设备/API 身份，至少完成威胁评估和清除应用数据验证；如改用加密存储，完成旧值迁移和异常回退测试。
 
 - [ ] R-004 评估 Manifest 广泛权限和明文流量开关
   - 优先级：高
@@ -186,12 +186,12 @@
   - 证据：`AddCookiesInterceptor` 已接入 `PrefManager.customToken/xAppToken`；默认关闭或空值时仍使用自动生成 Token；`TokenDeviceUtilsTest` 已覆盖覆盖/回退分支。不得在日志、截图或聊天记录中粘贴真实 Token。
   - 验收标准：明确自定义值是否应覆盖自动生成值；实现或删除设置入口；补充请求 Header 的单元/集成测试和迁移说明。
 
-- [ ] R-010 确认短信登录入口状态
+- [x] R-010 移除已废弃短信登录入口
   - 优先级：中
   - 可信度：高概率
   - 涉及文件：`ui/login/LoginActivity.kt`、`ui/login/LoginViewModel.kt`、`logic/network/ApiService.kt`
-  - 状态：待人工验证
-  - 验收标准：真实设备上确认入口是否展示、参数是否完整、验证码发送和登录是否可用；不可用时隐藏或明确标注未完成。
+  - 状态：已完成；登录 Activity、ViewModel、资源、网络接口和 Manifest 入口已删除，不安排登录测试
+  - 验收标准：当前源码、资源、Manifest 和网络边界不再保留短信登录入口或登录状态机。
 
 ## 低优先级：维护体验
 
@@ -226,3 +226,19 @@
 ## Review Issues 模板
 
 后续代码 Review 按 `docs/review.md` 记录。每个问题必须有唯一编号、优先级、可信度、涉及文件、证据、影响、建议和验收标准；无法验证的项目不得勾选完成。
+
+## 当前进行中：UI-GLASS-EXPANSION
+
+- [ ] 将 LiquidGlass 原生层扩展到适合的页面级操作 Chrome
+  - 优先级：中
+  - 涉及文件：LiquidGlassFrameLayout、BasePager、User、Feed、Search 及相关 XML/主题资源
+  - 状态：匿名只读范围清理和 Feed 回复可读性修正已落地；完整验收仍待 API 31/32、三键导航、放大字体、TalkBack、全页面动作和性能前后对比
+ - 证据：rasen/changes/liquid-glass-native-surface-expansion/evidence/device-validation.md、window-boundary.md；设备截图和 UI hierarchy 位于本次本机临时验证目录
+  - 自动化补充：匿名清理后 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`（26 个）和 `lintDebug` 通过，GlassSurface 定向真机 instrumentation 1/1 通过；历史 connected 22/22 结果不计入本轮清理后的覆盖。Search 基线与当前 Glass 版本三次独立长滑的加权 jank 为 23.21% 与 23.00%，未形成一致性回归，但全页面性能前后对比仍待完成
+  - 边界：不包裹普通列表项、评论/回复、Feed 排序栏、头像、图片、加载/错误、Preference、WebView、BottomSheet/Dialog；Feed 回复编辑、登录、消息和远程写入入口已移除
+  - 备注：一次长距离首页滑动曾观察到 Launcher，短距离复测未重现，需在完整滚动性能验收中继续关注
+
+- [x] ANON-001 清理匿名只读范围内的账号、消息和编辑器残留
+  - 优先级：高
+  - 状态：已完成代码删除、资源清理、网络测试收口、Debug/AndroidTest 构建、26 个 JVM 单测、lint 和定向 GlassSurface 真机测试；未运行登录/发帖/回复编辑/消息测试
+  - 验收标准：主源码、资源、Manifest、测试和依赖无登录/发帖/回复编辑/消息不可达残留；保留服务端评论只读展示、本地功能和 `EmojiUtils` 富文本渲染。

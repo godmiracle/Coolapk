@@ -13,9 +13,6 @@ object PrefManager {
     private const val PREF_FOLLOW_SYSTEM_ACCENT = "follow_system_accent"
     private const val PREF_THEME_COLOR = "theme_color"
     private const val SHOW_EMOJI = "show_emoji"
-    private const val UID = "uid"
-    private const val NAME = "name"
-    private const val TOKEN = "token"
     private const val SETTINGS_PREFERENCES = "settings"
     private const val CREDENTIAL_PREFERENCES = "credentials"
 
@@ -45,38 +42,6 @@ object PrefManager {
     var showEmoji: Boolean
         get() = pref.getBoolean(SHOW_EMOJI, true)
         set(value) = pref.edit().putBoolean(SHOW_EMOJI, value).apply()
-
-    var isLogin: Boolean
-        get() = credentialPref.getBoolean("isLogin", false)
-        set(value) = credentialPref.edit().putBoolean("isLogin", value).apply()
-
-    var uid: String
-        get() = credentialPref.getString(UID, "")!!
-        set(value) = credentialPref.edit().putString(UID, value).apply()
-
-    var username: String
-        get() = credentialPref.getString(NAME, "")!!
-        set(value) = credentialPref.edit().putString(NAME, value).apply()
-
-    var token: String
-        get() = credentialPref.getString(TOKEN, "")!!
-        set(value) = credentialPref.edit().putString(TOKEN, value).apply()
-
-    var userAvatar: String
-        get() = credentialPref.getString("userAvatar", "")!!
-        set(value) = credentialPref.edit().putString("userAvatar", value).apply()
-
-    var level: String
-        get() = credentialPref.getString("level", "")!!
-        set(value) = credentialPref.edit().putString("level", value).apply()
-
-    var experience: String
-        get() = credentialPref.getString("experience", "")!!
-        set(value) = credentialPref.edit().putString("experience", value).apply()
-
-    var nextLevelExperience: String
-        get() = credentialPref.getString("nextLevelExperience", "")!!
-        set(value) = credentialPref.edit().putString("nextLevelExperience", value).apply()
 
     var xAppToken: String
         get() = credentialPref.getString("xAppToken", "")!!
@@ -179,4 +144,5 @@ object PrefManager {
         pref.unregisterOnSharedPreferenceChangeListener(listener)
         credentialPref.unregisterOnSharedPreferenceChangeListener(listener)
     }
+
 }

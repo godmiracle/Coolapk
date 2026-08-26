@@ -594,3 +594,42 @@ Android Studio JDK 21 下，`:app:testDebugUnitTest :app:assembleDebug :app:lint
 ### 验证
 
 `TopicSortUrlTest` 新增编码嵌套 URL 的最新和热度回归用例；修复前热度用例失败，修复后 `:app:testDebugUnitTest :app:assembleDebug :app:lintDebug --offline --max-workers=1` 成功。`Pixel_10` 模拟器使用真实商品详情复测，默认、最新、热度请求分别携带 `lastupdate_desc`、`dateline_desc`、`rank_score`，均返回 `200 OK`。网络日志只使用项目已有的脱敏 Debug 开关，验证后恢复普通 Debug 构建配置。
+
+## 2026-08-26 - 以 XML 原生容器扩展页面级 LiquidGlass
+
+### 决定
+
+- 继续使用共享 LiquidGlassFrameLayout，在 XML/ViewBinding/Data Binding 架构内扩展 BasePager、User、Feed 和 Search 的页面级操作 Chrome；不引入 Compose，也不把 AndroidLiquidGlass 作为外部运行时依赖。
+- 玻璃层只包裹适合的 Toolbar/Tab/extraBar 等稳定操作区域，source 必须是同一 Window 内的内容 sibling；Feed 排序栏、普通卡片、列表项、评论/回复、头像、图片、加载/错误状态保持普通不透明渲染。
+- 匿名只读范围移除登录、消息、发布/回复编辑、远程点赞/关注、举报/删除及其 FAB/网络写入路径，保留服务端评论展示和本地功能。
+- Settings Preference、独立 WebView、BottomSheet 和 Dialog 不复用 Activity backdrop；跨 Window 取样违反 source sibling 约束，因此保留现有主题并记录为非目标。
+
+### 原因与边界
+
+当前项目的稳定技术边界是 XML/ViewBinding，最低平台已是 API 31。共享原生容器能复用现有页面层级、ViewBinding ID、分页和 inset 责任，同时把模糊、fallback、主题配置及监听清理集中维护。完整性能和可访问性仍需要独立验收，不能由构建通过推导。
+
+### 验证
+
+Android Studio JDK 21、离线依赖下 assembleDebug、assembleDebugAndroidTest、lintDebug 和 testDebugUnitTest 均通过；LiquidGlassFrameLayout 独立真机 instrumentation 1/1 通过。OPPO PGEM10（API 36）已完成主导航、搜索、发现、关注、我的、Feed、用户页，以及浅色、深色、横屏重点路径检查；设备已恢复原始竖屏/自动旋转/深色设置。API 31/32、三键导航、放大字体、TalkBack、完整消息入口和同设备三轮 before/after 帧统计仍未完成。
+
+### 自动化续测补充
+
+- 既有 connectedDebugAndroidTest 在 PGEM10 上 22/22 通过，0 failures、0 errors、0 skipped；覆盖 GlassSurface fixture、Room migration、16 KB GIF、WebView 生命周期和凭证迁移，但不等于 Feed 专项 UI 覆盖。
+- Search 基线与当前 Glass 版本各做三次独立长滑，jank 加权合计为 23.21% 与 23.00%；没有形成一致性性能回归，样本仍不足以完成所有页面的 7.5 性能门槛。
+- connected 测试框架曾暂时卸载应用并留下横屏状态；已重新安装当前 APK、恢复自动旋转/竖屏并冷启动确认 MainActivity，未发现新增 FATAL/ANR。
+
+## 2026-08-26 - 收紧匿名范围并移除 Feed 回复模糊
+
+### 决定
+
+- 当前产品固定为匿名只读浏览加本地收藏、历史、黑名单和本地关注；移除登录、消息、发帖、回复编辑、远程点赞/关注、举报和删除入口及其网络写入路径。
+- 既有服务端返回的 Feed 评论和楼中楼只保留清晰的只读展示。Feed 详情顶部 Toolbar 可以使用 LiquidGlass，但排序栏恢复为普通不透明背景，不能把 `RecyclerView`（含回复）设置为 backdrop source。
+- 编辑器专用的 @用户、最近表情、验证码、OSS 上传和账号迁移测试随功能一起移除；`EmojiUtils` 等只读富文本渲染依赖继续保留。
+
+### 原因
+
+详情排序栏原本以回复 `RecyclerView` 作为采样源，`LiquidGlassFrameLayout` 的 `RenderEffect` 会把回复内容一并模糊，导致文字难以阅读。回复不是适合玻璃化的页面 Chrome；匿名产品也不应保留不可达的账号写入代码。
+
+### 验证边界
+
+已通过静态检查确认 Feed 详情仅保留 Toolbar 玻璃绑定，排序栏无 backdrop source；清理后 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`（26 个）和 `lintDebug` 均通过，定向 `LiquidGlassFrameLayoutInstrumentedTest` 在 PGEM10 上 1/1 通过。自动化验证不执行登录、发帖、回复编辑、消息或远程社交写入测试。

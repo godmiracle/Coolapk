@@ -15,7 +15,6 @@ flowchart TD
     Retrofit --> Boundary["HTTPS + trusted-host credential boundary"]
     Boundary --> API1["api.coolapk.com"]
     Boundary --> API2["api2.coolapk.com"]
-    Boundary --> Account["account.coolapk.com"]
     Repo --> Room["Room 数据库"]
     VM --> Pref["PrefManager / SharedPreferences"]
     UI --> Image["Glide + Sketch + Mojito"]
@@ -41,7 +40,7 @@ Activity/Fragment
 ```text
 Fragment/ViewModel
   -> HistoryFavoriteRepo / HomeMenuRepo / SearchHistoryRepo /
-     RecentAtUserRepo / RecentEmojiRepo / BlackListRepo
+     BlackListRepo
   -> DAO
   -> 独立 Room 数据库
 ```
@@ -73,22 +72,19 @@ Fragment/ViewModel
 
 | 包 | 主要职责 |
 |---|---|
-| `ui/main` | 首页/关注/我的主导航、搜索动作、初始化账号/应用信息 |
+| `ui/main` | 首页/关注/我的主导航、搜索动作和应用信息 |
 | `ui/home`、`ui/homefeed` | 首页 Tab、关注/头条/热榜/酷图 feed |
 | `ui/applist`、`ui/app`、`ui/appupdate` | 应用列表、应用详情、更新检查 |
-| `ui/feed` | 动态详情、评论分页、投票、问答、分享和回复入口 |
-| `ui/feed/reply` | 回复编辑、@用户/@话题、表情、验证码和图片上传 |
+| `ui/feed` | 动态详情、评论分页、投票、问答、分享和只读楼中楼展示 |
 | `ui/topic`、`ui/hometopic` | 话题/数码页面及其内容列表 |
 | `ui/user`、`ui/follow` | 用户主页、动态、关注、粉丝和相关列表 |
 | `ui/my` | 本地收藏、浏览历史和设置入口 |
 | `ui/search` | 搜索入口、历史、类型/排序和结果页 |
-| `ui/message`、`ui/messagedetail` | 消息汇总、通知、@我、点赞、关注等详情 |
-| `ui/login` | 账号密码登录、验证码、Cookie 和登录状态回写 |
 | `ui/history`、`ui/collection`、`ui/blacklist` | 本地历史/收藏和黑名单管理 |
 | `ui/settings`、`ui/settings/params` | 外观、显示、设备/请求参数和缓存设置 |
 | `ui/others` | WebView、外链、复制、关于和崩溃处理 |
 
-`BaseActivity`、`BaseFragment`、`BaseViewModel`、`BaseAppViewModel` 提供通用绑定、列表状态、分页字段、统一交互和基础社交操作。具体业务 ViewModel 仍保留较多页面级状态和请求处理，因此当前不是严格的 Clean Architecture。
+`BaseActivity`、`BaseFragment`、`BaseViewModel`、`BaseAppViewModel` 提供通用绑定、列表状态、分页字段和只读交互。具体业务 ViewModel 仍保留较多页面级状态和请求处理，因此当前不是严格的 Clean Architecture。
 
 ### 3.3 列表和渲染
 
@@ -98,22 +94,37 @@ Fragment/ViewModel
 - `NineGridImageView` 处理多图布局，并把点击交给 Mojito 全屏预览。
 - 加载状态由 `LoadingState`、`FooterState` 和通用占位布局表达。
 
+### 3.4 原生 LiquidGlass 页面 Chrome
+
+当前 LiquidGlass 采用共享的 LiquidGlassFrameLayout，继续服务于 XML/ViewBinding/Data Binding 页面，不引入 Compose 或第二套模糊容器。容器包含一个内部非无障碍 backdrop 层和原样保留的前景子 View；backdrop 从同一 Window 内的内容 sibling 取样，内容未布局、已 detach 或 source 不可用时使用主题色 fallback。容器自身不消费系统 inset，source 的滚动、attach、页面切换和配置变化只触发刷新并在销毁时清理监听。
+
+页面 slot 只覆盖稳定的操作 Chrome：
+
+| 页面 | 玻璃 slot | source | 明确排除 |
+|---|---|---|---|
+| BasePager | pinned Toolbar、Tab/extraBar | pager/content sibling | pager item、特殊头部、普通列表内容 |
+| User | collapsed Toolbar action | fragmentContainer 内容 sibling | 头像、统计、用户列表 |
+| Feed | Toolbar；sticky sort 保持普通不透明 | Toolbar 使用 `contentLayout`；sort 不设置 backdrop source | 正文、排序栏背景采样、回复行、图片、加载/错误 |
+| Search | search Toolbar | recyclerView | 输入框前景、历史和结果行 |
+| Message | 已移出匿名只读范围 | none | 消息/登录 UI |
+
+CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻璃层，以保留 HideBottomViewOnScrollBehavior、WindowInsetsCompat margin、点击语义和 48dp 目标。Settings Preference、独立 WebView Window、BottomSheet/Dialog 也不跨 Window 借用 backdrop；它们的边界和原因记录在 Rasen change 的 window-boundary evidence 中。
+
 ## 4. 网络架构
 
 ### 4.1 当前主路径
 
-`di/NetworkModule.kt` 注册四个带 Qualifier 的 Retrofit 服务：
+`di/NetworkModule.kt` 注册三个带 Qualifier 的 Retrofit 服务：
 
 | Qualifier | Base URL | OkHttp 行为 | 用途 |
 |---|---|---|---|
 | `@Api1Service` | `https://api.coolapk.com/` | `AddCookiesInterceptor` + 最终 `NetworkCredentialBoundaryInterceptor`，跟随重定向 | 大多数业务 API |
 | `@Api1ServiceNoRedirect` | `https://api.coolapk.com/` | 同上，但不跟随重定向 | 获取应用下载 `Location` |
 | `@Api2Service` | `https://api2.coolapk.com/` | 复用 API1 请求头客户端和最终边界 | 动态评论、话题布局和部分用户接口 |
-| `@AccountService` | `https://account.coolapk.com/` | `LoginCookiesInterceptor` + 最终 `NetworkCredentialBoundaryInterceptor`，跟随重定向 | 登录参数、验证码和账号页请求 |
 
 `NetworkRepo` 通过 `NetworkCallAdapter` 的 `suspendCancellableCoroutine` 将 Retrofit `Call<T>` 转为挂起调用，再用 `flow {}` 捕获普通异常并返回单次 `Flow<Result<T>>`。协程取消会调用底层 `Call.cancel()`；`CancellationException` 不会被转换为普通失败结果。ViewModel 通常在 `Dispatchers.IO` 启动收集，成功后更新 LiveData，失败则显示页面错误或打印堆栈。
 
-> `NetworkEndpoints` 集中维护三组 Base URL，并由 `NetworkCredentialPolicy` 按最终 URL 判断 HTTPS 和 trusted host。构建、设备和实时 API 结果必须与源码边界分开记录；本轮文档同步未执行这些验证。
+> `NetworkEndpoints` 集中维护 API1/API2 Base URL，并由 `NetworkCredentialPolicy` 按最终 URL 判断 HTTPS 和 trusted host。构建、设备和实时 API 结果必须与源码边界分开记录；本轮文档同步未执行这些验证。
 
 ### 4.2 请求身份与状态
 
@@ -122,17 +133,15 @@ Fragment/ViewModel
 - `User-Agent`、`X-App-Id`、`X-App-Version`、`X-App-Code`、`X-Api-Version`。
 - `X-App-Device`、由设备码和时间计算的 `X-App-Token`。
 - locale、channel、mode、dark mode 等请求头。
-- 登录态下的 `uid/username/token` Cookie；未登录时使用会话 Cookie。
+- 匿名请求使用会话 Cookie 和设备/API 请求身份；不读取或写入账号 UID、用户名和登录 Token。
 
-`AddCookiesInterceptor` 只有在请求 URL 为三个 Coolapk HTTPS Host 之一时才添加上述敏感 Header；外部 `@Url`、非 HTTPS URL 和跨 Host 重定向由 `NetworkCredentialPolicy` 清理完整凭证集合。该边界同时挂在 API1、API1 no-redirect、API2 和 Account 客户端的最终网络发送路径上。
-
-`LoginCookiesInterceptor` 依赖 `CookieUtil` 中的一组一次性 flag，按登录步骤切换浏览器风格 Header、Referer、Origin 和会话 Cookie。这是有顺序的状态机，不应并发复用同一组 flag；对不可信 URL 会先清理凭证并返回，不消费登录 flag。最终 network interceptor 仍会保护 Account 的跨 Host 重定向。
+`AddCookiesInterceptor` 只在 API1/API2 的 Coolapk HTTPS Host 上添加匿名请求身份；外部 `@Url`、非 HTTPS URL 和跨 Host 重定向由 `NetworkCredentialPolicy` 清理请求身份。当前不存在登录拦截器或账号请求状态机。
 
 ### 4.3 错误和分页模型
 
 - `NetworkCallAdapter.await/response` 将非 2xx 响应转换为 `HttpException`，需要实体的 2xx 空 body 转换为明确的 `EmptyResponseBodyException`；普通传输异常保留原始原因并由 `NetworkRepo.fire` 发出 `Result.failure`。
 - 协程取消会取消底层 Retrofit `Call`，`CancellationException` 继续向上抛出，Flow 不发出普通失败结果。下载链接是例外：`Api1ServiceNoRedirect` 允许 `getAppDownloadLink` 读取 3xx `Location`，不改变其他请求的错误语义。
-- feed、评论、搜索、消息等接口普遍使用 `page`、`firstItem`、`lastItem` 或 `pageType/pageParam` 进行分页。
+- feed、评论和搜索等只读接口普遍使用 `page`、`firstItem`、`lastItem` 或 `pageType/pageParam` 进行分页。
 - ViewModel 自己维护 `isRefreshing`、`isLoadMore`、`isEnd`、`lastItem` 和 `FooterState`，页面之间没有统一分页组件。
 
 ### 4.4 历史网络层
@@ -147,9 +156,9 @@ Fragment/ViewModel
 
 - 主题、主题色、纯黑模式、系统取色、字体比例、图片质量、表情显示。
 - `settings.xml` 保存普通 UI 偏好以及 Coolapk/API 版本等非凭证设置。
-- `credentials.xml` 保存登录开关、UID、用户名、Token、头像、等级/经验、设备制造商/型号/Build/SDK、User-Agent、`SZLMID`、`xAppDevice`、`xAppToken` 和自定义 Token 开关。
+- `credentials.xml` 仅用于兼容保存设备制造商/型号/Build/SDK、User-Agent、`SZLMID`、`xAppDevice`、`xAppToken` 和自定义 Token 开关；历史账号键启动时清理。
 
-首次访问时 `CredentialPreferencesMigration` 将旧 `settings.xml` 中的敏感键幂等复制到 `credentials.xml`，在目标写入、旧键清理和迁移标记提交成功后结束；普通 UI 偏好保留。`backup_rules.xml`、`data_extraction_rules.xml` 分别排除 `credentials.xml`，但该文件仍是未加密的普通 SharedPreferences。清除应用数据会同时清除登录摘要和设备参数。
+首次访问时 `CredentialPreferencesMigration` 清理旧 `settings.xml` 中的账号键并保留设备/API 身份；普通 UI 偏好保留。`backup_rules.xml`、`data_extraction_rules.xml` 分别排除 `credentials.xml`，但该文件仍是未加密的普通 SharedPreferences。清除应用数据会同时清除历史账号键和设备参数。
 
 ### 5.2 Room 数据库
 
@@ -161,15 +170,13 @@ Fragment/ViewModel
 | `feed_favorite.db` | `FeedEntity` | 本地动态收藏 | 3 |
 | `local_follow.db` | `LocalFollow` | 本地话题/数码关注及头像 | 2 |
 | `home_menu.db` | `HomeMenu` | 首页 Tab 顺序和启用状态 | 5 |
-| `recent_at_user.db` | `RecentAtUser` | 最近 @用户 | 2 |
-| `recent_emoji.db` | `StringEntity` | 最近使用表情 | 2 |
 | `search_history.db` | `StringEntity` | 搜索历史 | 2 |
 | `topic_blacklist.db` | `StringEntity` | 话题黑名单 | 2 |
 | `user_blacklist.db` | `StringEntity` | 用户黑名单 | 2 |
 
-`DatabaseModule` 注册了多条迁移。当前变更对 `FeedFavorite`（历史 v1/两种 v2 到 v3）、`HomeMenu`、`RecentAtUser`、`LocalFollow` 和四类 `StringEntity` 采用保留数据的前向迁移：需要改变表结构时先创建新表、复制兼容行，再删除旧表并重命名；重复用户名按确定顺序保留，重复 `StringEntity.data` 保留最新 `id`。不得使用 destructive migration 替代数据迁移。
+`DatabaseModule` 注册了多条迁移。当前变更对 `FeedFavorite`（历史 v1/两种 v2 到 v3）、`HomeMenu`、`LocalFollow` 和仍在使用的 `StringEntity` 数据库采用保留数据的前向迁移；编辑器专用的最近 @用户/表情数据库已移除，不再创建新实例。不得使用 destructive migration 替代仍在使用的数据迁移。
 
-`DatabaseMigrationTest` 使用 `app/src/androidTest/assets/room-migration-fixtures/` 下的自包含旧 schema fixture，不依赖开发机残留的 `app/schemas`。测试覆盖 FeedFavorite 的三种历史布局、HomeMenu 的真实默认菜单链、RecentAtUser 重复用户名、LocalFollow 默认头像和四类 StringEntity 重复数据，并用 `MigrationTestHelper.runMigrationsAndValidate(..., true, ...)` 检查 Room identity 与关键数据；本轮未运行 instrumentation test，不能把源码覆盖写成当前通过结果。
+`DatabaseMigrationTest` 使用 `app/src/androidTest/assets/room-migration-fixtures/` 下的自包含旧 schema fixture，不依赖开发机残留的 `app/schemas`。当前保留的测试覆盖 FeedFavorite、HomeMenu、LocalFollow 和仍在使用的 StringEntity 数据；账号/编辑器专用迁移测试不属于当前匿名范围。
 
 ### 5.3 图片和文件
 
@@ -205,7 +212,7 @@ Fragment/ViewModel
 
 ### 6.3 WebView
 
-`WebViewActivity` 位于 `:webview` 独立进程，启用 JavaScript、DOM Storage、文件访问和网页下载能力，并向 `m.coolapk.com` 写入当前账号 Cookie。它还处理 `intent://`、自定义 Scheme 和网页内下载确认。`onDestroy()` 只执行 WebView 资源释放，不调用 `exitProcess`；进程存活和 Activity 重建由 Android 生命周期管理。该页面可接触登录态，外链、Cookie 隔离、下载文件名和返回栈都属于高风险验收项。
+`WebViewActivity` 位于 `:webview` 独立进程，启用 JavaScript、DOM Storage、文件访问和网页下载能力，并向 `m.coolapk.com` 写入当前匿名 WebView 所需的 DID、forward 和 displayVersion Cookie，不写入账号 UID、用户名或登录 Token。它还处理 `intent://`、自定义 Scheme 和网页内下载确认。`onDestroy()` 只执行 WebView 资源释放，不调用 `exitProcess`；进程存活和 Activity 重建由 Android 生命周期管理。该页面的外链、Cookie 隔离、下载文件名和返回栈仍属于高风险验收项。
 
 ## 7. 构建与发布架构
 
@@ -217,14 +224,14 @@ Fragment/ViewModel
 
 ## 8. 安全、隐私和兼容性风险
 
-1. 登录 Cookie、Token、设备码和 User-Agent 进入请求 Header；它们存于独立但未加密的 `credentials.xml`，该文件不参与云备份和设备迁移。
-2. API1、API2 和 Account 客户端只在三个 Coolapk HTTPS Host 保留敏感 Header；外部 `@Url` 和跨 Host 重定向会清理凭证。
-3. 显式开启 Debug BODY 日志时仍可能接触账号请求或服务端响应，当前实现会对常见 Cookie、Token、密码、验证码和 STS 字段脱敏。
+1. 会话 Cookie、设备码和 User-Agent 进入请求 Header；设备/API 身份存于独立但未加密的 `credentials.xml`，该文件不参与云备份和设备迁移。
+2. API1、API2 客户端只在两个 Coolapk HTTPS Host 保留设备/API Header；外部 `@Url` 和跨 Host 重定向会清理身份信息。
+3. 显式开启 Debug BODY 日志时仍可能接触服务端请求或响应，当前实现会对常见 Cookie、Token、密码、验证码和 STS 字段脱敏。
 4. 明文流量开关已关闭；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径会先升级为 HTTPS。
 5. `QUERY_ALL_PACKAGES` 会读取已安装应用列表，因应用列表和更新检查功能仍保留；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
-6. 设备码和 Coolapk 版本参数可在设置中修改，改变后可能导致接口拒绝、账号风控或数据错配。
-7. API、登录流程、图片地址、OSS 回调和返回字段依赖第三方服务，必须把线上验证与编译验证分开记录。
-8. 当前源码已有 Room/网络/凭证/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。本次已完成本地签名 Release 和 OPPO `PGEM10` 真机冷启动验证，但首次远端 Tag 工作流仍待运行；CI 仍不覆盖真实 API、完整登录、分页、深链、图片保存和设备验收。
+6. 设备码和 Coolapk 版本参数可在设置中修改，改变后可能导致接口拒绝、服务端风控或数据错配。
+7. API、图片地址和返回字段依赖第三方服务，必须把线上验证与编译验证分开记录。
+8. 当前源码已有 Room/网络/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。本次已完成本地签名 Release 和 OPPO `PGEM10` 真机冷启动验证，但首次远端 Tag 工作流仍待运行；CI 仍不覆盖真实 API、分页、深链、图片保存和设备验收。
 
 ## 9. 维护规则
 

@@ -13,7 +13,6 @@ import com.godmiracle.coolapk.logic.repository.LocalFollowRepo
 import com.godmiracle.coolapk.logic.repository.NetworkRepo
 import com.godmiracle.coolapk.ui.base.BaseAppViewModel
 import com.godmiracle.coolapk.util.Event
-import com.godmiracle.coolapk.util.PrefManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -49,7 +48,6 @@ class TopicViewModel @AssistedInject constructor(
     var discussionSort: TopicSort = TopicSort.DEFAULT
 
     var isAInit: Boolean = true
-    var postFollowData: HashMap<String, String>? = null
     var isFollow: Boolean = false
     var tabSelected: Int? = null
     var topicList: ArrayList<TopicBean>? = null
@@ -68,7 +66,6 @@ class TopicViewModel @AssistedInject constructor(
                             return@collect
                         } else if (data.data != null) {
                             topicData = data.data
-                            isFollow = data.data.userAction?.follow == 1
                             id = data.data.id ?: ""
                             type = data.data.entityType
                             avatar = data.data.logo
@@ -97,7 +94,6 @@ class TopicViewModel @AssistedInject constructor(
                             return@collect
                         } else if (data.data != null) {
                             topicData = data.data
-                            isFollow = data.data.userAction?.follow == 1
                             avatar = data.data.logo
                             subtitle = data.data.intro
                             getTopicList(data.data.tabList, data.data.selectedTab.toString())
@@ -134,80 +130,7 @@ class TopicViewModel @AssistedInject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             applyFollowState(targetFollow)
         }
-
-        if (!PrefManager.isLogin) {
-            toastText.postValue(Event(if (targetFollow) "关注成功" else "取消关注成功"))
-            return
-        }
-
-        when (type) {
-            LocalFollowType.TOPIC -> onGetFollow(
-                if (targetFollow) "/v6/feed/followTag" else "/v6/feed/unFollowTag",
-                url.replace("/t/", ""),
-                null,
-                targetFollow
-            )
-
-            LocalFollowType.PRODUCT -> {
-                if (postFollowData.isNullOrEmpty())
-                    postFollowData = HashMap()
-                postFollowData?.let { map ->
-                    map["id"] = id
-                    map["status"] = if (targetFollow) "1" else "0"
-                }
-                onPostFollow(targetFollow)
-            }
-        }
-    }
-
-    // The local state is authoritative for this screen; server sync is best effort.
-    fun onGetFollow(
-        followUrl: String,
-        tag: String?,
-        id: String?,
-        requestedFollow: Boolean = !isFollow
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.getFollow(followUrl, tag, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        val followed = response.data?.follow?.let { it == 1 }
-                            ?: response.message
-                                ?.takeIf { it.contains("成功") }
-                                ?.let { requestedFollow }
-                        if (followed != null) {
-                            applyFollowState(followed)
-                        }
-                        response.message?.let { toastText.postValue(Event(it)) }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
-    // follow product
-    fun onPostFollow(requestedFollow: Boolean = !isFollow) {
-        viewModelScope.launch(Dispatchers.IO) {
-            postFollowData?.let {
-                networkRepo.postFollow(it)
-                    .collect { result ->
-                        val response = result.getOrNull()
-                        if (response != null) {
-                            val followed = response.message
-                                ?.takeIf { it.contains("成功") }
-                                ?.let { requestedFollow }
-                            if (followed != null) {
-                                applyFollowState(followed)
-                            }
-                            response.message?.let { toastText.postValue(Event(it)) }
-                        } else {
-                            result.exceptionOrNull()?.printStackTrace()
-                        }
-                    }
-            }
-        }
+        toastText.postValue(Event(if (targetFollow) "已加入本地关注" else "已移出本地关注"))
     }
 
     private fun checkTopic(title: String) {
@@ -223,8 +146,7 @@ class TopicViewModel @AssistedInject constructor(
                     localFollowRepo.isFollowed(followType, targetId)
                 }
             } ?: false
-            if (localFollowed || !PrefManager.isLogin)
-                isFollow = localFollowed
+            isFollow = localFollowed
             if (localFollowed && !avatar.isNullOrBlank()) {
                 localFollowRepo.updateAvatar(
                     localFollowType().orEmpty(),

@@ -147,10 +147,6 @@ class HistoryActivity : BaseActivity<ActivityHistoryBinding>() {
 
         override fun onBlockUser(id: String, uid: String, position: Int) {
             viewModel.saveUid(uid)
-            onDeleteClicked("", id, position)
-        }
-
-        override fun onDeleteClicked(entityType: String, id: String, position: Int) {
             viewModel.delete(id)
         }
     }

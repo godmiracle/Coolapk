@@ -33,10 +33,6 @@ class FeedDataAdapter(
                     data?.userAction?.like ?: 0
                 )
             )
-            binding.setVariable(
-                BR.followAuthor,
-                data?.userAction?.followAuthor ?: 0
-            )
             binding.executePendingBindings()
         }
     }
@@ -149,10 +145,6 @@ class FeedDataAdapter(
                             feedDataList?.getOrNull(0)?.likenum ?: "0",
                             feedDataList?.getOrNull(0)?.userAction?.like ?: 0
                         )
-                    )
-                    binding.setVariable(
-                        BR.followAuthor,
-                        feedDataList?.getOrNull(0)?.userAction?.followAuthor ?: 0
                     )
                     binding.executePendingBindings()
                 }

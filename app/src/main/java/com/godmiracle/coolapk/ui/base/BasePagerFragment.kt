@@ -1,14 +1,10 @@
 package com.godmiracle.coolapk.ui.base
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
+import android.view.ViewTreeObserver
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -16,9 +12,8 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.BaseTablayoutViewpagerBinding
 import com.godmiracle.coolapk.ui.home.IOnTabClickContainer
 import com.godmiracle.coolapk.ui.home.IOnTabClickListener
-import com.godmiracle.coolapk.util.dp
-import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -29,8 +24,17 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
     val binding get() = _binding!!
     override var tabController: IOnTabClickListener? = null
     lateinit var tabList: List<String>
-    val fabBehavior by lazy { HideBottomViewOnScrollBehavior<FloatingActionButton>() }
-    lateinit var fab: FloatingActionButton
+    private var toolbarGlassSurface: LiquidGlassFrameLayout? = null
+    private var tabGlassSurface: LiquidGlassFrameLayout? = null
+    private var toolbarBackdropSource: View? = null
+    private var tabBackdropSource: View? = null
+    private var glassSurfacesInitialized = false
+    private var pageChangeCallback: ViewPager2.OnPageChangeCallback? = null
+    private var appBarOffsetChangedListener: AppBarLayout.OnOffsetChangedListener? = null
+    private var glassScrollObserver: ViewTreeObserver? = null
+    private var glassRootAttachStateChangeListener: View.OnAttachStateChangeListener? = null
+    private val glassContentScrollChangedListener =
+        ViewTreeObserver.OnScrollChangedListener { refreshGlassSurfaces() }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +42,7 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
         savedInstanceState: Bundle?
     ): View? {
         _binding = BaseTablayoutViewpagerBinding.inflate(inflater, container, false)
+        initGlassSurfaces()
         return binding.root
     }
 
@@ -49,31 +54,6 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
         initTabList()
         initBar()
         initView()
-    }
-
-    open fun initFab() {
-        fab = FloatingActionButton(requireContext()).apply {
-            setImageResource(R.drawable.outline_note_alt_24)
-            layoutParams = CoordinatorLayout.LayoutParams(
-                CoordinatorLayout.LayoutParams.WRAP_CONTENT,
-                CoordinatorLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.BOTTOM or Gravity.END
-                behavior = fabBehavior
-            }
-            tooltipText = getString(R.string.publishFeed)
-        }
-        // https://stackoverflow.com/questions/54062834/setonapplywindowinsetslistener-never-called
-        ViewCompat.setOnApplyWindowInsetsListener(binding.collapsingToolbar, null)
-        ViewCompat.setOnApplyWindowInsetsListener(fab) { _, insets ->
-            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            fab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                rightMargin = 25.dp
-                bottomMargin = navigationBars.bottom + 25.dp
-            }
-            insets
-        }
-        binding.root.addView(fab)
     }
 
     fun initView() {
@@ -102,6 +82,115 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
         })
     }
 
+    private fun initGlassSurfaces() {
+        if (glassSurfacesInitialized) {
+            refreshGlassSurfaces()
+            return
+        }
+        glassSurfacesInitialized = true
+        toolbarGlassSurface = binding.toolBar.parent as? LiquidGlassFrameLayout
+        tabGlassSurface = (binding.tabLayout.parent as? View)?.parent as? LiquidGlassFrameLayout
+
+        pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+                refreshGlassSurfaces()
+            }
+
+            override fun onPageSelected(position: Int) {
+                refreshGlassSurfaces()
+            }
+        }.also(binding.viewPager::registerOnPageChangeCallback)
+
+        appBarOffsetChangedListener = AppBarLayout.OnOffsetChangedListener { _, _ ->
+            refreshGlassSurfaces()
+        }.also(binding.appBar::addOnOffsetChangedListener)
+
+        glassRootAttachStateChangeListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                registerGlassContentScrollListener(view)
+                refreshGlassSurfaces()
+                view.post {
+                    if (_binding?.root === view) {
+                        refreshGlassSurfaces()
+                    }
+                }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                unregisterGlassContentScrollListener()
+                clearGlassBackdropSources()
+            }
+        }.also(binding.root::addOnAttachStateChangeListener)
+
+        binding.root.also { root ->
+            registerGlassContentScrollListener(root)
+            root.post {
+                if (_binding?.root === root) {
+                    refreshGlassSurfaces()
+                }
+            }
+        }
+        refreshGlassSurfaces()
+    }
+
+    private fun registerGlassContentScrollListener(root: View) {
+        val observer = root.viewTreeObserver
+        if (glassScrollObserver === observer) return
+        unregisterGlassContentScrollListener()
+        if (observer.isAlive) {
+            observer.addOnScrollChangedListener(glassContentScrollChangedListener)
+            glassScrollObserver = observer
+        }
+    }
+
+    private fun unregisterGlassContentScrollListener() {
+        glassScrollObserver?.takeIf { it.isAlive }
+            ?.removeOnScrollChangedListener(glassContentScrollChangedListener)
+        glassScrollObserver = null
+    }
+
+    private fun refreshGlassSurfaces() {
+        val currentBinding = _binding ?: return
+        val toolbarSource = currentBinding.collapsingToolbar.run {
+            (0 until childCount)
+                .map(::getChildAt)
+                .filter { child ->
+                    child !== toolbarGlassSurface &&
+                            child.visibility == View.VISIBLE &&
+                            child.isAttachedToWindow
+                }
+                .let { candidates ->
+                    candidates.firstOrNull { it !== currentBinding.view }
+                        ?: candidates.firstOrNull()
+                }
+        }
+        val tabSource = currentBinding.viewPager.takeIf {
+            it.visibility == View.VISIBLE && it.isAttachedToWindow
+        }
+
+        if (toolbarBackdropSource !== toolbarSource) {
+            toolbarBackdropSource = toolbarSource
+            toolbarGlassSurface?.setBackdropSource(toolbarSource)
+        }
+        if (tabBackdropSource !== tabSource) {
+            tabBackdropSource = tabSource
+            tabGlassSurface?.setBackdropSource(tabSource)
+        }
+        toolbarGlassSurface?.refreshBackdrop()
+        tabGlassSurface?.refreshBackdrop()
+    }
+
+    private fun clearGlassBackdropSources() {
+        toolbarBackdropSource = null
+        tabBackdropSource = null
+        toolbarGlassSurface?.setBackdropSource(null)
+        tabGlassSurface?.setBackdropSource(null)
+    }
+
     open fun onTabReselectedExtra() {}
 
     open fun iOnTabSelected(tab: TabLayout.Tab?) {}
@@ -121,7 +210,23 @@ abstract class BasePagerFragment : Fragment(), IOnTabClickContainer {
 
     abstract fun onBackClick()
 
+    override fun onStart() {
+        super.onStart()
+        refreshGlassSurfaces()
+    }
+
     override fun onDestroyView() {
+        pageChangeCallback?.let(binding.viewPager::unregisterOnPageChangeCallback)
+        appBarOffsetChangedListener?.let(binding.appBar::removeOnOffsetChangedListener)
+        glassRootAttachStateChangeListener?.let(binding.root::removeOnAttachStateChangeListener)
+        unregisterGlassContentScrollListener()
+        clearGlassBackdropSources()
+        glassSurfacesInitialized = false
+        pageChangeCallback = null
+        appBarOffsetChangedListener = null
+        glassRootAttachStateChangeListener = null
+        toolbarGlassSurface = null
+        tabGlassSurface = null
         super.onDestroyView()
         _binding = null
     }

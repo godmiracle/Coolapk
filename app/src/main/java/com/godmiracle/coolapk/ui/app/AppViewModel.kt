@@ -44,7 +44,6 @@ class AppViewModel @AssistedInject constructor(
     val blockState = MutableLiveData<Event<Boolean>>()
 
     val searchState = MutableLiveData<Event<Unit>>()
-    val followState = MutableLiveData<Event<Int>>()
 
     fun fetchAppInfo() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -82,31 +81,6 @@ class AppViewModel @AssistedInject constructor(
                 errMsg = data.commentStatusText
             }
             checkBlock(data.title ?: "") //menuBlock
-            checkFollow() //menuFollow
-        }
-    }
-
-    fun onGetFollowApk(followUrl: String, tag: String?, id: String?) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.getFollow(followUrl, tag, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (!response.message.isNullOrEmpty()) {
-                            toastText.postValue(Event(response.message))
-                        } else if (response.data?.follow != null) {
-                            response.data.follow.let {
-                                appData?.userAction?.follow = it
-                                checkFollow()
-                                val text = if (it == 1) "关注成功"
-                                else "取消关注成功"
-                                toastText.postValue(Event(text))
-                            }
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
         }
     }
 
@@ -136,18 +110,9 @@ class AppViewModel @AssistedInject constructor(
         }
     }
 
-    private fun checkFollow() {
-        viewModelScope.launch(Dispatchers.IO) {
-            appData?.userAction?.follow?.let {
-                followState.postValue(Event(it))
-            }
-        }
-    }
-
     override fun fetchData() {}
 
     fun checkMenuState() {
-        checkFollow()
         searchState.postValue(Event(Unit))
         appData?.title?.let {
             checkBlock(it)

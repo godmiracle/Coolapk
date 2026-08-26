@@ -14,7 +14,6 @@ object Network {
     private val apiServiceNoRedirect =
         ApiServiceCreator.create<ApiService>(ServiceType.API_SERVICE, false)
     private val api2Service = ApiServiceCreator.create<ApiService>(ServiceType.API2_SERVICE)
-    private val accountService = ApiServiceCreator.create<ApiService>(ServiceType.ACCOUNT_SERVICE)
 
     suspend fun getHomeFeed(
         page: Int,
@@ -94,26 +93,6 @@ object Network {
     suspend fun getFollowList(url: String, uid: String, page: Int, lastItem: String?) =
         apiService.getFollowList(url, uid, page, lastItem).await()
 
-    suspend fun postLikeFeed(url: String, id: String) =
-        apiService.postLikeFeed(url, id).await()
-
-    suspend fun postLikeReply(url: String, id: String) = apiService.postLikeReply(url, id).await()
-
-    suspend fun checkLoginInfo() = apiService.checkLoginInfo().response()
-
-    suspend fun preGetLoginParam() = accountService.preGetLoginParam().response()
-
-    suspend fun getLoginParam() = accountService.getLoginParam().response()
-
-    suspend fun tryLogin(data: HashMap<String, String?>) = accountService.tryLogin(data).response()
-
-    suspend fun getCaptcha(url: String) = accountService.getCaptcha(url).response()
-
-    suspend fun getValidateCaptcha(url: String) = apiService.getValidateCaptcha(url).response()
-
-    suspend fun postReply(data: HashMap<String, String>, id: String, type: String) =
-        apiService.postReply(data, id, type).await()
-
     suspend fun getDataList(
         url: String,
         title: String,
@@ -124,23 +103,6 @@ object Network {
 
     suspend fun getDyhDetail(dyhId: String, type: String, page: Int, lastItem: String?) =
         apiService.getDyhDetail(dyhId, type, page, lastItem).await()
-
-    suspend fun getSmsLoginParam(type: String) = accountService.getSmsLoginParam(type).response()
-
-    suspend fun getSmsToken(type: String, data: HashMap<String, String?>) =
-        accountService.getSmsToken(type, data).response()
-
-    suspend fun getMessage(url: String, page: Int, lastItem: String?) =
-        apiService.getMessage(url, page, lastItem).await()
-
-    suspend fun postFollowUnFollow(url: String, uid: String) =
-        apiService.postFollowUnFollow(url, uid).await()
-
-    suspend fun postCreateFeed(data: HashMap<String, String>) =
-        apiService.postCreateFeed(data).await()
-
-    suspend fun postRequestValidate(data: HashMap<String, String?>) =
-        apiService.postRequestValidate(data).await()
 
     suspend fun getVoteComment(
         fid: String,
@@ -160,13 +122,6 @@ object Network {
         page: Int,
         lastItem: String?
     ) = apiService.getCollectionList(url, uid, id, showDefault, page, lastItem).await()
-
-    suspend fun postDelete(url: String, id: String) = apiService.postDelete(url, id).await()
-
-    suspend fun postFollow(data: HashMap<String, String>) = apiService.postFollow(data).await()
-
-    suspend fun getFollow(url: String, tag: String?, id: String?) =
-        apiService.getFollow(url, tag, id).await()
 
     private suspend fun <T> Call<T>.await(): T {
         return suspendCoroutine { continuation ->

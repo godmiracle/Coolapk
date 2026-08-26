@@ -45,13 +45,6 @@ class FeedViewModel @AssistedInject constructor(
     }
 
     var isAInit = true
-    var position: Int? = null
-    var rPosition: Int? = null
-    var ruid: String? = null
-    var cuid: String? = null
-    var uname: String? = null
-    var type: String? = null
-    var isRefreshReply: Boolean? = null
     private var blockStatus = 0
     var fromFeedAuthor = 0
     private var discussMode: Int = 1
@@ -69,7 +62,6 @@ class FeedViewModel @AssistedInject constructor(
     private var isTop: Boolean? = null
     var feedType: String? = null
 
-    var rid: String? = null
     var feedTypeName: String? = null
 
     var feedDataList: MutableList<HomeFeedResponse.Data>? = null
@@ -79,58 +71,6 @@ class FeedViewModel @AssistedInject constructor(
     private val feedTopReplyList = ArrayList<TotalReplyResponse.Data>()
 
     val feedReplyData = MutableLiveData<List<TotalReplyResponse.Data>>()
-    val feedUserState = MutableLiveData<Event<Boolean>>()
-
-    fun onFollowUnFollow(url: String, uid: String, followAuthor: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postFollowUnFollow(url, uid)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.message != null) {
-                            toastText.postValue(Event(response.message))
-                        } else {
-                            feedDataList?.getOrNull(0)?.userAction?.followAuthor =
-                                if (followAuthor == 1) 0 else 1
-                            feedUserState.postValue(Event(true))
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
-    fun onLikeReply(id: String, isLike: Int) {
-        val likeType = if (isLike == 1) "unLikeReply" else "likeReply"
-        val likeUrl = "/v6/feed/$likeType"
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postLikeReply(likeUrl, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.data != null) {
-                            val currentList = feedReplyData.value?.map {
-                                if (it.id == id) {
-                                    it.copy(
-                                        likenum = response.data,
-                                        userAction = it.userAction?.copy(like = if (isLike == 1) 0 else 1)
-                                    )
-                                } else it
-                            } ?: emptyList()
-                            feedReplyData.postValue(currentList)
-                        } else {
-                            response.message?.let {
-                                toastText.postValue(Event(it))
-                            }
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
     fun fetchFeedReply() {
         viewModelScope.launch(Dispatchers.IO) {
             networkRepo.getFeedContentReply(
@@ -272,68 +212,6 @@ class FeedViewModel @AssistedInject constructor(
             """<a class="feed-link-uname" href="/u/${reply.uid}">${reply.username}${replyTag}</a>回复${rReplyUser}: ${reply.message}${replyPic}"""
 
         }
-
-    fun onLikeFeed(id: String, isLike: Int) {
-        val likeType = if (isLike == 1) "unlike" else "like"
-        val likeUrl = "/v6/feed/$likeType"
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postLikeFeed(likeUrl, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.data != null) {
-                            feedDataList?.getOrNull(0)?.likenum = response.data.count
-                            feedDataList?.getOrNull(0)?.userAction?.like = if (isLike == 1) 0 else 1
-                            feedUserState.postValue(Event(true))
-                        } else {
-                            response.message?.let {
-                                toastText.postValue(Event(it))
-                            }
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
-    fun postDeleteFeedReply(url: String, id: String, position: Int, rPosition: Int?) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postDelete(url, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.data == "删除成功") {
-                            toastText.postValue(Event("删除成功"))
-                            val newList: List<TotalReplyResponse.Data> =
-                                if (rPosition == null || rPosition == -1) {
-                                    feedReplyData.value?.filterIndexed { index, _ ->
-                                        index != position
-                                    } ?: emptyList()
-                                } else {
-                                    feedReplyData.value?.mapIndexed { index, reply ->
-                                        if (index == position) {
-                                            reply.copy(
-                                                lastupdate = System.currentTimeMillis(),
-                                                replyRows = reply.replyRows.also {
-                                                    it?.removeAt(rPosition)
-                                                }
-                                            )
-                                        } else reply
-                                    } ?: emptyList()
-                                }
-                            feedReplyData.postValue(newList)
-                        } else if (!response.message.isNullOrEmpty()) {
-                            response.message.let {
-                                toastText.postValue(Event(it))
-                            }
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
 
     fun saveUid(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -543,34 +421,6 @@ class FeedViewModel @AssistedInject constructor(
                     isLoadMore = false
                 }
         }
-    }
-
-    fun updateReply(data: TotalReplyResponse.Data) {
-        val feedReplyList: List<TotalReplyResponse.Data> =
-            if (type == "feed") { // feed
-                val newList =
-                    feedReplyData.value?.toMutableList() ?: ArrayList()
-                newList.add(0, data)
-                newList
-            } else { //feed reply
-                feedReplyData.value?.mapIndexed { index, reply ->
-                    if (index == position) {
-                        reply.copy(
-                            lastupdate = System.currentTimeMillis(),
-                            replyRows = (reply.replyRows ?: ArrayList()).also {
-                                it.add(
-                                    reply.replyRows?.size ?: 0,
-                                    data.also { reply ->
-                                        reply.message =
-                                            generateMess(reply, feedUid, cuid)
-                                    }
-                                )
-                            }
-                        )
-                    } else reply
-                } ?: emptyList()
-            }
-        feedReplyData.postValue(feedReplyList)
     }
 
     fun handleFeedData() {

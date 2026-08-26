@@ -12,7 +12,6 @@ import com.godmiracle.coolapk.adapter.ItemListener
 import com.godmiracle.coolapk.adapter.PopClickListener
 import com.godmiracle.coolapk.databinding.ItemHistoryFeedBinding
 import com.godmiracle.coolapk.logic.model.FeedEntity
-import com.godmiracle.coolapk.util.PrefManager
 
 
 class HistoryAdapter(
@@ -31,7 +30,6 @@ class HistoryAdapter(
                     menuInflater.inflate(R.menu.feed_reply_menu, menu).apply {
                         menu.findItem(R.id.copy)?.isVisible = false
                         menu.findItem(R.id.show)?.isVisible = false
-                        menu.findItem(R.id.report)?.isVisible = PrefManager.isLogin
                     }
                     setOnMenuItemClickListener(
                         PopClickListener(

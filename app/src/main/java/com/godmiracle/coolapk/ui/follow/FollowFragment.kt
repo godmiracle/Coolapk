@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.godmiracle.coolapk.ui.base.BaseAppFragment
-import com.godmiracle.coolapk.util.PrefManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -16,7 +15,7 @@ class FollowFragment : BaseAppFragment<FollowViewModel>() {
     override val viewModel by viewModels<FollowViewModel> {
         FollowViewModel.provideFactory(
             viewModelAssistedFactory,
-            uid = arguments?.getString("uid") ?: PrefManager.uid,
+            uid = arguments?.getString("uid").orEmpty(),
             type = arguments?.getString("type").orEmpty(),
         )
     }

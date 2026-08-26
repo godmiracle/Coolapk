@@ -45,12 +45,9 @@ object AddCookiesInterceptor : Interceptor {
             header("X-App-Mode", MODE)
             header("X-App-Supported", PrefManager.VERSION_CODE)
             header("Content-Type", "application/x-www-form-urlencoded")
-            if (PrefManager.isLogin)
-                header(
-                    "Cookie",
-                    "uid=${PrefManager.uid}; username=${PrefManager.username}; token=${PrefManager.token}"
-                )
-            else header("Cookie", SESSID)
+            // The client is anonymous-only. Keep the server-issued anonymous session when
+            // available, but never attach account cookies.
+            header("Cookie", SESSID)
         }
         return chain.proceed(builder.build())
     }

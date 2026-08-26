@@ -7,14 +7,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.godmiracle.coolapk.logic.dao.HistoryFavoriteDao
 import com.godmiracle.coolapk.logic.dao.HomeMenuDao
 import com.godmiracle.coolapk.logic.dao.LocalFollowDao
-import com.godmiracle.coolapk.logic.dao.RecentAtUserDao
 import com.godmiracle.coolapk.logic.dao.StringEntityDao
 import com.godmiracle.coolapk.logic.database.BrowseHistoryDatabase
 import com.godmiracle.coolapk.logic.database.FeedFavoriteDatabase
 import com.godmiracle.coolapk.logic.database.HomeMenuDatabase
 import com.godmiracle.coolapk.logic.database.LocalFollowDatabase
-import com.godmiracle.coolapk.logic.database.RecentAtUserDatabase
-import com.godmiracle.coolapk.logic.database.RecentEmojiDatabase
 import com.godmiracle.coolapk.logic.database.SearchHistoryDatabase
 import com.godmiracle.coolapk.logic.database.TopicBlackListDatabase
 import com.godmiracle.coolapk.logic.database.UserBlackListDatabase
@@ -41,10 +38,6 @@ annotation class SearchHistory
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class RecentEmoji
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
 annotation class BrowseHistory
 
 @Qualifier
@@ -54,24 +47,6 @@ annotation class FeedFavorite
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
-    @RecentEmoji
-    @Singleton
-    @Provides
-    fun provideRecentEmojiDao(stringEntityDatabase: RecentEmojiDatabase): StringEntityDao {
-        return stringEntityDatabase.recentEmojiDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideRecentEmojiDatabase(@ApplicationContext context: Context): RecentEmojiDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            RecentEmojiDatabase::class.java, "recent_emoji.db"
-        )
-            .addMigrations(StringEntityDatabase_MIGRATION_1_2)
-            .build()
-    }
 
     @UserBlackList
     @Singleton
@@ -197,23 +172,6 @@ object DatabaseModule {
             .build()
     }
 
-    @Singleton
-    @Provides
-    fun provideRecentAtUserDao(recentAtUserDatabase: RecentAtUserDatabase): RecentAtUserDao {
-        return recentAtUserDatabase.recentAtUserDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideRecentAtUserDatabase(@ApplicationContext context: Context): RecentAtUserDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            RecentAtUserDatabase::class.java, "recent_at_user.db"
-        )
-            .addMigrations(RecentAtUserDatabase_MIGRATION_1_2)
-            .build()
-    }
-
 }
 
 object LocalFollowDatabase_MIGRATION_1_2 : Migration(1, 2) {
@@ -335,31 +293,6 @@ object HomeMenuDatabase_MIGRATION_4_5 : Migration(4, 5) {
         db.execSQL("INSERT INTO HomeMenu_new (position, title, isEnable) SELECT position, title, isEnable FROM HomeMenu")
         db.execSQL("DROP TABLE HomeMenu")
         db.execSQL("ALTER TABLE HomeMenu_new RENAME TO HomeMenu")
-    }
-}
-
-object RecentAtUserDatabase_MIGRATION_1_2 : Migration(1, 2) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS `RecentAtUser_new` (
-                `id` INTEGER NOT NULL,
-                `group` TEXT NOT NULL,
-                `avatar` TEXT NOT NULL,
-                `username` TEXT NOT NULL,
-                PRIMARY KEY(`username`)
-            )
-            """.trimIndent()
-        )
-        db.execSQL(
-            """
-            INSERT OR IGNORE INTO `RecentAtUser_new` (`id`, `group`, `avatar`, `username`)
-            SELECT `id`, `group`, `avatar`, `username`
-            FROM `RecentAtUser` ORDER BY `id`
-            """.trimIndent()
-        )
-        db.execSQL("DROP TABLE `RecentAtUser`")
-        db.execSQL("ALTER TABLE `RecentAtUser_new` RENAME TO `RecentAtUser`")
     }
 }
 

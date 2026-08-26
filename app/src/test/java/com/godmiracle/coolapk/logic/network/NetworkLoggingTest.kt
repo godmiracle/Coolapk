@@ -26,15 +26,18 @@ class NetworkLoggingTest {
     @Test
     fun `sensitive request data is redacted`() {
         val message = """
-            Cookie: uid=100; token=cookie-secret
+            Cookie: device=device-secret
             X-App-Token: app-token-secret
-            {"password":"password-secret","captcha":"captcha-secret","sts":"sts-secret","safe":"safe-value"}
+            {"secret":"secret-value","sts":"sts-secret","safe":"safe-value"}
             accessToken=query-secret&normal=value
         """.trimIndent()
 
         val redacted = NetworkLogging.redact(message)
 
-        assertFalse(redacted.contains("secret"))
+        assertFalse(redacted.contains("device-secret"))
+        assertFalse(redacted.contains("app-token-secret"))
+        assertFalse(redacted.contains("secret-value"))
+        assertFalse(redacted.contains("sts-secret"))
         assertFalse(redacted.contains("query-secret"))
         assertTrue(redacted.contains("[REDACTED]"))
         assertTrue(redacted.contains("safe-value"))

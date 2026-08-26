@@ -2,8 +2,6 @@ package com.godmiracle.coolapk.logic.network
 
 import com.godmiracle.coolapk.di.NetworkModule
 import com.godmiracle.coolapk.util.AddCookiesInterceptor
-import com.godmiracle.coolapk.util.CookieUtil
-import com.godmiracle.coolapk.util.LoginCookiesInterceptor
 import okhttp3.Dns
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
@@ -29,7 +27,6 @@ class NetworkRequestBoundaryTest {
         .commonName("request-boundary.test")
         .addSubjectAlternativeName(API_HOST)
         .addSubjectAlternativeName(API2_HOST)
-        .addSubjectAlternativeName(ACCOUNT_HOST)
         .addSubjectAlternativeName(EXTERNAL_HOST)
         .build()
     private val serverCertificates = HandshakeCertificates.Builder()
@@ -53,20 +50,16 @@ class NetworkRequestBoundaryTest {
     fun `production clients install the final boundary without changing redirect semantics`() {
         val apiClient = NetworkModule.provideOkHttpClient()
         val noRedirectApiClient = NetworkModule.provideNoOkHttpClient()
-        val accountClient = NetworkModule.provideAccountServiceOkHttpClient()
 
         assertTrue(apiClient.followRedirects)
         assertFalse(noRedirectApiClient.followRedirects)
-        assertTrue(accountClient.followRedirects)
         assertSame(AddCookiesInterceptor, apiClient.networkInterceptors.first())
         assertSame(AddCookiesInterceptor, noRedirectApiClient.networkInterceptors.first())
-        assertSame(LoginCookiesInterceptor, accountClient.interceptors.first())
         assertSame(NetworkCredentialBoundaryInterceptor, apiClient.networkInterceptors.last())
         assertSame(
             NetworkCredentialBoundaryInterceptor,
             noRedirectApiClient.networkInterceptors.last()
         )
-        assertSame(NetworkCredentialBoundaryInterceptor, accountClient.networkInterceptors.last())
     }
 
     @Test
@@ -82,47 +75,6 @@ class NetworkRequestBoundaryTest {
 
         assertClientBoundary(client, listOf(API_HOST, API2_HOST))
         assertEquals(6, headerInjector.invocationCount.get())
-    }
-
-    @Test
-    fun `account client applies the boundary without rerunning login state injection`() {
-        val headerInjector = HeaderAddingInterceptor(identityHeaders)
-        val client = configureTestTransport(
-            NetworkModule.buildAccountOkHttpClient(
-                loginInterceptor = headerInjector,
-                loggingInterceptor = passThroughInterceptor
-            )
-        )
-
-        assertSame(headerInjector, client.interceptors.first())
-        assertClientBoundary(client, listOf(ACCOUNT_HOST))
-        assertEquals(4, headerInjector.invocationCount.get())
-    }
-
-    @Test
-    fun `untrusted account request does not consume the login state flag`() {
-        val client = configureTestTransport(
-            NetworkModule.buildAccountOkHttpClient(
-                loginInterceptor = LoginCookiesInterceptor,
-                loggingInterceptor = passThroughInterceptor
-            )
-        )
-        CookieUtil.isGetLoginParam = true
-
-        try {
-            withServer(https = false) { server ->
-                server.enqueue(MockResponse().setResponseCode(200))
-
-                execute(client, server.requestUrl(ACCOUNT_HOST, "/http-login"))
-
-                assertTrue(CookieUtil.isGetLoginParam)
-                val request = server.takeRecordedRequest()
-                assertRecordedRequest(request, ACCOUNT_HOST, "http", server)
-                assertIdentityHeadersAbsent(request)
-            }
-        } finally {
-            CookieUtil.isGetLoginParam = false
-        }
     }
 
     private fun assertClientBoundary(client: OkHttpClient, trustedHosts: List<String>) {
@@ -261,7 +213,6 @@ class NetworkRequestBoundaryTest {
     private companion object {
         const val API_HOST = "api.coolapk.com"
         const val API2_HOST = "api2.coolapk.com"
-        const val ACCOUNT_HOST = "account.coolapk.com"
         const val EXTERNAL_HOST = "external.example"
     }
 }

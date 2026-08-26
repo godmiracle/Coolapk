@@ -5,7 +5,6 @@ import com.godmiracle.coolapk.logic.network.NetworkCredentialBoundaryInterceptor
 import com.godmiracle.coolapk.logic.network.NetworkEndpoints
 import com.godmiracle.coolapk.logic.network.NetworkLogging
 import com.godmiracle.coolapk.util.AddCookiesInterceptor
-import com.godmiracle.coolapk.util.LoginCookiesInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,10 +28,6 @@ annotation class Api1ServiceNoRedirect
 @Retention(AnnotationRetention.BINARY)
 annotation class Api2Service
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class AccountService
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -55,13 +50,6 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideApi2Service(@Api2Service retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
-
-    @AccountService
-    @Singleton
-    @Provides
-    fun provideAccountService(@AccountService retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
 
@@ -98,17 +86,6 @@ object NetworkModule {
             .build()
     }
 
-    @AccountService
-    @Singleton
-    @Provides
-    fun provideAccountServiceRetrofit(@AccountService okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(NetworkEndpoints.ACCOUNT_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(okHttpClient)
-            .build()
-    }
-
     @Api1Service
     @Singleton
     @Provides
@@ -131,16 +108,6 @@ object NetworkModule {
         )
     }
 
-    @AccountService
-    @Singleton
-    @Provides
-    fun provideAccountServiceOkHttpClient(): OkHttpClient {
-        return buildAccountOkHttpClient(
-            loginInterceptor = LoginCookiesInterceptor,
-            loggingInterceptor = NetworkLogging.createInterceptor()
-        )
-    }
-
     internal fun buildApiOkHttpClient(
         credentialInterceptor: Interceptor,
         loggingInterceptor: Interceptor,
@@ -151,18 +118,6 @@ object NetworkModule {
             .addNetworkInterceptor(loggingInterceptor)
             .addNetworkInterceptor(NetworkCredentialBoundaryInterceptor)
             .followRedirects(followRedirects)
-            .build()
-    }
-
-    internal fun buildAccountOkHttpClient(
-        loginInterceptor: Interceptor,
-        loggingInterceptor: Interceptor
-    ): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(loginInterceptor)
-            .addInterceptor(loggingInterceptor)
-            .addNetworkInterceptor(NetworkCredentialBoundaryInterceptor)
-            .followRedirects(true)
             .build()
     }
 

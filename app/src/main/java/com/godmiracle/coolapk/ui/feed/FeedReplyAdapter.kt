@@ -31,17 +31,9 @@ class FeedReplyAdapter(
         RecyclerView.ViewHolder(binding.root) {
         var id: String = ""
         var uid: String = ""
-        var username: String = ""
         var message: String = ""
 
         init {
-            itemView.setOnClickListener {
-                listener.onReply(
-                    id, uid, uid, username,
-                    bindingAdapterPosition, null
-                )
-            }
-
             binding.expand.setOnClickListener {
                 listener.onExpand(
                     it, id, uid,
@@ -75,7 +67,6 @@ class FeedReplyAdapter(
 
         holder.id = reply.id
         holder.uid = reply.uid
-        holder.username = reply.userInfo.username
         holder.message = reply.message
 
         holder.binding.setVariable(BR.data, reply)
@@ -164,12 +155,6 @@ class FeedReplyAdapter(
                                 true
                             )
                         }
-                    }
-                    view.setOnClickListener {
-                        this@FeedReplyAdapter.listener.onReply(
-                            replyData.id, reply.uid, replyData.uid, replyData.username,
-                            holder.bindingAdapterPosition, index
-                        )
                     }
                     view.setOnLongClickListener {
                         this@FeedReplyAdapter.listener.onExpand(

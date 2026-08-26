@@ -3,4 +3,7 @@
     <color name="cover">#0DFFFFFF</color>
     <color name="advanced_menu_item_text_not_checked">#ECECEC</color>
     <color name="advanced_menu_item_text_checked">#232323</color>
+    <color name="glass_surface_fallback">#FF252525</color>
+    <color name="glass_border_fallback">#7FFFFFFF</color>
+    <color name="glass_highlight_fallback">#4DFFFFFF</color>
 </resources>

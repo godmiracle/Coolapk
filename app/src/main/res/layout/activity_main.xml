@@ -24,6 +24,7 @@
 
         <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
             android:id="@+id/bottomNavSurface"
+            style="@style/Widget.Coolapk.GlassSurface.Navigation"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginEnd="@dimen/liquid_glass_navigation_search_gap"
@@ -59,6 +60,7 @@
 
         <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
             android:id="@+id/searchActionSurface"
+            style="@style/Widget.Coolapk.GlassSurface.Action"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_gravity="end|center_vertical"

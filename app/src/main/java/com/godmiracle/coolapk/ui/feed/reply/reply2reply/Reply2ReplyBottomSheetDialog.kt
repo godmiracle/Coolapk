@@ -1,21 +1,13 @@
 package com.godmiracle.coolapk.ui.feed.reply.reply2reply
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
@@ -28,10 +20,8 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.adapter.FooterAdapter
 import com.godmiracle.coolapk.adapter.FooterState
 import com.godmiracle.coolapk.adapter.ItemListener
-import com.godmiracle.coolapk.constant.Constants
 import com.godmiracle.coolapk.databinding.DialogReplyToReplyBottomSheetBinding
 import com.godmiracle.coolapk.logic.model.TotalReplyResponse
-import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.UiUtils.setSystemBarStyle
 import com.godmiracle.coolapk.util.dp
@@ -55,12 +45,10 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
     var oriReply: ArrayList<TotalReplyResponse.Data> = ArrayList()
     private lateinit var sLayoutManager: StaggeredGridLayoutManager
     private val isPortrait by lazy { resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT }
-    private lateinit var intentActivityResultLauncher: ActivityResultLauncher<Intent>
     var lastVisibleItemPosition: Int = 0
 
     companion object {
         fun newInstance(
-            position: Int,
             fuid: String,
             uid: String,
             id: String
@@ -69,7 +57,6 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
             args.putString("fuid", fuid)
             args.putString("uid", uid)
             args.putString("id", id)
-            args.putInt("position", position)
             val fragment = Reply2ReplyBottomSheetDialog()
             fragment.arguments = args
             return fragment
@@ -81,30 +68,7 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
             viewModel.id = it.getString("id", "")
             viewModel.fuid = it.getString("fuid", "")
             viewModel.uid = it.getString("uid", "")
-            viewModel.position = it.getInt("position")
             viewModel.oriReply = oriReply
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (PrefManager.isLogin) {
-            intentActivityResultLauncher =
-                registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-                { result: ActivityResult ->
-                    if (result.resultCode == Activity.RESULT_OK) {
-                        val data = if (Build.VERSION.SDK_INT >= 33)
-                            result.data?.getParcelableExtra(
-                                "response_data", TotalReplyResponse.Data::class.java
-                            )
-                        else
-                            result.data?.getParcelableExtra("response_data")
-                        data?.let {
-                            viewModel.updateReply(it)
-                            Toast.makeText(requireContext(), "回复成功", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
         }
     }
 
@@ -152,12 +116,6 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
     }
 
     private fun initObserve() {
-        viewModel.toastText.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandledOrReturnNull()?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-            }
-        }
-
         viewModel.footerState.observe(viewLifecycleOwner) {
             footerAdapter.setLoadState(it)
             if (it !is FooterState.Loading) {
@@ -288,52 +246,11 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
                 )
         }
 
-        override fun onLikeClick(type: String, id: String, isLike: Int) {
-            if (PrefManager.isLogin)
-                if (PrefManager.SZLMID.isEmpty())
-                    Toast.makeText(requireContext(), Constants.SZLM_ID, Toast.LENGTH_SHORT).show()
-                else
-                    viewModel.onPostLikeReply(id, isLike)
-        }
-
-        override fun onReply(
-            id: String,
-            cuid: String,
-            uid: String,
-            username: String?,
-            position: Int,
-            rPosition: Int?
-        ) {
-            if (PrefManager.isLogin) {
-                if (PrefManager.SZLMID == "") {
-                    Toast.makeText(requireContext(), Constants.SZLM_ID, Toast.LENGTH_SHORT)
-                        .show()
-                } else {
-                    viewModel.rid = id
-                    viewModel.ruid = uid
-                    viewModel.uname = username
-                    viewModel.position = position
-                    val intent = Intent(requireContext(), ReplyActivity::class.java)
-                    intent.putExtra("type", "reply")
-                    intent.putExtra("rid", viewModel.rid)
-                    intent.putExtra("username", viewModel.uname)
-                    val options = ActivityOptionsCompat.makeCustomAnimation(
-                        requireContext(), R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
-                    )
-                    intentActivityResultLauncher.launch(intent, options)
-                }
-            }
-        }
-
         override fun onBlockUser(id: String, uid: String, position: Int) {
             viewModel.saveUid(uid)
             val currentList = viewModel.totalReplyData.value?.toMutableList() ?: ArrayList()
             currentList.removeAt(position)
             viewModel.totalReplyData.value = currentList
-        }
-
-        override fun onDeleteClicked(entityType: String, id: String, position: Int) {
-            viewModel.postDeleteFeedReply("/v6/feed/deleteReply", id, position)
         }
 
         override fun showTotalReply(
@@ -345,7 +262,6 @@ class Reply2ReplyBottomSheetDialog : BottomSheetDialogFragment() {
         ) {
             val mBottomSheetDialogFragment =
                 newInstance(
-                    position,
                     viewModel.uid.toString(),
                     uid,
                     id

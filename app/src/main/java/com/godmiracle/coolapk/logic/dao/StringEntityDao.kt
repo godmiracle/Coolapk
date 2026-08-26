@@ -47,7 +47,4 @@ interface StringEntityDao {
     @Query("UPDATE StringEntity SET id = :newId WHERE data = :data")
     suspend fun updateHistory(data: String, newId: Long)
 
-    @Query("UPDATE StringEntity SET id = :newId , data = :newData WHERE data = :oldData")
-    suspend fun updateEmoji(oldData: String, newData: String, newId: Long)
-
 }

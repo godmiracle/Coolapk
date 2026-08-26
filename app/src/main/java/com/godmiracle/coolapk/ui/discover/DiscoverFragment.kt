@@ -24,12 +24,7 @@ class DiscoverFragment : BaseFragment<FragmentDiscoverBinding>(), IOnTabClickCon
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.topGlassSurface.apply {
-            setBackdropSource(binding.viewPager)
-            setBlurRadiusDp(14f)
-            setSurfaceAlpha(0.24f)
-            setCornerRadiusDp(26f)
-        }
+        binding.topGlassSurface.setBackdropSource(binding.viewPager)
 
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: Tab) {}

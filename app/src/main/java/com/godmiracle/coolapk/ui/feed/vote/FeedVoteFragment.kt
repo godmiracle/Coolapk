@@ -15,11 +15,9 @@ import com.godmiracle.coolapk.adapter.HeaderAdapter
 import com.godmiracle.coolapk.adapter.ItemListener
 import com.godmiracle.coolapk.databinding.FragmentFeedVoteBinding
 import com.godmiracle.coolapk.ui.base.BaseFragment
-import com.godmiracle.coolapk.ui.feed.FeedActivity
 import com.godmiracle.coolapk.ui.feed.FeedDataAdapter
 import com.godmiracle.coolapk.ui.feed.FeedReplyAdapter
 import com.godmiracle.coolapk.ui.feed.FeedViewModel
-import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.dp
 import com.godmiracle.coolapk.view.VoteStaggerItemDecoration
 import com.google.android.material.color.MaterialColors
@@ -157,20 +155,6 @@ class FeedVoteFragment : BaseFragment<FragmentFeedVoteBinding>() {
         }
     }
 
-    inner class ItemClickListener : ItemListener {
-        override fun onReply(
-            id: String,
-            cuid: String,
-            uid: String,
-            username: String?,
-            position: Int,
-            rPosition: Int?
-        ) {
-            IntentUtil.startActivity<FeedActivity>(requireContext()) {
-                putExtra("id", id)
-            }
-        }
-
-    }
+    inner class ItemClickListener : ItemListener
 
 }

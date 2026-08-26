@@ -23,17 +23,6 @@
         android:usesCleartextTraffic="false">
 
         <activity
-            android:name=".ui.feed.reply.attopic.AtTopicActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.feed.reply.ReplyActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/AppThemeTranslucent"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
             android:name=".ui.others.AppLinkActivity"
             android:exported="true">
             <intent-filter>
@@ -420,9 +409,6 @@
             android:name=".ui.appupdate.AppUpdateActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.messagedetail.MessageActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.dyh.DyhActivity"
             android:exported="false" />
         <activity
@@ -434,9 +420,6 @@
             android:theme="@style/AppTheme.About" />
         <activity
             android:name=".ui.follow.FFFListActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.login.LoginActivity"
             android:exported="false" />
         <activity
             android:name=".ui.app.AppActivity"

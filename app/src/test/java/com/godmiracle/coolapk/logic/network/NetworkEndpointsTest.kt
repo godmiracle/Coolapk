@@ -21,7 +21,6 @@ class NetworkEndpointsTest {
     fun `only trusted https hosts receive credential policy`() {
         assertTrue(NetworkEndpoints.isTrusted(Request.Builder().url("https://api.coolapk.com/v6/feed").build().url))
         assertTrue(NetworkEndpoints.isTrusted(Request.Builder().url("https://api2.coolapk.com/v8/feed").build().url))
-        assertTrue(NetworkEndpoints.isTrusted(Request.Builder().url("https://account.coolapk.com/auth").build().url))
         assertFalse(NetworkEndpoints.isTrusted(Request.Builder().url("http://api.coolapk.com/v6/feed").build().url))
         assertFalse(NetworkEndpoints.isTrusted(Request.Builder().url("https://example.com/feed").build().url))
     }

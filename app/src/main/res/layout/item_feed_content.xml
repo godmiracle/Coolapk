@@ -21,10 +21,6 @@
             name="listener"
             type="com.godmiracle.coolapk.adapter.ItemListener" />
 
-        <variable
-            name="followAuthor"
-            type="int" />
-
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -56,22 +52,9 @@
             android:maxLines="1"
             android:singleLine="true"
             android:text="@{data.userInfo.username}"
-            app:layout_constraintEnd_toStartOf="@id/follow"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/avatar"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/follow"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:onClick="@{() -> listener.onFollowUser(data.uid, followAuthor)}"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:setFollowText="@{followAuthor}"
-            tools:text="关注" />
 
         <TextView
             android:id="@+id/pubDate"
@@ -96,7 +79,7 @@
             android:visibility="@{data.deviceTitle == null || data.deviceTitle.isEmpty ? View.GONE : View.VISIBLE}"
             app:customText="@{data.deviceTitle}"
             app:icon="@{@drawable/ic_device}"
-            app:layout_constraintEnd_toStartOf="@id/follow"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/pubDate"
             app:layout_constraintTop_toBottomOf="@id/uname" />
 
@@ -143,8 +126,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="?attr/actionBarItemBackground"
-            android:onClick="@{() -> listener.onLikeClick(`feed`, data.id, likeData.isLike)}"
+            android:background="@null"
             android:text="@{likeData.likeNum}"
             android:textColor="@android:color/darker_gray"
             app:layout_constraintEnd_toEndOf="parent"

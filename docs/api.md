@@ -11,6 +11,10 @@
 - 所有接口的真实可用性、权限和返回字段都必须通过真实网络请求或设备验收确认
 - 本次文档同步只做源码/测试静态核对，未运行 Gradle、设备测试或实时 API；下文带日期的设备/接口结果均为历史记录，不是本轮验证。
 
+### 当前匿名只读边界（2026-08-26）
+
+当前源码只保留 API1/API2 的匿名内容读取和本地功能。登录、消息、动态发布、回复编辑、远程点赞/关注、删除、举报、验证码和 OSS 上传已移除；Feed 评论/楼中楼仍可通过只读接口展示。下文历史章节中的 Account、写入接口和登录流程仅用于追溯旧实现，不代表当前源码能力。
+
 ## 1. 服务地址
 
 | 服务 | Base URL | Retrofit Qualifier | 主要用途 |
@@ -18,17 +22,16 @@
 | API1 | `https://api.coolapk.com/` | `@Api1Service` | 首页、动态详情、搜索、用户、应用、社交操作、消息、发布等 |
 | API1（不跟随重定向） | `https://api.coolapk.com/` | `@Api1ServiceNoRedirect` | 读取应用下载接口的 `Location` |
 | API2 | `https://api2.coolapk.com/` | `@Api2Service` | 动态评论、话题布局、用户资料等兼容接口 |
-| Account | `https://account.coolapk.com/` | `@AccountService` | 登录页面、Cookie、验证码和短信登录参数 |
 
 图片和网页会额外访问 Coolapk 图片域名、`m.coolapk.com`、网页跳转地址及 OSS 上传返回的 Endpoint/Callback URL。
 
-三组 Base URL 已集中在 `NetworkEndpoints`，统一以 `/` 结尾；Hilt 网络模块和旧 `ApiServiceCreator` 共用同一组常量。带凭证的 API1、API2、Account 客户端均使用最终网络边界；是否能访问实时服务仍需单独通过构建、设备和真实请求验证。
+两组 API Base URL 已集中在 `NetworkEndpoints`，统一以 `/` 结尾；Hilt 网络模块和旧 `ApiServiceCreator` 共用同一组常量。API1/API2 客户端使用最终网络边界；是否能访问实时服务仍需单独通过构建、设备和真实请求验证。
 
-### 凭证 Host 边界
+### 请求身份 Host 边界
 
-`NetworkEndpoints.isTrusted` 只接受 HTTPS 且 Host 为 `api.coolapk.com`、`api2.coolapk.com` 或 `account.coolapk.com`。API1/API2 的 `AddCookiesInterceptor` 仅在该条件满足时添加 `X-App-Token`、Cookie、`X-App-Device` 和应用身份 Header；Account 的 `LoginCookiesInterceptor` 对不可信 URL 先清理并返回，不消费登录步骤 flag。
+`NetworkEndpoints.isTrusted` 只接受 HTTPS 且 Host 为 `api.coolapk.com` 或 `api2.coolapk.com`。API1/API2 的 `AddCookiesInterceptor` 仅在该条件满足时添加匿名请求身份 Header 和会话 Cookie。
 
-四个客户端都在 OkHttp 的最终 network interceptor 中挂载 `NetworkCredentialBoundaryInterceptor`。因此 Retrofit `@Url` 解析出的外部/非 HTTPS URL，以及受信任请求跨 Host 重定向后的新请求，都会移除完整敏感 Header 集合；请求本身是否继续作为无凭证公共请求由网络层决定。`@Api1ServiceNoRedirect` 仍不跟随重定向，下载接口只在 Repository 显式允许时读取 3xx `Location`。
+三个客户端都在 OkHttp 的最终 network interceptor 中挂载 `NetworkCredentialBoundaryInterceptor`。因此 Retrofit `@Url` 解析出的外部/非 HTTPS URL，以及受信任请求跨 Host 重定向后的新请求，都会移除完整请求身份 Header 集合；请求本身是否继续作为无身份公共请求由网络层决定。`@Api1ServiceNoRedirect` 仍不跟随重定向，下载接口只在 Repository 显式允许时读取 3xx `Location`。
 
 ## 1.1 社区 API 参考（非官方）
 

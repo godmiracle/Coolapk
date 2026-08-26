@@ -1,21 +1,12 @@
 package com.godmiracle.coolapk.logic.network
 
-import com.godmiracle.coolapk.logic.model.CheckCountResponse
-import com.godmiracle.coolapk.logic.model.CheckResponse
-import com.godmiracle.coolapk.logic.model.CreateFeedResponse
 import com.godmiracle.coolapk.logic.model.FeedContentResponse
 import com.godmiracle.coolapk.logic.model.HomeFeedResponse
-import com.godmiracle.coolapk.logic.model.LikeFeedResponse
-import com.godmiracle.coolapk.logic.model.LikeReplyResponse
 import com.godmiracle.coolapk.logic.model.LoadUrlResponse
-import com.godmiracle.coolapk.logic.model.MessageResponse
-import com.godmiracle.coolapk.logic.model.OSSUploadPrepareResponse
-import com.godmiracle.coolapk.logic.model.PostReplyResponse
 import com.godmiracle.coolapk.logic.model.TotalReplyResponse
 import com.godmiracle.coolapk.logic.model.UpdateCheckResponse
 import com.godmiracle.coolapk.logic.model.UserProfileResponse
 import okhttp3.MultipartBody
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -132,49 +123,6 @@ interface ApiService {
         @Query("lastItem") lastItem: String?
     ): Call<HomeFeedResponse>
 
-    @POST
-    fun postLikeFeed(
-        @Url url: String,
-        @Query("id") id: String
-    ): Call<LikeFeedResponse>
-
-    @POST
-    fun postLikeReply(
-        @Url url: String,
-        @Query("id") id: String
-    ): Call<LikeReplyResponse>
-
-    @GET("/v6/account/checkLoginInfo")
-    fun checkLoginInfo(
-    ): Call<CheckResponse>
-
-    @GET("/auth/login/")
-    fun preGetLoginParam(
-        @Query("type") type: String = "mobile"
-    ): Call<ResponseBody>
-
-    @GET("/auth/loginByCoolApk")
-    fun getLoginParam(
-    ): Call<ResponseBody>
-
-    @POST("/auth/loginByCoolApk")
-    @FormUrlEncoded
-    fun tryLogin(@FieldMap data: HashMap<String, String?>): Call<ResponseBody>
-
-    @GET
-    fun getCaptcha(@Url url: String): Call<ResponseBody>
-
-    @GET
-    fun getValidateCaptcha(@Url url: String): Call<ResponseBody>
-
-    @POST("v6/feed/reply")
-    @FormUrlEncoded
-    fun postReply(
-        @FieldMap data: HashMap<String, String>,
-        @Query("id") id: String,
-        @Query("type") type: String
-    ): Call<PostReplyResponse>
-
     @GET("/v6/page/dataList")
     fun getDataList(
         @Query("url") url: String,
@@ -191,43 +139,6 @@ interface ApiService {
         @Query("page") page: Int,
         @Query("lastItem") lastItem: String?
     ): Call<HomeFeedResponse>
-
-    @GET("/auth/login")
-    fun getSmsLoginParam(
-        @Query("type") type: String = "mobile",
-    ): Call<ResponseBody>
-
-    @POST("/auth/login")
-    @FormUrlEncoded
-    fun getSmsToken(
-        @Query("type") type: String = "mobile",
-        @FieldMap data: HashMap<String, String?>
-    ): Call<ResponseBody>
-
-    @GET
-    fun getMessage(
-        @Url url: String,
-        @Query("page") page: Int,
-        @Query("lastItem") lastItem: String?
-    ): Call<MessageResponse>
-
-    @POST
-    fun postFollowUnFollow(
-        @Url url: String,
-        @Query("uid") uid: String
-    ): Call<LikeReplyResponse>
-
-    @POST("/v6/feed/createFeed")
-    @FormUrlEncoded
-    fun postCreateFeed(
-        @FieldMap data: HashMap<String, String>
-    ): Call<CreateFeedResponse>
-
-    @POST("/v6/account/requestValidate")
-    @FormUrlEncoded
-    fun postRequestValidate(
-        @FieldMap data: HashMap<String, String?>
-    ): Call<LikeReplyResponse>
 
     @GET("/v6/vote/commentList")
     fun getVoteComment(
@@ -260,31 +171,6 @@ interface ApiService {
         @Query("lastItem") lastItem: String?
     ): Call<HomeFeedResponse>
 
-    @POST
-    fun postDelete(
-        @Url url: String,
-        @Query("id") id: String,
-    ): Call<LikeReplyResponse>
-
-    @POST("/v6/product/changeFollowStatus")
-    @FormUrlEncoded
-    fun postFollow(
-        @FieldMap data: HashMap<String, String>
-    ): Call<LikeReplyResponse>
-
-    @GET
-    fun getFollow(
-        @Url url: String,
-        @Query("tag") tag: String?,
-        @Query("id") id: String?,
-    ): Call<LikeFeedResponse>
-
-    @POST("/v6/upload/ossUploadPrepare")
-    @FormUrlEncoded
-    fun postOSSUploadPrepare(
-        @FieldMap data: HashMap<String, String>
-    ): Call<OSSUploadPrepareResponse>
-
     @GET("/v6/feed/searchTag")
     fun getSearchTag(
         @Query("q") query: String,
@@ -299,8 +185,5 @@ interface ApiService {
         @Query("url") url: String,
         @Query("packageName") packageName: String = "",
     ): Call<LoadUrlResponse>
-
-    @GET("/v6/notification/checkCount")
-    fun checkCount(): Call<CheckCountResponse>
 
 }

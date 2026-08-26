@@ -1,25 +1,14 @@
 package com.godmiracle.coolapk.ui.feed
 
 import android.annotation.SuppressLint
-import android.app.Activity.RESULT_OK
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.app.ActivityOptionsCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -32,12 +21,10 @@ import com.godmiracle.coolapk.adapter.FooterAdapter
 import com.godmiracle.coolapk.adapter.FooterState
 import com.godmiracle.coolapk.adapter.HeaderAdapter
 import com.godmiracle.coolapk.adapter.ItemListener
-import com.godmiracle.coolapk.constant.Constants.SZLM_ID
 import com.godmiracle.coolapk.databinding.FragmentFeedBinding
 import com.godmiracle.coolapk.logic.model.FeedEntity
 import com.godmiracle.coolapk.logic.model.TotalReplyResponse
 import com.godmiracle.coolapk.ui.base.BaseFragment
-import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.ui.feed.reply.reply2reply.Reply2ReplyBottomSheetDialog
 import com.godmiracle.coolapk.ui.feed.reply.reply2reply.ReplyRefreshListener
 import com.godmiracle.coolapk.ui.others.CopyActivity
@@ -47,12 +34,12 @@ import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.dp
 import com.godmiracle.coolapk.util.makeToast
+import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
 import com.godmiracle.coolapk.view.StaggerItemDecoration
 import com.godmiracle.coolapk.view.StickyItemDecorator
-import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -70,58 +57,24 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
     private lateinit var footerAdapter: FooterAdapter
     private lateinit var mLayoutManager: LinearLayoutManager
     private lateinit var sLayoutManager: StaggeredGridLayoutManager
-    private val fabViewBehavior by lazy { HideBottomViewOnScrollBehavior<FloatingActionButton>() }
     private var dialog: AlertDialog? = null
-    private var isShowReply = false
-    private lateinit var intentActivityResultLauncher: ActivityResultLauncher<Intent>
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (PrefManager.isLogin) {
-            intentActivityResultLauncher =
-                registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-                { result: ActivityResult ->
-                    if (result.resultCode == RESULT_OK) {
-                        val data = if (SDK_INT >= 33)
-                            result.data?.getParcelableExtra(
-                                "response_data", TotalReplyResponse.Data::class.java
-                            )
-                        else
-                            result.data?.getParcelableExtra("response_data")
-                        data?.let {
-                            viewModel.updateReply(it)
-                            Toast.makeText(requireContext(), "回复成功", Toast.LENGTH_SHORT).show()
-                            if (viewModel.type == "feed") {
-                                if (isPortrait)
-                                    mLayoutManager.scrollToPositionWithOffset(
-                                        viewModel.itemCount,
-                                        0
-                                    )
-                                else
-                                    sLayoutManager.scrollToPositionWithOffset(0, 0)
-                            }
-                        }
-                    }
-                }
-        }
-    }
+    private var toolbarGlassSurface: LiquidGlassFrameLayout? = null
+    private var toolbarBackdropSource: View? = null
+    private var appBarOffsetChangedListener: AppBarLayout.OnOffsetChangedListener? = null
+    private var rootAttachStateChangeListener: View.OnAttachStateChangeListener? = null
+    private var feedScrollListener: RecyclerView.OnScrollListener? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        var height = 0
-        ViewCompat.setOnApplyWindowInsetsListener(binding.reply) { _, insets ->
-            height = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            insets
-        }
+        initGlassSurfaces()
 
         binding.tabLayout.post {
-            initView(binding.swipeRefresh.height - binding.tabLayout.height - height)
+            initView(binding.swipeRefresh.height - binding.tabLayout.height)
             initToolBar()
             initData()
             initRefresh()
             initScroll()
-            initReplyBtn(height)
             initObserve()
         }
 
@@ -145,36 +98,9 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
         }
     }
 
-    private fun initReplyBtn(height: Int) {
-        if (PrefManager.isLogin) {
-            binding.reply.apply {
-                isVisible = true
-                layoutParams = CoordinatorLayout.LayoutParams(
-                    CoordinatorLayout.LayoutParams.WRAP_CONTENT,
-                    CoordinatorLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.BOTTOM or Gravity.END
-                    behavior = fabViewBehavior
-                    setMargins(0, 0, 25.dp, 25.dp + height)
-                }
-                setOnClickListener {
-                    if (PrefManager.SZLMID == "") {
-                        Toast.makeText(requireContext(), SZLM_ID, Toast.LENGTH_SHORT).show()
-                    } else {
-                        viewModel.rid = viewModel.id
-                        viewModel.ruid = viewModel.feedUid
-                        viewModel.uname = viewModel.funame
-                        viewModel.type = "feed"
-                        launchReply()
-                    }
-                }
-            }
-        } else
-            binding.reply.isVisible = false
-    }
-
     private fun initScroll() {
-        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        feedScrollListener?.let(binding.recyclerView::removeOnScrollListener)
+        feedScrollListener = object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
@@ -193,6 +119,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
+                refreshGlassSurfaces()
                 firstVisibleItemPosition =
                     if (isPortrait) mLayoutManager.findFirstVisibleItemPosition()
                     else sLayoutManager.findFirstVisibleItemPositions(null).min()
@@ -206,7 +133,59 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                 }
                 binding.titleProfile.isVisible = shouldShow
             }
-        })
+        }.also(binding.recyclerView::addOnScrollListener)
+    }
+
+    private fun initGlassSurfaces() {
+        val root = binding.root
+        toolbarGlassSurface = binding.toolbarGlassSurface
+        appBarOffsetChangedListener = AppBarLayout.OnOffsetChangedListener { _, _ ->
+            refreshGlassSurfaces()
+        }.also(binding.appBar::addOnOffsetChangedListener)
+        rootAttachStateChangeListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                bindGlassBackdropSources()
+                refreshGlassSurfaces()
+                view.post {
+                    if (this@FeedFragment.view === view) {
+                        refreshGlassSurfaces()
+                    }
+                }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                clearGlassBackdropSources()
+            }
+        }.also(root::addOnAttachStateChangeListener)
+
+        bindGlassBackdropSources()
+        root.post {
+            if (this@FeedFragment.view === root) {
+                refreshGlassSurfaces()
+            }
+        }
+        refreshGlassSurfaces()
+    }
+
+    private fun bindGlassBackdropSources() {
+        val toolbarSource = binding.contentLayout
+        if (toolbarBackdropSource !== toolbarSource) {
+            toolbarBackdropSource = toolbarSource
+            toolbarGlassSurface?.setBackdropSource(toolbarSource)
+        }
+    }
+
+    private fun refreshGlassSurfaces() {
+        toolbarGlassSurface?.refreshBackdrop()
+    }
+
+    private fun clearGlassBackdropSources() {
+        toolbarBackdropSource = null
+        toolbarGlassSurface?.setBackdropSource(null)
+    }
+
+    private fun setStickySortVisible(show: Boolean) {
+        binding.tabLayout.isVisible = show
     }
 
     private fun loadMore() {
@@ -215,13 +194,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
     }
 
     private fun initObserve() {
-        viewModel.feedUserState.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandledOrReturnNull()?.let {
-                if (it)
-                    feedDataAdapter.notifyItemChanged(0, true)
-            }
-        }
-
         viewModel.toastText.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandledOrReturnNull()?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
@@ -314,7 +286,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                     mLayoutManager = LinearLayoutManager(requireContext())
                     mLayoutManager
                 } else {
-                    binding.tabLayout.isVisible = false
+                    setStickySortVisible(false)
                     sLayoutManager =
                         StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
                     sLayoutManager
@@ -336,7 +308,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                         StickyItemDecorator(requireContext(), 1, viewModel.itemCount,
                             object : StickyItemDecorator.SortShowListener {
                                 override fun showSort(show: Boolean) {
-                                    binding.tabLayout.isVisible = show
+                                    setStickySortVisible(show)
                                 }
                             })
                     )
@@ -359,7 +331,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             inflateMenu(R.menu.feed_menu)
 
             menu.findItem(R.id.showReply).isVisible = isPortrait
-            menu.findItem(R.id.report).isVisible = PrefManager.isLogin
             menu.findItem(R.id.showQuestion).isVisible = viewModel.feedType == "answer"
 
             val favorite = menu.findItem(R.id.favorite)
@@ -408,15 +379,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                             requireContext(),
                             "https://www.coolapk1s.com/feed/${viewModel.id}"
                         )
-                    }
-
-                    R.id.report -> {
-                        IntentUtil.startActivity<WebViewActivity>(requireContext()) {
-                            putExtra(
-                                "url",
-                                "https://m.coolapk.com/mp/do?c=feed&m=report&type=feed&id=${viewModel.id}"
-                            )
-                        }
                     }
 
                     R.id.favorite -> {
@@ -485,7 +447,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             viewModel.isEnd = false
             viewModel.isRefreshing = true
             viewModel.isLoadMore = false
-            viewModel.isRefreshReply = true
             dialog = MaterialAlertDialogBuilder(
                 requireContext(),
                 R.style.ThemeOverlay_MaterialAlertDialog_Rounded
@@ -551,13 +512,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                 )
         }
 
-        override fun onFollowUser(uid: String, followAuthor: Int) {
-            if (PrefManager.isLogin) {
-                val url = if (followAuthor == 1) "/v6/user/unfollow" else "/v6/user/follow"
-                viewModel.onFollowUnFollow(url, uid, followAuthor)
-            }
-        }
-
         override fun onExpand(
             view: View,
             id: String,
@@ -567,10 +521,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             rPosition: Int?
         ) {
             PopupMenu(view.context, view).apply {
-                menuInflater.inflate(R.menu.feed_reply_menu, menu).apply {
-                    menu.findItem(R.id.delete).isVisible = PrefManager.uid == uid
-                    menu.findItem(R.id.report).isVisible = PrefManager.isLogin
-                }
+                menuInflater.inflate(R.menu.feed_reply_menu, menu)
                 setOnMenuItemClickListener(
                     PopClickListener(
                         id,
@@ -584,44 +535,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             }
         }
 
-        override fun onReply(
-            id: String,
-            cuid: String,
-            uid: String,
-            username: String?,
-            position: Int,
-            rPosition: Int?
-        ) {
-            if (isShowReply) {
-                isShowReply = false
-                return
-            }
-            if (PrefManager.isLogin) {
-                if (PrefManager.SZLMID == "") {
-                    Toast.makeText(requireContext(), SZLM_ID, Toast.LENGTH_SHORT).show()
-                } else {
-                    viewModel.rid = id
-                    viewModel.cuid = cuid
-                    viewModel.ruid = uid
-                    viewModel.uname = username
-                    viewModel.type = "reply"
-                    viewModel.position = position
-                    viewModel.rPosition = rPosition
-                    launchReply()
-                }
-            }
-        }
-
-        override fun onLikeClick(type: String, id: String, isLike: Int) {
-            if (PrefManager.isLogin)
-                if (PrefManager.SZLMID.isEmpty())
-                    Toast.makeText(requireContext(), SZLM_ID, Toast.LENGTH_SHORT).show()
-                else if (type == "feed")
-                    viewModel.onLikeFeed(id, isLike)
-                else
-                    viewModel.onLikeReply(id, isLike)
-        }
-
         override fun showTotalReply(
             id: String,
             uid: String,
@@ -629,10 +542,8 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             rPosition: Int?,
             intercept: Boolean
         ) {
-            isShowReply = intercept
             val mBottomSheetDialogFragment =
                 Reply2ReplyBottomSheetDialog.newInstance(
-                    position,
                     viewModel.feedUid.toString(),
                     uid,
                     id
@@ -657,17 +568,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             mBottomSheetDialogFragment.show(childFragmentManager, "Dialog")
         }
 
-    }
-
-    private fun launchReply() {
-        val intent = Intent(requireContext(), ReplyActivity::class.java)
-        intent.putExtra("type", viewModel.type)
-        intent.putExtra("rid", viewModel.rid)
-        intent.putExtra("username", viewModel.uname)
-        val options = ActivityOptionsCompat.makeCustomAnimation(
-            requireContext(), R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
-        )
-        intentActivityResultLauncher.launch(intent, options)
     }
 
     inner class PopClickListener(
@@ -702,20 +602,6 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                     viewModel.feedReplyData.value = newList
                 }
 
-                R.id.report -> {
-                    IntentUtil.startActivity<WebViewActivity>(requireContext()) {
-                        putExtra(
-                            "url",
-                            "https://m.coolapk.com/mp/do?c=feed&m=report&type=feed_reply&id=$id"
-                        )
-                    }
-                }
-
-                R.id.delete -> {
-                    viewModel.position = position
-                    viewModel.postDeleteFeedReply("/v6/feed/deleteReply", id, position, rPosition)
-                }
-
                 R.id.copy -> {
                     IntentUtil.startActivity<CopyActivity>(requireContext()) {
                         putExtra("text", text)
@@ -742,6 +628,18 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
                 else sLayoutManager.findViewByPosition(firstVisibleItemPosition)
             return abs(firstVisibleChildView?.top ?: 0)
         }
+
+    override fun onDestroyView() {
+        feedScrollListener?.let(binding.recyclerView::removeOnScrollListener)
+        appBarOffsetChangedListener?.let(binding.appBar::removeOnOffsetChangedListener)
+        rootAttachStateChangeListener?.let(binding.root::removeOnAttachStateChangeListener)
+        clearGlassBackdropSources()
+        feedScrollListener = null
+        appBarOffsetChangedListener = null
+        rootAttachStateChangeListener = null
+        toolbarGlassSurface = null
+        super.onDestroyView()
+    }
 
     override fun onDestroy() {
         dialog?.dismiss()

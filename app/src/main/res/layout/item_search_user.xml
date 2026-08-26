@@ -12,10 +12,6 @@
             type="String" />
 
         <variable
-            name="isFollow"
-            type="int" />
-
-        <variable
             name="data"
             type="com.godmiracle.coolapk.logic.model.HomeFeedResponse.Data" />
 
@@ -58,7 +54,7 @@
                 android:layout_marginStart="10dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                app:layout_constraintEnd_toStartOf="@id/followBtn"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/avatar"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -94,20 +90,6 @@
                 android:textSize="13sp"
                 app:layout_constraintStart_toEndOf="@id/fans"
                 app:layout_constraintTop_toBottomOf="@id/uname" />
-
-            <TextView
-                android:id="@+id/followBtn"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:onClick="@{() -> listener.onFollowUser(uid, isFollow)}"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="@string/follow" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

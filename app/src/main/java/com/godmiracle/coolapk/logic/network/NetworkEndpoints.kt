@@ -9,9 +9,8 @@ import java.io.IOException
 internal object NetworkEndpoints {
     const val API_BASE_URL = "https://api.coolapk.com/"
     const val API2_BASE_URL = "https://api2.coolapk.com/"
-    const val ACCOUNT_BASE_URL = "https://account.coolapk.com/"
 
-    val all = listOf(API_BASE_URL, API2_BASE_URL, ACCOUNT_BASE_URL)
+    val all = listOf(API_BASE_URL, API2_BASE_URL)
     val trustedHosts = all.map { it.substringAfter("://").substringBefore('/') }.toSet()
 
     fun isTrusted(url: HttpUrl): Boolean {
@@ -38,25 +37,7 @@ internal object NetworkCredentialPolicy {
         "X-App-Supported"
     )
 
-    internal val accountIdentityHeaders = listOf(
-        "Cookie",
-        "User-Agent",
-        "X-Requested-With",
-        "X-App-Id",
-        "sec-ch-ua",
-        "sec-ch-ua-mobile",
-        "sec-ch-ua-platform",
-        "Origin",
-        "Referer",
-        "Sec-Fetch-Site",
-        "Sec-Fetch-Mode",
-        "Sec-Fetch-User",
-        "Sec-Fetch-Dest",
-        "Upgrade-Insecure-Requests",
-        "Accept-Language"
-    )
-
-    internal val credentialHeaders = (apiIdentityHeaders + accountIdentityHeaders).distinct()
+    internal val credentialHeaders = apiIdentityHeaders
 
     private val credentialHeaderNames = (
         credentialHeaders + listOf(

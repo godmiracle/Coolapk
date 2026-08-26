@@ -10,7 +10,6 @@ import com.godmiracle.coolapk.logic.model.TotalReplyResponse
 import com.godmiracle.coolapk.logic.repository.BlackListRepo
 import com.godmiracle.coolapk.logic.repository.HistoryFavoriteRepo
 import com.godmiracle.coolapk.logic.repository.NetworkRepo
-import com.godmiracle.coolapk.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.onStart
@@ -24,10 +23,6 @@ class Reply2ReplyBottomSheetViewModel @Inject constructor(
     private val networkRepo: NetworkRepo
 ) : ViewModel() {
 
-    var uname: String? = null
-    var ruid: String? = null
-    var rid: String? = null
-    var position: Int? = null
     var fuid: String? = null
     var listSize: Int = -1
     var page = 1
@@ -115,60 +110,6 @@ class Reply2ReplyBottomSheetViewModel @Inject constructor(
             """<a class="feed-link-uname" href="/u/${data.uid}">${data.username}$replyTag</a>回复<a class="feed-link-uname" href="/u/${data.rusername}">${data.rusername}$rReplyTag</a>"""
     }
 
-    val toastText = MutableLiveData<Event<String>>()
-    fun postDeleteFeedReply(url: String, id: String, position: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postDelete(url, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.data == "删除成功") {
-                            toastText.postValue(Event("删除成功"))
-                            val replyList =
-                                totalReplyData.value?.toMutableList() ?: ArrayList()
-                            replyList.removeAt(position)
-                            totalReplyData.postValue(replyList)
-                        } else if (!response.message.isNullOrEmpty()) {
-                            toastText.postValue(Event(response.message))
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
-    fun onPostLikeReply(id: String, isLike: Int) {
-        val likeType = if (isLike == 1) "unLikeReply"
-        else "likeReply"
-        val likeUrl = "/v6/feed/$likeType"
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postLikeReply(likeUrl, id)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.data != null) {
-                            val currentList = totalReplyData.value?.map {
-                                if (it.id == id) {
-                                    it.copy(
-                                        likenum = response.data,
-                                        userAction = it.userAction?.copy(like = if (isLike == 1) 0 else 1)
-                                    )
-                                } else it
-                            } ?: emptyList()
-                            totalReplyData.postValue(currentList)
-                        } else {
-                            response.message?.let {
-                                toastText.postValue(Event(it))
-                            }
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
     fun saveUid(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blackListRepo.saveUid(uid)
@@ -195,18 +136,6 @@ class Reply2ReplyBottomSheetViewModel @Inject constructor(
                 dateline,
             )
         }
-    }
-
-    fun updateReply(data: TotalReplyResponse.Data) {
-        toastText.postValue(Event("回复成功"))
-        val replyTotalList = totalReplyData.value?.toMutableList() ?: ArrayList()
-        replyTotalList.add(
-            (position ?: 0) + 1,
-            data.copy(
-                username = generateName(data)
-            )
-        )
-        totalReplyData.postValue(replyTotalList)
     }
 
 }

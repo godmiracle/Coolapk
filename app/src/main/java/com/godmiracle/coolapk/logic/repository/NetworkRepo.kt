@@ -1,6 +1,5 @@
 package com.godmiracle.coolapk.logic.repository
 
-import com.godmiracle.coolapk.di.AccountService
 import com.godmiracle.coolapk.di.Api1Service
 import com.godmiracle.coolapk.di.Api1ServiceNoRedirect
 import com.godmiracle.coolapk.di.Api2Service
@@ -21,8 +20,6 @@ class NetworkRepo @Inject constructor(
     private val apiServiceNoRedirect: ApiService,
     @Api2Service
     private val api2Service: ApiService,
-    @AccountService
-    private val accountService: ApiService,
 ) {
 
     suspend fun getHomeFeed(
@@ -123,42 +120,6 @@ class NetworkRepo @Inject constructor(
         Result.success(apiService.getFollowList(url, uid, page, lastItem).await())
     }
 
-    suspend fun postLikeFeed(url: String, id: String) = fire {
-        Result.success(apiService.postLikeFeed(url, id).await())
-    }
-
-    suspend fun postLikeReply(url: String, id: String) = fire {
-        Result.success(apiService.postLikeReply(url, id).await())
-    }
-
-    suspend fun checkLoginInfo() = fire {
-        Result.success(apiService.checkLoginInfo().response())
-    }
-
-    suspend fun preGetLoginParam() = fire {
-        Result.success(accountService.preGetLoginParam().response())
-    }
-
-    suspend fun getLoginParam() = fire {
-        Result.success(accountService.getLoginParam().response())
-    }
-
-    suspend fun tryLogin(data: HashMap<String, String?>) = fire {
-        Result.success(accountService.tryLogin(data).response())
-    }
-
-    suspend fun getCaptcha(url: String) = fire {
-        Result.success(accountService.getCaptcha(url).response())
-    }
-
-    suspend fun getValidateCaptcha(url: String) = fire {
-        Result.success(apiService.getValidateCaptcha(url).response())
-    }
-
-    suspend fun postReply(data: HashMap<String, String>, id: String, type: String) = fire {
-        Result.success(apiService.postReply(data, id, type).await())
-    }
-
     suspend fun getDataList(
         url: String, title: String, subTitle: String?, lastItem: String?, page: Int
     ) = fire {
@@ -169,22 +130,6 @@ class NetworkRepo @Inject constructor(
         fire {
             Result.success(apiService.getDyhDetail(dyhId, type, page, lastItem).await())
         }
-
-    suspend fun getMessage(url: String, page: Int, lastItem: String?) = fire {
-        Result.success(apiService.getMessage(url, page, lastItem).await())
-    }
-
-    suspend fun postFollowUnFollow(url: String, uid: String) = fire {
-        Result.success(apiService.postFollowUnFollow(url, uid).await())
-    }
-
-    suspend fun postCreateFeed(data: HashMap<String, String>) = fire {
-        Result.success(apiService.postCreateFeed(data).await())
-    }
-
-    suspend fun postRequestValidate(data: HashMap<String, String?>) = fire {
-        Result.success(apiService.postRequestValidate(data).await())
-    }
 
     suspend fun getVoteComment(
         fid: String,
@@ -223,22 +168,6 @@ class NetworkRepo @Inject constructor(
         )
     }
 
-    suspend fun postDelete(url: String, id: String) = fire {
-        Result.success(apiService.postDelete(url, id).await())
-    }
-
-    suspend fun postFollow(data: HashMap<String, String>) = fire {
-        Result.success(apiService.postFollow(data).await())
-    }
-
-    suspend fun getFollow(url: String, tag: String?, id: String?) = fire {
-        Result.success(apiService.getFollow(url, tag, id).await())
-    }
-
-    suspend fun postOSSUploadPrepare(data: HashMap<String, String>) = fire {
-        Result.success(apiService.postOSSUploadPrepare(data).await())
-    }
-
     suspend fun getSearchTag(
         query: String,
         page: Int,
@@ -251,10 +180,6 @@ class NetworkRepo @Inject constructor(
 
     suspend fun loadShareUrl(url: String) = fire {
         Result.success(apiService.loadShareUrl(url).await())
-    }
-
-    suspend fun checkCount() = fire {
-        Result.success(apiService.checkCount().await())
     }
 
     private fun <T> fire(block: suspend () -> Result<T>) =

@@ -24,6 +24,31 @@
         <item name="bottomSheetDialogTheme">@style/CustomBottomSheetDialog.Md3</item>
     </style>
 
+    <style name="Widget.Coolapk.GlassSurface" parent="ThemeOverlay.GlassSurface">
+        <item name="glassSurfaceAlpha">0.24</item>
+        <item name="glassBlurRadius">@dimen/glass_surface_blur_radius</item>
+        <item name="glassCornerRadius">@dimen/glass_surface_corner_radius</item>
+        <item name="glassBorderWidth">@dimen/glass_surface_border_width</item>
+        <item name="glassHighlightWidth">@dimen/glass_surface_highlight_width</item>
+    </style>
+
+    <style name="Widget.Coolapk.GlassSurface.Top" parent="Widget.Coolapk.GlassSurface">
+        <item name="glassBlurRadius">@dimen/glass_surface_top_blur_radius</item>
+        <item name="glassCornerRadius">@dimen/glass_surface_top_corner_radius</item>
+    </style>
+
+    <style name="Widget.Coolapk.GlassSurface.Navigation" parent="Widget.Coolapk.GlassSurface">
+        <item name="glassSurfaceAlpha">0.28</item>
+        <item name="glassBlurRadius">@dimen/glass_surface_navigation_blur_radius</item>
+        <item name="glassCornerRadius">@dimen/glass_surface_navigation_corner_radius</item>
+    </style>
+
+    <style name="Widget.Coolapk.GlassSurface.Action" parent="Widget.Coolapk.GlassSurface">
+        <item name="glassSurfaceAlpha">0.32</item>
+        <item name="glassBlurRadius">@dimen/glass_surface_action_blur_radius</item>
+        <item name="glassCornerRadius">@dimen/glass_surface_action_corner_radius</item>
+    </style>
+
     <style name="PreferenceThemeOverlay.Rikka.Material3.Mod" parent="@style/PreferenceThemeOverlay">
         <item name="preferenceCategoryTitleTextAppearance">
             @style/TextAppearance.Rikka.CategoryTitle.Material3

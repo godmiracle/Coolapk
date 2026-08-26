@@ -1,6 +1,5 @@
 package com.godmiracle.coolapk.ui.app
 
-import android.app.ActivityOptions
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -15,12 +14,10 @@ import androidx.fragment.app.viewModels
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.BaseViewAppBinding
 import com.godmiracle.coolapk.ui.base.BasePagerFragment
-import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ClipboardUtil
 import com.godmiracle.coolapk.util.ImageUtil
 import com.godmiracle.coolapk.util.IntentUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.ReplaceViewHelper
 import com.godmiracle.coolapk.util.Utils.downloadApk
 import com.godmiracle.coolapk.view.AppBarLayoutStateChangeListener
@@ -33,7 +30,6 @@ class AppFragment : BasePagerFragment() {
     private val viewModel by viewModels<AppViewModel>(ownerProducer = { requireActivity() })
     private val typeList = listOf("reply", "pub", "hot")
     private lateinit var appBinding: BaseViewAppBinding
-    private var menuSubscribe: MenuItem? = null
     private var menuBlock: MenuItem? = null
     private var menuSearch: MenuItem? = null
 
@@ -43,8 +39,6 @@ class AppFragment : BasePagerFragment() {
         initApp()
         initAppBar()
         if (!viewModel.tabList.isNullOrEmpty()) {
-            if (PrefManager.isLogin)
-                initFab()
             initTabList()
             initView()
         } else if (!viewModel.errMsg.isNullOrEmpty()) {
@@ -55,28 +49,6 @@ class AppFragment : BasePagerFragment() {
             }
         }
         initObserve()
-    }
-
-    override fun initFab() {
-        super.initFab()
-
-        fab.setOnClickListener {
-            val intent = Intent(requireContext(), ReplyActivity::class.java)
-            intent.putExtra("type", "createFeed")
-            intent.putExtra("targetType", "apk")
-            intent.putExtra("targetId", "${1000000000 + (viewModel.appId?.toInt() ?: 4599)}")
-            val animationBundle = ActivityOptions.makeCustomAnimation(
-                context,
-                R.anim.anim_bottom_sheet_slide_up,
-                R.anim.anim_bottom_sheet_slide_down
-            ).toBundle()
-            requireContext().startActivity(intent, animationBundle)
-        }
-    }
-
-    override fun onTabReselectedExtra() {
-        if (fabBehavior.isScrolledDown)
-            fabBehavior.slideUp(fab, true)
     }
 
     private fun initObserve() {
@@ -90,15 +62,6 @@ class AppFragment : BasePagerFragment() {
         viewModel.searchState.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandledOrReturnNull()?.let {
                 menuSearch?.isVisible = !viewModel.tabList.isNullOrEmpty()
-            }
-        }
-
-        viewModel.followState.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandledOrReturnNull()?.let {
-                menuSubscribe?.isVisible = PrefManager.isLogin
-                        && viewModel.appData?.entityType == "apk"
-                menuSubscribe?.title = if (it == 1) "取消关注"
-                else "关注"
             }
         }
 
@@ -125,12 +88,10 @@ class AppFragment : BasePagerFragment() {
             inflateMenu(R.menu.topic_product_menu)
             menu?.findItem(R.id.order)?.isVisible = false
 
-            menuSubscribe = menu?.findItem(R.id.subscribe)
             menuBlock = menu?.findItem(R.id.block)
             menuSearch = menu?.findItem(R.id.search)
 
             menuSearch?.isVisible = false
-            menuSubscribe?.isVisible = false
             menuBlock?.isVisible = false
             viewModel.checkMenuState()
 
@@ -142,15 +103,6 @@ class AppFragment : BasePagerFragment() {
                             putExtra("pageParam", viewModel.appId)
                             putExtra("title", viewModel.appData?.title)
                         }
-                    }
-
-                    R.id.subscribe -> {
-                        viewModel.onGetFollowApk(
-                            if (viewModel.appData?.userAction?.follow == 1) "/v6/apk/unFollow"
-                            else "/v6/apk/follow",
-                            null,
-                            viewModel.appId
-                        )
                     }
 
                     R.id.block -> {

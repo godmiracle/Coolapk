@@ -13,7 +13,6 @@ import com.godmiracle.coolapk.di.HomeMenuDatabase_MIGRATION_2_3
 import com.godmiracle.coolapk.di.HomeMenuDatabase_MIGRATION_3_4
 import com.godmiracle.coolapk.di.HomeMenuDatabase_MIGRATION_4_5
 import com.godmiracle.coolapk.di.LocalFollowDatabase_MIGRATION_1_2
-import com.godmiracle.coolapk.di.RecentAtUserDatabase_MIGRATION_1_2
 import com.godmiracle.coolapk.di.StringEntityDatabase_MIGRATION_1_2
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -30,7 +29,6 @@ class DatabaseMigrationTest {
     private val feedLegacyV2Helper = migrationHelper(FEED_LEGACY_V2_FIXTURE)
     private val homeHelper = migrationHelper(HomeMenuDatabase::class.java)
     private val localFollowHelper = migrationHelper(LocalFollowDatabase::class.java)
-    private val recentAtUserHelper = migrationHelper(RecentAtUserDatabase::class.java)
 
     @Before
     fun cleanDatabases() {
@@ -190,47 +188,6 @@ class DatabaseMigrationTest {
     }
 
     @Test
-    fun recentAtUserV1ToCurrentPreservesUniqueUsersDeterministically() {
-        recentAtUserHelper.createDatabase(RECENT_AT_USER_DATABASE, 1).apply {
-            execSQL(
-                """
-                INSERT INTO RecentAtUser (`group`, avatar, username, id)
-                VALUES ('recent', 'a1', 'user', 1)
-                """.trimIndent()
-            )
-            execSQL(
-                """
-                INSERT INTO RecentAtUser (`group`, avatar, username, id)
-                VALUES ('follow', 'a2', 'user', 2)
-                """.trimIndent()
-            )
-            execSQL(
-                """
-                INSERT INTO RecentAtUser (`group`, avatar, username, id)
-                VALUES ('recent', 'a3', 'other', 3)
-                """.trimIndent()
-            )
-            close()
-        }
-
-        recentAtUserHelper.runMigrationsAndValidate(
-            RECENT_AT_USER_DATABASE,
-            2,
-            true,
-            RecentAtUserDatabase_MIGRATION_1_2
-        ).use { db ->
-            db.assertIdentityHash(RECENT_AT_USER_IDENTITY_HASH)
-            assertEquals(
-                listOf(
-                    RecentAtUserRow(1, "recent", "a1", "user"),
-                    RecentAtUserRow(3, "recent", "a3", "other")
-                ),
-                db.readRecentAtUserRows()
-            )
-        }
-    }
-
-    @Test
     fun localFollowV1ToCurrentPreservesRowsAndDefaultsAvatar() {
         localFollowHelper.createDatabase(LOCAL_FOLLOW_DATABASE, 1).apply {
             execSQL(
@@ -263,14 +220,6 @@ class DatabaseMigrationTest {
                 db.readLocalFollowRows()
             )
         }
-    }
-
-    @Test
-    fun recentEmojiV1ToCurrentKeepsLatestDuplicate() {
-        assertStringEntityMigration(
-            RecentEmojiDatabase::class.java,
-            RECENT_EMOJI_DATABASE
-        )
     }
 
     @Test
@@ -384,29 +333,6 @@ class DatabaseMigrationTest {
         }
     }
 
-    private fun SupportSQLiteDatabase.readRecentAtUserRows(): List<RecentAtUserRow> {
-        return query(
-            """
-            SELECT id, `group`, avatar, username
-            FROM RecentAtUser
-            ORDER BY id
-            """.trimIndent()
-        ).use { cursor ->
-            buildList {
-                while (cursor.moveToNext()) {
-                    add(
-                        RecentAtUserRow(
-                            cursor.getLong(0),
-                            cursor.getString(1),
-                            cursor.getString(2),
-                            cursor.getString(3)
-                        )
-                    )
-                }
-            }
-        }
-    }
-
     private fun SupportSQLiteDatabase.readLocalFollowRows(): List<LocalFollowRow> {
         return query(
             """
@@ -449,13 +375,6 @@ class DatabaseMigrationTest {
         val isEnable: Int
     )
 
-    private data class RecentAtUserRow(
-        val id: Long,
-        val group: String,
-        val avatar: String,
-        val username: String
-    )
-
     private data class LocalFollowRow(
         val type: String,
         val targetId: String,
@@ -481,10 +400,7 @@ class DatabaseMigrationTest {
             "feed_favorite_migration_v2_current.db"
         private const val HOME_DATABASE_V1 = "home_menu_migration_v1.db"
         private const val HOME_DATABASE_V2 = "home_menu_migration_v2.db"
-        private const val RECENT_AT_USER_DATABASE =
-            "recent_at_user_migration_v1.db"
         private const val LOCAL_FOLLOW_DATABASE = "local_follow_migration_v1.db"
-        private const val RECENT_EMOJI_DATABASE = "recent_emoji_migration_v1.db"
         private const val SEARCH_HISTORY_DATABASE = "search_history_migration_v1.db"
         private const val TOPIC_BLACKLIST_DATABASE =
             "topic_blacklist_migration_v1.db"
@@ -495,8 +411,6 @@ class DatabaseMigrationTest {
             "b1e18544632d0a39cd006f946c2e2b6b"
         private const val HOME_MENU_IDENTITY_HASH =
             "b0bad9ad3a4f15dcc4d2894038da96e3"
-        private const val RECENT_AT_USER_IDENTITY_HASH =
-            "6b167c4c8a07d14e6d8cb02211ea50cd"
         private const val LOCAL_FOLLOW_IDENTITY_HASH =
             "ae73fee3fbd6fc88031b124285c1d442"
         private const val STRING_ENTITY_IDENTITY_HASH =
@@ -518,9 +432,7 @@ class DatabaseMigrationTest {
             FEED_DATABASE_V2_CURRENT,
             HOME_DATABASE_V1,
             HOME_DATABASE_V2,
-            RECENT_AT_USER_DATABASE,
             LOCAL_FOLLOW_DATABASE,
-            RECENT_EMOJI_DATABASE,
             SEARCH_HISTORY_DATABASE,
             TOPIC_BLACKLIST_DATABASE,
             USER_BLACKLIST_DATABASE

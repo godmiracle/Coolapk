@@ -28,32 +28,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolBar"
+            <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:elevation="0dp"
-                app:layout_collapseMode="pin" />
+                app:glassBackdropSource="@id/view"
+                app:layout_collapseMode="pin">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    android:elevation="0dp"
+                    app:layout_collapseMode="pin" />
+
+            </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabLayout"
-            style="@style/Widget.Material3.TabLayout.OnSurface.Trans"
+        <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:tabTextAppearance="@style/TabText15" />
+            app:glassBackdropSource="@id/view_pager">
 
-        <FrameLayout
-            android:id="@+id/extraBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="?attr/colorSurfaceVariant" />
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout"
+                    style="@style/Widget.Material3.TabLayout.OnSurface.Trans"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    app:tabTextAppearance="@style/TabText15" />
+
+                <FrameLayout
+                    android:id="@+id/extraBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:visibility="gone" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="?attr/colorSurfaceVariant" />
+
+            </LinearLayout>
+
+        </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 

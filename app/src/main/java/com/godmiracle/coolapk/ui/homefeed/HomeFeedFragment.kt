@@ -2,15 +2,12 @@ package com.godmiracle.coolapk.ui.homefeed
 
 import android.annotation.SuppressLint
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -19,10 +16,8 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.adapter.FooterState
 import com.godmiracle.coolapk.adapter.LoadingState
 import com.godmiracle.coolapk.adapter.PlaceHolderAdapter
-import com.godmiracle.coolapk.constant.Constants.SZLM_ID
 import com.godmiracle.coolapk.databinding.BaseRefreshRecyclerviewBinding
 import com.godmiracle.coolapk.ui.base.BaseAppFragment
-import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.ui.home.IOnTabClickContainer
 import com.godmiracle.coolapk.ui.home.IOnTabClickListener
 import com.godmiracle.coolapk.ui.main.IOnBottomClickContainer
@@ -33,7 +28,6 @@ import com.godmiracle.coolapk.util.dp
 import com.godmiracle.coolapk.util.setSpaceFooterView
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -49,8 +43,6 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
             getLastingInstallTime(requireContext())
         )
     }
-    private lateinit var fab: FloatingActionButton
-    private val fabViewBehavior by lazy { HideBottomViewOnScrollBehavior<FloatingActionButton>() }
     private val placeHolderAdapter by lazy { PlaceHolderAdapter() }
 
     companion object {
@@ -69,11 +61,6 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
         savedInstanceState: Bundle?
     ): View {
         _binding = BaseRefreshRecyclerviewBinding.inflate(inflater, container, false)
-        if (viewModel.type == "feed" && PrefManager.isLogin) {
-            fab = FloatingActionButton(requireContext())
-            initPublish()
-            _binding?.root?.addView(fab)
-        }
         return binding.root
     }
 
@@ -152,43 +139,6 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
         }
     }
 
-    @SuppressLint("InflateParams")
-    private fun initPublish() {
-        fab.apply {
-            setImageResource(R.drawable.ic_add1)
-            layoutParams = CoordinatorLayout.LayoutParams(
-                CoordinatorLayout.LayoutParams.WRAP_CONTENT,
-                CoordinatorLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.BOTTOM or Gravity.END
-                behavior = fabViewBehavior
-            }
-            tooltipText = getString(R.string.publishFeed)
-            setOnClickListener {
-                if (PrefManager.SZLMID == "") {
-                    Toast.makeText(requireContext(), SZLM_ID, Toast.LENGTH_SHORT).show()
-                } else {
-                    val intent = Intent(requireContext(), ReplyActivity::class.java)
-                    intent.putExtra("type", "createFeed")
-                    val options = ActivityOptionsCompat.makeCustomAnimation(
-                        requireContext(),
-                        R.anim.anim_bottom_sheet_slide_up,
-                        R.anim.anim_bottom_sheet_slide_down
-                    )
-                    requireContext().startActivity(intent, options.toBundle())
-                }
-            }
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(fab) { _, insets ->
-            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            fab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                rightMargin = 25.dp
-                bottomMargin = navigationBars.bottom + if (isPortrait) 105.dp else 25.dp
-            }
-            insets
-        }
-    }
-
     override fun onPause() {
         super.onPause()
         (parentFragment as? IOnTabClickContainer)?.tabController = null
@@ -205,8 +155,6 @@ class HomeFeedFragment : BaseAppFragment<HomeFeedViewModel>(), IOnTabClickListen
         if (binding.swipeRefresh.isEnabled) {
             binding.recyclerView.stopScroll()
             if (isRefresh == true) {
-                if (viewModel.type == "feed" && fabViewBehavior.isScrolledDown)
-                    fabViewBehavior.slideUp(fab, true)
                 binding.recyclerView.scrollToPosition(0)
                 binding.swipeRefresh.isRefreshing = true
                 refreshData()

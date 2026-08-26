@@ -1,7 +1,5 @@
 package com.godmiracle.coolapk.ui.topic
 
-import android.app.ActivityOptions
-import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -15,14 +13,12 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.BaseViewTopicBinding
 import com.godmiracle.coolapk.databinding.TopicSortBarBinding
 import com.godmiracle.coolapk.ui.base.BasePagerFragment
-import com.godmiracle.coolapk.ui.feed.reply.ReplyActivity
 import com.godmiracle.coolapk.ui.home.IOnTabClickListener
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickContainer
 import com.godmiracle.coolapk.ui.search.IOnSearchMenuClickListener
 import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ImageUtil
 import com.godmiracle.coolapk.util.IntentUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.ReplaceViewHelper
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -48,8 +44,6 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
         initSortBar()
         initSelected()
         updateSortBarVisibility(binding.viewPager.currentItem)
-        if (PrefManager.isLogin)
-            initFab()
         initObserve()
     }
 
@@ -150,32 +144,6 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
         TopicSort.HOT -> R.id.topicSortHot
     }
 
-    override fun initFab() {
-        super.initFab()
-        fab.setOnClickListener {
-            val intent = Intent(requireContext(), ReplyActivity::class.java)
-            intent.putExtra("type", "createFeed")
-            intent.putExtra(
-                "targetType",
-                if (viewModel.type == "topic") "tag" else "product_phone"
-            )
-            intent.putExtra("targetId", viewModel.id)
-            if (viewModel.type == "topic")
-                intent.putExtra("title", viewModel.title)
-            val animationBundle = ActivityOptions.makeCustomAnimation(
-                context,
-                R.anim.anim_bottom_sheet_slide_up,
-                R.anim.anim_bottom_sheet_slide_down
-            ).toBundle()
-            requireContext().startActivity(intent, animationBundle)
-        }
-    }
-
-    override fun onTabReselectedExtra() {
-        if (fabBehavior.isScrolledDown)
-            fabBehavior.slideUp(fab, true)
-    }
-
     private fun initSelected() {
         viewModel.tabSelected?.let {
             binding.viewPager.setCurrentItem(it, false)
@@ -234,7 +202,6 @@ class TopicFragment : BasePagerFragment(), IOnSearchMenuClickContainer {
 
             inflateMenu(R.menu.topic_product_menu)
             menu.findItem(R.id.order).isVisible = false
-            menu.findItem(R.id.subscribe).isVisible = false
             menuBlock = menu.findItem(R.id.block)
 
             viewModel.checkMenuState()

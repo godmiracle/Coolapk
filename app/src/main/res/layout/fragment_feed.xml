@@ -51,78 +51,88 @@
             android:fitsSystemWindows="false"
             app:fitsSystemWindowsInsets="@integer/internal_fragment_top_insets">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolBar"
+            <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+                android:id="@+id/toolbarGlassSurface"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize">
+                android:layout_height="?attr/actionBarSize"
+                app:glassBackdropSource="@id/contentLayout">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/titleProfile"
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolBar"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone">
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    android:elevation="0dp">
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/avatar"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:background="@color/cover"
-                        android:foreground="@drawable/selector_bg_avatar"
-                        android:onClick="@{(view) -> listener.onViewUser(view, username)}"
-                        app:layout_constraintBottom_toBottomOf="@id/date"
-                        app:layout_constraintDimensionRatio="1"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:setImage="@{avatarUrl}"
-                        app:shapeAppearance="@style/circleImageStyle" />
-
-                    <TextView
-                        android:id="@+id/name"
-                        android:layout_width="0dp"
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/titleProfile"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="@{username}"
-                        android:textSize="15sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/avatar"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="name" />
+                        android:visibility="gone">
 
-                    <TextView
-                        android:id="@+id/date"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:maxLines="1"
-                        android:text="@{String.valueOf(DateUtils.fromToday(dateline))}"
-                        android:textColor="@android:color/darker_gray"
-                        android:textSize="13sp"
-                        app:layout_constraintStart_toEndOf="@id/avatar"
-                        app:layout_constraintTop_toBottomOf="@id/name"
-                        tools:text="date" />
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/avatar"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:background="@color/cover"
+                            android:foreground="@drawable/selector_bg_avatar"
+                            android:onClick="@{(view) -> listener.onViewUser(view, username)}"
+                            app:layout_constraintBottom_toBottomOf="@id/date"
+                            app:layout_constraintDimensionRatio="1"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:setImage="@{avatarUrl}"
+                            app:shapeAppearance="@style/circleImageStyle" />
 
-                    <TextView
-                        android:id="@+id/device"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textColor="@android:color/darker_gray"
-                        android:textSize="13sp"
-                        android:visibility="@{deviceTitle == null || deviceTitle.isEmpty ? View.INVISIBLE : View.VISIBLE}"
-                        app:customText="@{deviceTitle}"
-                        app:icon="@{@drawable/ic_device}"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/date"
-                        app:layout_constraintTop_toBottomOf="@id/name"
-                        tools:text="device" />
+                        <TextView
+                            android:id="@+id/name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@{username}"
+                            android:textSize="15sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/avatar"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:text="name" />
 
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        <TextView
+                            android:id="@+id/date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:maxLines="1"
+                            android:text="@{String.valueOf(DateUtils.fromToday(dateline))}"
+                            android:textColor="@android:color/darker_gray"
+                            android:textSize="13sp"
+                            app:layout_constraintStart_toEndOf="@id/avatar"
+                            app:layout_constraintTop_toBottomOf="@id/name"
+                            tools:text="date" />
 
-            </com.google.android.material.appbar.MaterialToolbar>
+                        <TextView
+                            android:id="@+id/device"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="5dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@android:color/darker_gray"
+                            android:textSize="13sp"
+                            android:visibility="@{deviceTitle == null || deviceTitle.isEmpty ? View.INVISIBLE : View.VISIBLE}"
+                            app:customText="@{deviceTitle}"
+                            app:icon="@{@drawable/ic_device}"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/date"
+                            app:layout_constraintTop_toBottomOf="@id/name"
+                            tools:text="device" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </com.google.android.material.appbar.MaterialToolbar>
+
+            </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -157,41 +167,41 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?android:windowBackground"
-                android:orientation="vertical"
-                android:visibility="invisible">
+                android:visibility="invisible"
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/replyCount"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="15dp"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        app:layout_constraintBottom_toTopOf="@id/divider"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="共 99 回复" />
+                        <TextView
+                            android:id="@+id/replyCount"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="15dp"
+                            android:layout_weight="1"
+                            android:textSize="14sp"
+                            app:layout_constraintBottom_toTopOf="@id/divider"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:text="共 99 回复" />
 
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/buttonToggle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="15dp"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        app:checkedButton="@id/lastUpdate"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintBottom_toTopOf="@id/divider"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
+                        <com.google.android.material.button.MaterialButtonToggleGroup
+                            android:id="@+id/buttonToggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            app:checkedButton="@id/lastUpdate"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintBottom_toTopOf="@id/divider"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/lastUpdate"
@@ -253,7 +263,7 @@
                             android:text="楼主"
                             android:textSize="12sp" />
 
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                        </com.google.android.material.button.MaterialButtonToggleGroup>
 
                 </LinearLayout>
 
@@ -266,15 +276,6 @@
             </LinearLayout>
 
         </FrameLayout>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/reply"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_reply"
-            android:tooltipText="@string/reply"
-            android:visibility="gone"
-            tools:ignore="ContentDescription" />
 
         <include
             android:id="@+id/indicator"

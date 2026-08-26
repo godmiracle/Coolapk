@@ -28,7 +28,6 @@ import com.godmiracle.coolapk.logic.model.HomeFeedResponse
 import com.godmiracle.coolapk.logic.model.Like
 import com.godmiracle.coolapk.util.DateUtils
 import com.godmiracle.coolapk.util.ImageUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.dp
 import com.godmiracle.coolapk.view.LinearItemDecoration1
 import com.google.android.material.color.MaterialColors
@@ -48,9 +47,7 @@ class AppAdapter(
                 PopupMenu(it.context, it).apply {
                     menuInflater.inflate(R.menu.feed_reply_menu, menu).apply {
                         menu.findItem(R.id.copy)?.isVisible = false
-                        menu.findItem(R.id.delete)?.isVisible = PrefManager.uid == uid
                         menu.findItem(R.id.show)?.isVisible = false
-                        menu.findItem(R.id.report)?.isVisible = PrefManager.isLogin
                     }
                     setOnMenuItemClickListener(
                         PopClickListener(
@@ -246,21 +243,6 @@ class AppAdapter(
                 binding.follow.text = "${data.follow}关注"
                 binding.fans.text = "${data.fans}粉丝"
                 binding.act.text = DateUtils.fromToday(data.logintime ?: 0L) + "活跃"
-                binding.isFollow = data.isFollow ?: 0
-                if (data.isFollow == 1) {
-                    binding.followBtn.text = "已关注"
-                    binding.followBtn.setTextColor(itemView.context.getColor(android.R.color.darker_gray))
-                } else {
-                    binding.followBtn.text = "关注"
-                    binding.followBtn.setTextColor(
-                        MaterialColors.getColor(
-                            itemView.context,
-                            com.google.android.material.R.attr.colorPrimary,
-                            0
-                        )
-                    )
-                }
-                binding.followBtn.isVisible = PrefManager.isLogin
                 ImageUtil.showIMG(binding.avatar, data.userAvatar)
             }
 
@@ -340,9 +322,7 @@ class AppAdapter(
                 PopupMenu(it.context, it).apply {
                     menuInflater.inflate(R.menu.feed_reply_menu, menu).apply {
                         menu.findItem(R.id.copy)?.isVisible = false
-                        menu.findItem(R.id.delete)?.isVisible = PrefManager.uid == uid
                         menu.findItem(R.id.show)?.isVisible = false
-                        menu.findItem(R.id.report)?.isVisible = PrefManager.isLogin
                     }
                     setOnMenuItemClickListener(
                         PopClickListener(
@@ -541,26 +521,6 @@ class AppAdapter(
                         holder.binding.executePendingBindings()
                     }
 
-                    is UserViewHolder -> {
-                        holder.binding.isFollow = currentList[position].isFollow ?: 0
-                        if (currentList[position].isFollow == 1) {
-                            holder.binding.followBtn.text = "已关注"
-                            holder.binding.followBtn.setTextColor(
-                                holder.itemView.context.getColor(
-                                    android.R.color.darker_gray
-                                )
-                            )
-                        } else {
-                            holder.binding.followBtn.text = "关注"
-                            holder.binding.followBtn.setTextColor(
-                                MaterialColors.getColor(
-                                    holder.itemView.context,
-                                    com.google.android.material.R.attr.colorPrimary,
-                                    0
-                                )
-                            )
-                        }
-                    }
                 }
             }
         }

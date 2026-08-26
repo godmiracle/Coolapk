@@ -18,6 +18,7 @@
 
         <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
             android:id="@+id/topGlassSurface"
+            style="@style/Widget.Coolapk.GlassSurface.Top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/liquid_glass_top_outer_padding"

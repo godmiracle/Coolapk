@@ -4,17 +4,9 @@ import android.content.SharedPreferences
 
 internal object CredentialPreferencesMigration {
 
-    private const val MIGRATION_MARKER = "_credentials_migration_v1"
+    private const val MIGRATION_MARKER = "_device_identity_migration_v2"
 
     private val credentialKeys = setOf(
-        "isLogin",
-        "uid",
-        "name",
-        "token",
-        "userAvatar",
-        "level",
-        "experience",
-        "nextLevelExperience",
         "xAppToken",
         "xAppDevice",
         "customToken",

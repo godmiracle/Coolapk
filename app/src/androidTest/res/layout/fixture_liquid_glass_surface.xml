@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/fixture_backdrop_source"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#336699" />
+
+    <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+        android:id="@+id/fixture_glass_surface"
+        android:layout_width="match_parent"
+        android:layout_height="96dp">
+
+        <Button
+            android:id="@+id/fixture_foreground_action"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:contentDescription="Glass action"
+            android:text="Action" />
+
+    </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
+
+</FrameLayout>

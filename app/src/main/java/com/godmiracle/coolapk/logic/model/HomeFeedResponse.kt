@@ -15,7 +15,7 @@ data class HomeFeedResponse(
     @Parcelize
     data class Data(
         val rid: Long?,
-        val forwardSourceFeed: MessageResponse.ForwardSourceFeed?,
+        val forwardSourceFeed: ForwardSourceFeed?,
         @SerializedName("comment_num") val commentNum: String?,
         @SerializedName("fans_num") val fansNum: String?,
         @SerializedName("target_type") val targetType: String?,
@@ -120,6 +120,19 @@ data class HomeFeedResponse(
         val userInfo: UserInfo?,
         val fUserInfo: UserInfo?,
         var isFollow: Int?
+    ) : Parcelable
+
+    @Parcelize
+    data class ForwardSourceFeed(
+        val entityType: String,
+        val feedType: String,
+        val id: String,
+        val username: String,
+        val uid: String,
+        val message: String,
+        @SerializedName("message_title") val messageTitle: String,
+        val pic: String,
+        val picArr: List<String>?,
     ) : Parcelable
 
     @Parcelize
@@ -259,4 +272,3 @@ data class HomeFeedResponse(
     ) : Parcelable
 
 }
-

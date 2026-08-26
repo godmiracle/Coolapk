@@ -3,7 +3,6 @@ package com.godmiracle.coolapk.ui.main
 import android.os.Bundle
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.viewModels
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -22,9 +21,7 @@ import com.godmiracle.coolapk.ui.my.MyFragment
 import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ActivityCollector
 import com.godmiracle.coolapk.util.IntentUtil
-import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.view.AnimatedBottomNavigationView
-import com.godmiracle.coolapk.view.LiquidGlassFrameLayout
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
@@ -33,13 +30,11 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContainer {
 
-    private val viewModel by viewModels<MainViewModel>()
     private val navViewBehavior by lazy { HideBottomViewOnScrollBehavior<FrameLayout>() }
     override var controller: IOnBottomClickListener? = null
     private lateinit var navView: NavigationBarView
     private var animatedBottomNav: AnimatedBottomNavigationView? = null
     private var navigationChromeVisible = true
-    private val isLogin by lazy { PrefManager.isLogin }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,34 +44,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
         animatedBottomNav = binding.bottomNav as? AnimatedBottomNavigationView
 
         // 竖屏布局提供玻璃底栏，横屏布局继续使用原有 NavigationRailView。
-        val bottomNavSurface = binding.root.findViewById<LiquidGlassFrameLayout>(
-            R.id.bottomNavSurface
-        )
-        val searchActionSurface = binding.root.findViewById<LiquidGlassFrameLayout>(
-            R.id.searchActionSurface
-        )
-        bottomNavSurface?.apply {
+        binding.bottomNavSurface?.setBackdropSource(binding.viewPager)
+        binding.searchActionSurface?.apply {
             setBackdropSource(binding.viewPager)
-            setBlurRadiusDp(18f)
-            setSurfaceAlpha(0.28f)
-            setCornerRadiusDp(30f)
-        }
-        searchActionSurface?.apply {
-            setBackdropSource(binding.viewPager)
-            setBlurRadiusDp(20f)
-            setSurfaceAlpha(0.32f)
-            setCornerRadiusDp(28f)
             setOnClickListener {
                 IntentUtil.startActivity<SearchActivity>(this@MainActivity) {}
             }
         }
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
-
-        if (viewModel.isInit) {
-            viewModel.isInit = false
-            genData()
-        }
 
         binding.viewPager.apply {
             offscreenPageLimit = 3
@@ -87,7 +63,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                         0 -> HomeFragment()
                         1 -> DiscoverFragment()
                         2 -> FollowPagerFragment.newInstance(
-                            uid = PrefManager.uid,
+                            uid = "",
                             type = "follow",
                             embedded = true
                         )
@@ -99,8 +75,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    bottomNavSurface?.refreshBackdrop()
-                    searchActionSurface?.refreshBackdrop()
+                    binding.bottomNavSurface?.refreshBackdrop()
+                    binding.searchActionSurface?.refreshBackdrop()
                     when (position) {
                         0 -> onBackPressedCallback.isEnabled = false
                         else -> onBackPressedCallback.isEnabled = true
@@ -165,10 +141,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             windowInsets
         }
 
-    }
-
-    private fun genData() {
-        viewModel.fetchAppInfo("com.coolapk.market")
     }
 
     private val onBackPressedCallback = object : OnBackPressedCallback(false) {
@@ -282,18 +254,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
     override fun onDestroy() {
         super.onDestroy()
         ActivityCollector.removeActivity(this)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!viewModel.isInit && isLogin) {
-            with(System.currentTimeMillis()) {
-                if (this - viewModel.lastCheck >= 5 * 60 * 1000) {
-                    viewModel.lastCheck = this
-                    viewModel.onCheckCount()
-                }
-            }
-        }
     }
 
 }

@@ -37,7 +37,6 @@ class UserViewModel @AssistedInject constructor(
     // activity
     var isAInit: Boolean = true
     val blockState = MutableLiveData<Event<Boolean>>()
-    val followState = MutableLiveData<Event<Int?>>()
     var userData: UserProfileResponse.Data? = null
 
     fun fetchUser() {
@@ -144,31 +143,6 @@ class UserViewModel @AssistedInject constructor(
         }
     }
 
-    fun onPostFollowUnFollow(url: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postFollowUnFollow(url, uid)
-                .collect { result ->
-                    val response = result.getOrNull()
-                    if (response != null) {
-                        if (response.message != null) {
-                            toastText.postValue(Event(response.message))
-                        } else {
-                            userData?.isFollow = if (userData?.isFollow == 1) 0 else 1
-                            checkFollow()
-                            toastText.postValue(
-                                Event(
-                                    if (userData?.isFollow == 1) "关注成功"
-                                    else "取消关注成功"
-                                )
-                            )
-                        }
-                    } else {
-                        result.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-        }
-    }
-
     fun saveUid(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blackListRepo.saveUid(uid)
@@ -183,18 +157,11 @@ class UserViewModel @AssistedInject constructor(
 
     fun checkMenuState() {
         checkUid(uid)
-        checkFollow()
     }
 
     private fun checkUid(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blockState.postValue(Event(blackListRepo.checkUid(uid)))
-        }
-    }
-
-    private fun checkFollow() {
-        viewModelScope.launch(Dispatchers.IO) {
-            followState.postValue(Event(userData?.isFollow ?: 0))
         }
     }
 

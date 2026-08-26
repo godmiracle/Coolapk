@@ -31,13 +31,22 @@
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true" />
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolBar"
+            <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:elevation="0dp"
-                android:theme="@style/OverflowMenu"
-                app:layout_collapseMode="pin" />
+                app:glassBackdropSource="@id/view"
+                app:layout_collapseMode="pin">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    android:elevation="0dp"
+                    android:theme="@style/OverflowMenu"
+                    app:layout_collapseMode="pin" />
+
+            </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 

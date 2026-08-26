@@ -57,7 +57,7 @@ class FollowViewModel @AssistedInject constructor(
             initUrl()
         }
         when (type) {
-            "feed", "fans", "follow", "apk", "reply", "replyToMe", "recentHistory", "like" -> fetchFeedList()
+            "feed", "fans", "follow", "apk" -> fetchFeedList()
 
             "topic", "product", "favorite" -> fetchTopicData()
         }
@@ -162,14 +162,6 @@ class FollowViewModel @AssistedInject constructor(
                 uid = ""
                 "/v6/user/forumFollowList"
             }
-
-            "like" -> "/v6/user/likeList"
-
-            "reply" -> "/v6/user/replyList"
-
-            "replyToMe" -> "/v6/user/replyToMeList"
-
-            "recentHistory" -> "/v6/user/recentHistoryList"
 
             else -> type
         }

@@ -21,8 +21,6 @@ import org.jsoup.select.Elements
 
 interface ItemListener {
 
-    fun onFollowUser(uid: String, followAuthor: Int) {}
-
     fun onShowCollection(id: String, title: String) {}
 
     fun onViewApk(view: View, id: String?) {
@@ -160,19 +158,5 @@ interface ItemListener {
     ) {
     }
 
-    fun onLikeClick(type: String, id: String, isLike: Int) {}
-
-    fun onReply(
-        id: String,
-        cuid: String,
-        uid: String,
-        username: String?,
-        position: Int,
-        rPosition: Int?
-    ) {
-    }
-
     fun onBlockUser(id: String, uid: String, position: Int) {}
-
-    fun onDeleteClicked(entityType: String, id: String, position: Int) {}
 }

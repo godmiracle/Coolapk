@@ -18,6 +18,12 @@
   -->
 
 <resources>
+    <style name="ThemeOverlay.GlassSurface" parent="ThemeOverlay">
+        <item name="glassSurfaceColor">?attr/colorSurface</item>
+        <item name="glassBorderColor">?attr/colorOnSurface</item>
+        <item name="glassHighlightColor">?attr/colorOnSurface</item>
+    </style>
+
     <style name="ThemeOverlay.MaterialRed" parent="ThemeOverlay.Light.MaterialRed"/>
     <style name="ThemeOverlay.MaterialPink" parent="ThemeOverlay.Light.MaterialPink"/>
     <style name="ThemeOverlay.MaterialPurple" parent="ThemeOverlay.Light.MaterialPurple"/>
