@@ -633,3 +633,17 @@ Android Studio JDK 21、离线依赖下 assembleDebug、assembleDebugAndroidTest
 ### 验证边界
 
 已通过静态检查确认 Feed 详情仅保留 Toolbar 玻璃绑定，排序栏无 backdrop source；清理后 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`（26 个）和 `lintDebug` 均通过，定向 `LiquidGlassFrameLayoutInstrumentedTest` 在 PGEM10 上 1/1 通过。自动化验证不执行登录、发帖、回复编辑、消息或远程社交写入测试。
+
+## 2026-08-26 - Release 校验文件使用实际上传文件名
+
+### 决定
+
+GitHub Actions 创建 Release 时，将 Gradle 产出的带括号版本号文件名规范化为不带括号的 Release 资产名，并使用规范化后的实际上传路径生成 `SHA256SUMS`。Release 资产不再让 GitHub 服务端自动改名后才与校验文件发生偏差。
+
+### 原因
+
+Gradle 当前产物名为 `c001apk_v1.1.0(463).apk`；GitHub Release 资产最终显示为 `c001apk_v1.1.0.463.apk`，而原校验文件仍记录本地源文件名，导致下载后 `sha256sum -c` 找不到文件。
+
+### 验证边界
+
+本次修复用于后续 Tag 发布；当前 `v1.1.0` 的校验文件已单独替换为实际资产名并重新核验。CI 的 Action 版本告警（Node.js 20、AdoptOpenJDK 和 setup-java v4）仍需独立升级，不影响本次成功运行。
