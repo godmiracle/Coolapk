@@ -97,15 +97,22 @@ KEY_PASSWORD=本地别名密码
 
 第一次运行时，主界面会请求应用信息。外部 API 不可达时，页面可能出现加载失败或空列表；这不应直接判断为编译问题。
 
+### 客户端更新流程
+
+从“我的 → 设置 → 其他 → 检查本客户端更新”进入更新页；页面打开、重建或从浏览器返回时不自动请求，只有点击“检查更新”才请求固定的 GitHub latest Release。应用只校验 Release 的稳定状态和 semver 版本，展示版本/更新说明；检测成功、失败和未检查时都提供“浏览器下载 Release（推荐）”，固定打开 `https://github.com/godmiracle/Coolapk/releases/latest`。应用不下载 APK、不申请 `REQUEST_INSTALL_PACKAGES`、不创建更新缓存，也不启动系统 Package Installer。旧的“检查应用更新”批量第三方应用更新链路已移除，应用详情页仍保留单个 APK 下载。
+
+用户在浏览器下载后由 Android 系统正常处理安装。正式包覆盖安装必须同时满足 applicationId 相同、签名证书一致且 `versionCode` 更高；Debug 构建使用独立的 `com.godmiracle.coolapk.debug` applicationId 和 Debug 签名，可与正式包并存，因此不会再尝试用正式包覆盖 Debug 包。旧版本的同包名 Debug 安装若仍存在，需要卸载一次；之后新的 Debug 包可直接安装，正式包则从 Release 页面单独安装或升级。
+
 ## 6. 网络日志和明文流量边界
 
 - `NetworkLogging` 默认将 OkHttp 日志级别设为 `NONE`，Release 永远不会启用 BODY。
 - 个人 Debug 调试可使用 `-PenableHttpBodyLogging=true` 显式开启 BODY；Cookie、Authorization、设备/应用 Token、密码、验证码和 STS 等字段仍会输出为 `[REDACTED]`。
 - Manifest 已关闭 `usesCleartextTraffic`；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径会先升级为 HTTPS。
 - API1、API2 以及 API1 no-redirect 客户端均在最终网络发送处执行 HTTPS + trusted-host 检查；只有 `api.coolapk.com`、`api2.coolapk.com` 保留匿名请求身份和会话 Cookie。外部 `@Url`、非 HTTPS 请求和跨 Host 重定向会清理请求身份。
+- GitHub client 使用独立的无凭据 HTTPS 配置，仅发送 GitHub API Header，固定 HTTP/1.1 并关闭重定向；不复用 Coolapk Cookie、设备 Token 或 `X-App-*` Header。更新页另提供固定 Release 网页入口供系统浏览器使用，应用不读取资产下载地址。
 - 当前不存在 Account 客户端、登录拦截器或登录状态机。
 - `credentials.xml` 同时被 `backup_rules.xml`、`data_extraction_rules.xml` 排除；这只是隔离和备份策略，当前文件仍未加密。
-- `QUERY_ALL_PACKAGES` 仅因应用列表和更新检查实际需要而保留；`REQUEST_INSTALL_PACKAGES` 已移除。
+- 当前不声明 `QUERY_ALL_PACKAGES`；旧的应用列表和第三方应用批量更新检查已移除。客户端更新不声明 `REQUEST_INSTALL_PACKAGES`。
 
 ## 7. 业务人工验收矩阵
 
@@ -121,6 +128,7 @@ KEY_PASSWORD=本地别名密码
 | 图片 | 九宫格、全屏缩放、保存、分享、复制、OSS 上传 | 文件/分享结果 |
 | 搜索 | 动态/应用/数码/用户/话题、排序、历史 | 结果和边界页 |
 | 用户/应用 | 用户主页、应用详情、下载链接、安装/更新入口 | 页面 + 下载行为 |
+| 客户端更新 | GitHub latest Release 检查、固定 Release 浏览器入口 | API 状态 + 浏览器前台/Release 页面 |
 | 本地关注 | 空状态、话题/数码详情关注、合并列表、取消关注和重启后保留 | 截图 + 本地数据库/UI 状态 |
 | 我的/设置 | 本地收藏、浏览历史、设置二级入口及设置项持久化 | 页面截图 + 设置结果 |
 | 深链 | `coolmarket://`、HTTP/HTTPS `/feed`、`/apk`、`/u`、`/t` 等 | `adb` 启动结果 |
@@ -132,9 +140,9 @@ KEY_PASSWORD=本地别名密码
 当前源码中的测试清单（按 `@Test` 方法静态计数，不代表本轮已经执行）包括：
 
 - JVM 测试覆盖 `NetworkEndpoints`、`NetworkLogging`、匿名请求边界、`NetworkCallAdapter` 和 `TokenDeviceUtils`；其中网络边界测试覆盖受信任/外部/非 HTTPS/跨 Host 重定向，Call adapter 测试覆盖非 2xx、空 body、transport failure、取消和 `NetworkRepo` Flow 取消语义。
-- instrumentation 测试覆盖 `LiquidGlassFrameLayout`、GIF native 兼容性、仍在使用的 Room migration 和 WebView 生命周期；登录/账号迁移、消息、发帖和回复编辑测试不属于当前范围。
+- instrumentation 测试覆盖 `LiquidGlassFrameLayout`、GIF native 兼容性、仍在使用的 Room migration 和 WebView 生命周期；客户端更新的 API/版本校验由 JVM 测试覆盖。登录/账号迁移、消息、发帖和回复编辑测试不属于当前范围。
 
-本次 docs fixer 未运行 `:app:testDebugUnitTest`、`lintDebug`、`compileDebugAndroidTestKotlin` 或 `:app:connectedDebugAndroidTest`，也未进行设备/实时 API 验收，因此不能写当前工作树的“通过”结论。历史会话中的测试数量不能替代当前源码的验证结果。无论自动化测试是否通过，它们仍不能证明真实 API、分页、深链或完整图片业务功能。新增业务逻辑时，优先为以下边界增加测试：
+本次 GitHub Releases 更新实现已运行 `:app:testDebugUnitTest`、`:app:assembleDebug`、`:app:assembleDebugAndroidTest` 和 `:app:lintDebug`；JVM 测试共 33 个，全部通过。移除批量更新链路后已重新执行当前源码门禁，`BUILD SUCCESSFUL`；随后在 OPPO `PGEM10` 上完成当前 Debug APK 安装、更新页初始手动触发状态核对，且 `:app:connectedDebugAndroidTest` 14/14 通过。latest API 检查和固定 Release 浏览器跳转已在本 change 的既有真机验证中确认。历史会话中的测试数量不能替代当前源码的验证结果。无论自动化测试是否通过，它们仍不能证明 Coolapk 真实分页、深链或完整图片业务功能。新增业务逻辑时，优先为以下边界增加测试：
 
 1. `NetWorkUtil.openLink` 的 URL 到 Activity/参数映射。
 2. `TokenDeviceUtils` 的输入输出稳定性和设备参数变化。
@@ -181,6 +189,10 @@ KEY_PASSWORD=本地别名密码
 Gradle 分发包已安装并不代表 Android Gradle Plugin、Kotlin 插件和业务依赖已缓存。若详细日志显示 Maven 下载长时间无进度，或临时 JAR 只有部分大小，先停止构建并检查网络/代理，再重新执行 `bash gradlew :app:assembleDebug --info --stacktrace --console=plain`。`--offline` 只能使用完整缓存；缺少完整插件依赖时应报告构建阻塞，不应把截断文件当作可用缓存。
 
 本轮曾遇到 `room-compiler-2.6.1.jar` 和 `sqlite-jdbc-3.41.2.2.jar` 下载被远端提前断开；在网络恢复后补齐完整缓存并使用 `--max-workers=1` 重试，最终 Debug 构建通过。GIF 依赖应使用 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，不要恢复旧的 `io.github.panpf.sketch:sketch-gif:2.7.1` 或更早的 `me.panpf:sketch-gif` 坐标。
+
+### GitHub 客户端更新检查失败
+
+先确认设备网络和 `https://api.github.com/repos/godmiracle/Coolapk/releases/latest` 是否可达；HTTP 403 可能表示 GitHub 限流或当前网络环境拦截。应用只接受非 draft/prerelease 且 semver 合法的 Release；API 受限时，可点击“浏览器下载 Release（推荐）”使用固定的 `https://github.com/godmiracle/Coolapk/releases/latest`。若系统安装提示包名、签名或版本不匹配，检查是否将 Debug 包当成正式包升级：当前 Debug applicationId 为 `com.godmiracle.coolapk.debug`，正式包为 `com.godmiracle.coolapk`；正式包覆盖安装还要求同一签名和更高 `versionCode`。
 
 ### 下载链接为空
 

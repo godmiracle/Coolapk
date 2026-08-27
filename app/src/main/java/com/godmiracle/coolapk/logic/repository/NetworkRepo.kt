@@ -8,7 +8,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import okhttp3.MultipartBody
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -103,13 +102,6 @@ class NetworkRepo @Inject constructor(
         val appResponse = apiServiceNoRedirect.getAppDownloadLink(pn, aid, vc)
             .response(requireBody = false, allowRedirects = true)
         Result.success(appResponse.headers()["Location"])
-    }
-
-    suspend fun getAppsUpdate(pkgs: String) = fire {
-        val multipartBody =
-            MultipartBody.Part.createFormData("pkgs", pkgs)
-        val appResponse = apiService.getAppsUpdate(multipartBody).await()
-        Result.success(appResponse.data)
     }
 
     suspend fun getProfile(uid: String) = fire {

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.godmiracle.coolapk.BuildConfig
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.ui.blacklist.BlackListActivity
+import com.godmiracle.coolapk.ui.clientupdate.ClientUpdateActivity
 import com.godmiracle.coolapk.ui.main.MainActivity
 import com.godmiracle.coolapk.ui.others.AboutActivity
 import com.godmiracle.coolapk.ui.settings.params.ParamsActivity
@@ -96,7 +97,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
                 "isIconMiniCard" -> PrefManager.isIconMiniCard
                 "isOpenLinkOutside" -> PrefManager.isOpenLinkOutside
                 "isColorFilter" -> PrefManager.isColorFilter
-                "isCheckUpdate" -> PrefManager.isCheckUpdate
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
@@ -111,7 +111,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
                 "isIconMiniCard" -> PrefManager.isIconMiniCard = value
                 "isOpenLinkOutside" -> PrefManager.isOpenLinkOutside = value
                 "isColorFilter" -> PrefManager.isColorFilter = value
-                "isCheckUpdate" -> PrefManager.isCheckUpdate = value
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
@@ -156,6 +155,18 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("about")?.setOnPreferenceClickListener {
             IntentUtil.startActivity<AboutActivity>(requireContext()) {}
             true
+        }
+
+        findPreference<Preference>("clientUpdate")?.apply {
+            summary = getString(
+                R.string.update_current_version,
+                BuildConfig.VERSION_NAME,
+                BuildConfig.VERSION_CODE
+            )
+            setOnPreferenceClickListener {
+                IntentUtil.startActivity<ClientUpdateActivity>(requireContext()) {}
+                true
+            }
         }
 
 

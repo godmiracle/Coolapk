@@ -1,6 +1,5 @@
 package com.godmiracle.coolapk.logic.network
 
-import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -85,8 +84,6 @@ object Network {
 
     suspend fun getAppDownloadLink(pn: String, aid: String, vc: String) =
         apiServiceNoRedirect.getAppDownloadLink(pn, aid, vc).response()
-
-    suspend fun getAppsUpdate(pkgs: MultipartBody.Part) = apiService.getAppsUpdate(pkgs).await()
 
     suspend fun getProfile(uid: String) = api2Service.getProfile(uid).await()
 

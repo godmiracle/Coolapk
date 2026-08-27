@@ -9,7 +9,7 @@
 - 主调用入口：`logic.repository.NetworkRepo`
 - 旧调用入口：`logic.network.Network` + `logic.network.Repository`，当前静态搜索未发现 UI 调用
 - 所有接口的真实可用性、权限和返回字段都必须通过真实网络请求或设备验收确认
-- 本次文档同步只做源码/测试静态核对，未运行 Gradle、设备测试或实时 API；下文带日期的设备/接口结果均为历史记录，不是本轮验证。
+- 本次文档同步包含源码/测试核对、离线 Gradle 门禁和 OPPO `PGEM10` 真机的 GitHub latest API/Release 浏览器入口验证；下文带日期的其他设备/接口结果仍按各自会话记录区分，不能扩展为完整业务验收。
 
 ### 当前匿名只读边界（2026-08-26）
 
@@ -19,9 +19,10 @@
 
 | 服务 | Base URL | Retrofit Qualifier | 主要用途 |
 |---|---|---|---|
-| API1 | `https://api.coolapk.com/` | `@Api1Service` | 首页、动态详情、搜索、用户、应用、社交操作、消息、发布等 |
+| API1 | `https://api.coolapk.com/` | `@Api1Service` | 首页、动态详情、搜索、用户和应用等匿名只读接口 |
 | API1（不跟随重定向） | `https://api.coolapk.com/` | `@Api1ServiceNoRedirect` | 读取应用下载接口的 `Location` |
 | API2 | `https://api2.coolapk.com/` | `@Api2Service` | 动态评论、话题布局、用户资料等兼容接口 |
+| GitHub Releases | `https://api.github.com/` | `@GitHubReleaseService` | 当前仓库 latest Release 查询；不携带 Coolapk 凭据 |
 
 图片和网页会额外访问 Coolapk 图片域名、`m.coolapk.com`、网页跳转地址及 OSS 上传返回的 Endpoint/Callback URL。
 
@@ -31,7 +32,23 @@
 
 `NetworkEndpoints.isTrusted` 只接受 HTTPS 且 Host 为 `api.coolapk.com` 或 `api2.coolapk.com`。API1/API2 的 `AddCookiesInterceptor` 仅在该条件满足时添加匿名请求身份 Header 和会话 Cookie。
 
-三个客户端都在 OkHttp 的最终 network interceptor 中挂载 `NetworkCredentialBoundaryInterceptor`。因此 Retrofit `@Url` 解析出的外部/非 HTTPS URL，以及受信任请求跨 Host 重定向后的新请求，都会移除完整请求身份 Header 集合；请求本身是否继续作为无身份公共请求由网络层决定。`@Api1ServiceNoRedirect` 仍不跟随重定向，下载接口只在 Repository 显式允许时读取 3xx `Location`。
+三个 Coolapk 客户端都在 OkHttp 的最终 network interceptor 中挂载 `NetworkCredentialBoundaryInterceptor`。因此 Retrofit `@Url` 解析出的外部/非 HTTPS URL，以及受信任请求跨 Host 重定向后的新请求，都会移除完整请求身份 Header 集合；请求本身是否继续作为无身份公共请求由网络层决定。`@Api1ServiceNoRedirect` 仍不跟随重定向，下载接口只在 Repository 显式允许时读取 3xx `Location`。GitHub client 使用独立的无凭据边界，不复用上述身份拦截器。
+
+### GitHub Releases 客户端更新 API
+
+客户端更新使用与 Coolapk 完全隔离的 Retrofit/OkHttp client，固定请求：
+
+```text
+GET https://api.github.com/repos/godmiracle/Coolapk/releases/latest
+```
+
+请求只带 GitHub API 所需的 `Accept: application/vnd.github+json`、`X-GitHub-Api-Version: 2022-11-28` 和固定 User-Agent，不带 Cookie、`X-App-Token`、`X-App-Device` 或其他 Coolapk 请求身份；client 固定使用 HTTP/1.1，并关闭重定向，避免把 API 请求带到未知 Host。
+
+Repository 只校验 Release 不是 draft/prerelease 且 Tag 可解析为 `v?major.minor.patch`，然后按 semver 与当前版本比较。应用不读取或下载 API 返回的 APK URL、大小或 digest，不创建更新缓存，也不声明 `REQUEST_INSTALL_PACKAGES`。检测到更新后，页面只把固定的 `https://github.com/godmiracle/Coolapk/releases/latest` 交给系统浏览器；浏览器负责网页访问、APK 下载和后续系统安装确认。应用不把 API 返回的任意 `html_url` 或资产 URL 直接传播给外部应用。
+
+更新页只在用户点击“检查更新”时调用 latest API；页面打开、重建或从浏览器返回不会自动发起请求。旧的“检查应用更新”批量第三方应用更新链路、设备应用枚举和 `/v6/apk/checkUpdate` 请求已移除，但应用详情的 `getAppDownloadLink` 单个下载路径保留。
+
+GitHub API 的非 2xx、解析失败或 Release 元数据不符合约束时显示可读错误，并保留固定 Release 网页入口。实时 API 可受网络、GitHub 限流或国内网络策略影响，构建和本地 MockWebServer 测试不能替代设备验收。
 
 ## 1.1 社区 API 参考（非官方）
 
@@ -103,7 +120,6 @@ Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY �
 | `getUserFeed` | GET | `/v6/user/feedList?...` | 用户动态列表 |
 | `getAppInfo` | GET | `/v6/apk/detail` | 应用详情 |
 | `getAppDownloadLink` | POST | `/v6/apk/download?extra=` | 获取下载重定向地址；使用不跟随重定向客户端 |
-| `getAppsUpdate` | POST multipart | `/v6/apk/checkUpdate?coolmarket_beta=0` | 批量应用更新检查 |
 | `getProductLayout` | GET | `/v6/product/detail` | 数码产品详情布局 |
 | `getFollowList` | GET | `@Url` | 用户/关注/粉丝等列表，调用者传入完整相对或绝对 URL |
 | `getDataList` | GET | `/v6/page/dataList` | 通用页面数据列表 |

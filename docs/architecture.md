@@ -17,6 +17,9 @@ flowchart TD
     Boundary --> API2["api2.coolapk.com"]
     Repo --> Room["Room 数据库"]
     VM --> Pref["PrefManager / SharedPreferences"]
+    VM --> GitHubRepo["GitHubReleaseRepository"]
+    GitHubRepo --> GitHub["GitHub Releases API"]
+    UI --> Browser["固定 Release 页面 -> 系统浏览器"]
     UI --> Image["Glide + Sketch + Mojito"]
     Image --> ImageHost["Coolapk 图片 / OSS"]
 ```
@@ -74,7 +77,7 @@ Fragment/ViewModel
 |---|---|
 | `ui/main` | 首页/关注/我的主导航、搜索动作和应用信息 |
 | `ui/home`、`ui/homefeed` | 首页 Tab、关注/头条/热榜/酷图 feed |
-| `ui/applist`、`ui/app`、`ui/appupdate` | 应用列表、应用详情、更新检查 |
+| `ui/app` | 应用详情和单个 APK 下载 |
 | `ui/feed` | 动态详情、评论分页、投票、问答、分享和只读楼中楼展示 |
 | `ui/topic`、`ui/hometopic` | 话题/数码页面及其内容列表 |
 | `ui/user`、`ui/follow` | 用户主页、动态、关注、粉丝和相关列表 |
@@ -82,6 +85,7 @@ Fragment/ViewModel
 | `ui/search` | 搜索入口、历史、类型/排序和结果页 |
 | `ui/history`、`ui/collection`、`ui/blacklist` | 本地历史/收藏和黑名单管理 |
 | `ui/settings`、`ui/settings/params` | 外观、显示、设备/请求参数和缓存设置 |
+| `ui/clientupdate` | GitHub latest Release 检查和固定 Release 浏览器入口 |
 | `ui/others` | WebView、外链、复制、关于和崩溃处理 |
 
 `BaseActivity`、`BaseFragment`、`BaseViewModel`、`BaseAppViewModel` 提供通用绑定、列表状态、分页字段和只读交互。具体业务 ViewModel 仍保留较多页面级状态和请求处理，因此当前不是严格的 Clean Architecture。
@@ -114,17 +118,18 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 
 ### 4.1 当前主路径
 
-`di/NetworkModule.kt` 注册三个带 Qualifier 的 Retrofit 服务：
+`di/NetworkModule.kt` 注册三个 Coolapk Retrofit 服务和一个独立的 GitHub Retrofit 服务：
 
 | Qualifier | Base URL | OkHttp 行为 | 用途 |
 |---|---|---|---|
-| `@Api1Service` | `https://api.coolapk.com/` | `AddCookiesInterceptor` + 最终 `NetworkCredentialBoundaryInterceptor`，跟随重定向 | 大多数业务 API |
+| `@Api1Service` | `https://api.coolapk.com/` | `AddCookiesInterceptor` + 最终 `NetworkCredentialBoundaryInterceptor`，跟随重定向 | 匿名只读内容、搜索、用户和应用 API |
 | `@Api1ServiceNoRedirect` | `https://api.coolapk.com/` | 同上，但不跟随重定向 | 获取应用下载 `Location` |
 | `@Api2Service` | `https://api2.coolapk.com/` | 复用 API1 请求头客户端和最终边界 | 动态评论、话题布局和部分用户接口 |
+| `@GitHubReleaseService` | `https://api.github.com/` | 独立 HTTPS client；固定 GitHub Header 和 HTTP/1.1；不挂载 Coolapk Cookie/Token；关闭重定向 | 当前仓库 latest Release 查询 |
 
 `NetworkRepo` 通过 `NetworkCallAdapter` 的 `suspendCancellableCoroutine` 将 Retrofit `Call<T>` 转为挂起调用，再用 `flow {}` 捕获普通异常并返回单次 `Flow<Result<T>>`。协程取消会调用底层 `Call.cancel()`；`CancellationException` 不会被转换为普通失败结果。ViewModel 通常在 `Dispatchers.IO` 启动收集，成功后更新 LiveData，失败则显示页面错误或打印堆栈。
 
-> `NetworkEndpoints` 集中维护 API1/API2 Base URL，并由 `NetworkCredentialPolicy` 按最终 URL 判断 HTTPS 和 trusted host。构建、设备和实时 API 结果必须与源码边界分开记录；本轮文档同步未执行这些验证。
+> `NetworkEndpoints` 集中维护 API1/API2 Base URL，并由 `NetworkCredentialPolicy` 按最终 URL 判断 HTTPS 和 trusted host。构建、设备和实时 API 结果必须与源码边界分开记录；本轮已完成离线构建门禁，并在 OPPO `PGEM10` 上验证 GitHub latest API 与固定 Release 浏览器入口。
 
 ### 4.2 请求身份与状态
 
@@ -137,14 +142,20 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 
 `AddCookiesInterceptor` 只在 API1/API2 的 Coolapk HTTPS Host 上添加匿名请求身份；外部 `@Url`、非 HTTPS URL 和跨 Host 重定向由 `NetworkCredentialPolicy` 清理请求身份。当前不存在登录拦截器或账号请求状态机。
 
-### 4.3 错误和分页模型
+### 4.3 GitHub Releases 更新链路
+
+`GitHubReleaseRepository` 使用独立的 `@GitHubReleaseService`，请求固定的 `godmiracle/Coolapk` latest Release，不携带 Cookie、Coolapk `X-App-*` Header 或账号状态。client 固定使用 HTTP/1.1，关闭重定向，并只允许 `api.github.com`，以降低部分网络环境的协商风险和 Host 漂移风险。响应由 `GitHubReleaseValidator` 做非草稿/非预发布和 semver 校验；当前版本名为 Git hash 时只显示最新稳定版，不把 hash 参与版本排序。
+
+更新页提供固定的“浏览器下载 Release（推荐）”路径，目标为 `https://github.com/godmiracle/Coolapk/releases/latest`，在初始、检查成功或失败状态均可用。该路径只把固定网页交给系统 `ACTION_VIEW`，不传播 API 返回的任意下载 URL。应用不下载 APK、不创建更新缓存、不使用 FileProvider 传递更新包，也不启动系统 Package Installer；用户在浏览器完成下载后由 Android 系统按正常流程处理安装和覆盖安装。
+
+### 4.4 错误和分页模型
 
 - `NetworkCallAdapter.await/response` 将非 2xx 响应转换为 `HttpException`，需要实体的 2xx 空 body 转换为明确的 `EmptyResponseBodyException`；普通传输异常保留原始原因并由 `NetworkRepo.fire` 发出 `Result.failure`。
 - 协程取消会取消底层 Retrofit `Call`，`CancellationException` 继续向上抛出，Flow 不发出普通失败结果。下载链接是例外：`Api1ServiceNoRedirect` 允许 `getAppDownloadLink` 读取 3xx `Location`，不改变其他请求的错误语义。
 - feed、评论和搜索等只读接口普遍使用 `page`、`firstItem`、`lastItem` 或 `pageType/pageParam` 进行分页。
 - ViewModel 自己维护 `isRefreshing`、`isLoadMore`、`isEnd`、`lastItem` 和 `FooterState`，页面之间没有统一分页组件。
 
-### 4.4 历史网络层
+### 4.5 历史网络层
 
 `logic/network/ApiServiceCreator.kt`、`logic/network/Network.kt` 和 `logic/network/Repository.kt` 还保留一套手工创建 Retrofit、再包装成 LiveData/Flow 的实现。静态搜索显示当前 UI ViewModel 引用的是 `logic/repository/NetworkRepo.kt`，未发现业务代码调用旧 `Repository`；因此它目前是遗留/备用链路，存在接口和 Header 配置漂移风险。本次文档任务不删除它，后续应先确认没有外部使用者，再统一或移除。
 
@@ -183,7 +194,7 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 - Glide 负责常规图片加载和缓存。
 - Sketch loader 支持 Mojito 所需的部分大图/GIF/分块能力。
 - Mojito 负责图片全屏预览、缩放、切换、保存和分享回调。
-- `FileProvider` 只暴露 `external-cache/imageShare/` 路径用于分享。
+- `FileProvider` 只暴露 `external-cache/imageShare/` 路径用于分享；客户端更新不复用该 Provider 传递 APK。
 - WebView 下载使用 Android `DownloadManager`，目标目录为公共 Downloads。
 - 应用缓存可由设置页清理；Room 数据库不属于该缓存清理范围。
 
@@ -228,10 +239,10 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 2. API1、API2 客户端只在两个 Coolapk HTTPS Host 保留设备/API Header；外部 `@Url` 和跨 Host 重定向会清理身份信息。
 3. 显式开启 Debug BODY 日志时仍可能接触服务端请求或响应，当前实现会对常见 Cookie、Token、密码、验证码和 STS 字段脱敏。
 4. 明文流量开关已关闭；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径会先升级为 HTTPS。
-5. `QUERY_ALL_PACKAGES` 会读取已安装应用列表，因应用列表和更新检查功能仍保留；未发现应用内安装调用，`REQUEST_INSTALL_PACKAGES` 已移除。
+5. 当前 Manifest 不声明 `QUERY_ALL_PACKAGES`；旧的第三方应用批量更新链路已移除。客户端更新不声明 `REQUEST_INSTALL_PACKAGES`，只通过系统浏览器进入 Release 页面；应用详情的单个 APK 下载仍走 Coolapk 的下载链接接口。
 6. 设备码和 Coolapk 版本参数可在设置中修改，改变后可能导致接口拒绝、服务端风控或数据错配。
 7. API、图片地址和返回字段依赖第三方服务，必须把线上验证与编译验证分开记录。
-8. 当前源码已有 Room/网络/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。本次已完成本地签名 Release 和 OPPO `PGEM10` 真机冷启动验证，但首次远端 Tag 工作流仍待运行；CI 仍不覆盖真实 API、分页、深链、图片保存和设备验收。
+8. 当前源码已有 Room/网络/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。`v1.1.0` 签名 Release 已验证；客户端 GitHub latest API 和浏览器跳转已在 OPPO `PGEM10` 上验证，应用不再负责流式下载或系统安装器调用，CI 仍不覆盖真实 API、分页、深链、图片保存和设备验收。
 
 ## 9. 维护规则
 

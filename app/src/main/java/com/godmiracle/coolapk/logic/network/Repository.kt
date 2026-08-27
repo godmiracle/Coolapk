@@ -4,7 +4,6 @@ import androidx.lifecycle.liveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import okhttp3.MultipartBody
 import kotlin.coroutines.CoroutineContext
 
 object Repository {
@@ -87,13 +86,6 @@ object Repository {
     suspend fun getAppDownloadLink(pn: String, aid: String, vc: String) = fire {
         val appResponse = Network.getAppDownloadLink(pn, aid, vc)
         Result.success(appResponse.headers()["Location"])
-    }
-
-    suspend fun getAppsUpdate(pkgs: String) = fire {
-        val multipartBody =
-            MultipartBody.Part.createFormData("pkgs", pkgs)
-        val appResponse = Network.getAppsUpdate(multipartBody)
-        Result.success(appResponse.data)
     }
 
     suspend fun getProfile(uid: String) = fire {

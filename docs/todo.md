@@ -126,8 +126,8 @@
   - 优先级：高
   - 可信度：已确认
   - 涉及文件：`app/src/main/AndroidManifest.xml`
-  - 状态：已修改，Debug Manifest 合并已通过；等待设备 WebView/深链和分发审核验证
-  - 证据：`QUERY_ALL_PACKAGES` 因应用列表和更新检查仍保留；未发现应用内安装调用，已移除 `REQUEST_INSTALL_PACKAGES`；已关闭 `usesCleartextTraffic`，应用控制的 HTTP 链接在 WebView/外部打开前升级为 HTTPS。
+  - 状态：已修改，Debug Manifest 合并已通过；客户端更新不声明 `REQUEST_INSTALL_PACKAGES`，旧的第三方应用批量更新链路移除后当前也不再声明 `QUERY_ALL_PACKAGES`，仍需发布渠道复核权限披露
+  - 证据：应用详情单个 APK 下载继续使用 Coolapk 下载链接；客户端更新只通过固定 Release 网页交给系统浏览器；已关闭 `usesCleartextTraffic`，应用控制的 HTTP 链接在 WebView/外部打开前升级为 HTTPS。
   - 验收标准：逐项确认权限必要性、系统版本行为、分发审核影响和隐私披露；不需要的权限移除；明文流量有明确白名单或关闭策略。
 
 - [x] R-005 确认 Release 缺少密钥时的签名策略
@@ -153,6 +153,14 @@
   - 状态：已完成；APK、AAB、16 KB 模拟器冷启动和 GIF native 回归均通过
   - 证据：旧 `libpl_droidsonroids_gif.so` 在 16 KB 模拟器触发 `RELRO segment not aligned`；依赖已切换到 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，AGP 升至 8.5.1。Debug APK 的 native 库通过 `zipalign -P 16` 和 ELF 对齐检查，AAB `bundletool dump config` 为 `PAGE_ALIGNMENT_16K`；`emulator-5554` 的 `PAGE_SIZE=16384`，APK 与 Bundle 生成的 APK 冷启动均无 `PageSizeMismatchDialog`，包状态为 `pageSizeCompat=0`；2 个 instrumentation tests 全部通过。
   - 验收标准：所有打包 native 库的 LOAD/RELRO 满足 16 KB 对齐；AAB 请求 16 KB 页面大小；16 KB 环境启动不再弹兼容性提示；GIF native drawable 能实际创建并释放。
+
+- [ ] R-015 增加 GitHub Releases 客户端更新检测与 Release 浏览器入口
+  - 优先级：高
+  - 可信度：源码、离线门禁和 OPPO `PGEM10` 真机验证已确认；独立 review/交付仍待完成
+  - 涉及文件：`logic/network/GitHubReleaseApiService.kt`、`logic/repository/GitHubReleaseRepository.kt`、`logic/update/`、`ui/clientupdate/`、`app/build.gradle.kts`、`AndroidManifest.xml`、`res/xml/file_provider_paths.xml`
+  - 状态：已完成源码清理、资源编译、JVM 单测、AndroidTest APK、lint、OPPO `PGEM10` 当前 Debug 包安装、更新页初始手动触发状态核对、latest API 检查、Firefox Release 页面跳转和 connected instrumentation；客户端更新严格手动触发，旧的第三方应用批量更新链路已移除，仅等待独立 review
+  - 证据：`rasen/changes/github-release-self-update/evidence/verification-report.md`、`review-cycle-report.md`、`docs/sessions/2026-08-27.md`；旧版设备证据中的 `versionCode=465` 对 `versionCode=463` 降级拒绝只作为 Android 行为基线，不作为当前应用内下载功能证据。
+  - 验收标准：设置入口可打开；固定 GitHub latest Release 请求不携带 Coolapk 凭据；检测 `v1.1.0`；检测成功/失败/未检查时都可打开固定 Release 浏览器页面；应用内不再出现下载/安装动作；Debug 使用 `com.godmiracle.coolapk.debug` 并可与正式包并存；正式包升级仍遵守同包名、同签名和更高 `versionCode`。
 
 ## 中优先级：架构和测试
 

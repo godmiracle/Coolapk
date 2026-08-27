@@ -15,6 +15,12 @@ class NetworkEndpointsTest {
             assertTrue(baseUrl, baseUrl.endsWith('/'))
             Retrofit.Builder().baseUrl(baseUrl).build()
         }
+        assertTrue(NetworkEndpoints.GITHUB_API_BASE_URL.endsWith('/'))
+        Retrofit.Builder().baseUrl(NetworkEndpoints.GITHUB_API_BASE_URL).build()
+        assertEquals(
+            "https://github.com/godmiracle/Coolapk/releases/latest",
+            NetworkEndpoints.GITHUB_RELEASE_LATEST_PAGE_URL
+        )
     }
 
     @Test
@@ -23,6 +29,11 @@ class NetworkEndpointsTest {
         assertTrue(NetworkEndpoints.isTrusted(Request.Builder().url("https://api2.coolapk.com/v8/feed").build().url))
         assertFalse(NetworkEndpoints.isTrusted(Request.Builder().url("http://api.coolapk.com/v6/feed").build().url))
         assertFalse(NetworkEndpoints.isTrusted(Request.Builder().url("https://example.com/feed").build().url))
+        assertFalse(
+            NetworkEndpoints.isTrusted(
+                Request.Builder().url("https://api.github.com/repos/godmiracle/Coolapk").build().url
+            )
+        )
     }
 
     @Test

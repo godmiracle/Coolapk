@@ -85,14 +85,13 @@
             android:icon="@drawable/ic_emoji"
             android:key="showEmoji"
             android:title="@string/show_emoji" />
-        <rikka.material.preference.MaterialSwitchPreference
-            android:defaultValue="true"
-            android:icon="@drawable/outline_system_update_24"
-            android:key="isCheckUpdate"
-            android:title="@string/check_apps_update" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/others">
+        <Preference
+            android:icon="@drawable/outline_system_update_24"
+            android:key="clientUpdate"
+            android:title="@string/client_update" />
         <Preference
             android:icon="@drawable/ic_logo"
             android:key="about"

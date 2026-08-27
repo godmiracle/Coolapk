@@ -3,7 +3,6 @@ package com.godmiracle.coolapk.util
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
@@ -43,58 +42,6 @@ object AppUtils {
         } catch (e: PackageManager.NameNotFoundException) {
             context.packageManager.defaultActivityIcon
         }
-    }
-
-    fun getApps(context: Context): List<PackageInfo> {
-        val packageManager = context.packageManager
-        return packageManager.getInstalledPackages(0)
-    }
-
-    @SuppressLint("QueryPermissionsNeeded")
-    fun getInstalledSystemApp(context: Context): List<PackageInfo> {
-        val packageManager = context.packageManager
-        return packageManager.getInstalledPackages(0).filter {
-            (it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-        }
-    }
-
-    @SuppressLint("QueryPermissionsNeeded")
-    fun getInstalledUserApp(context: Context): List<PackageInfo> {
-        val packageManager = context.packageManager
-        return packageManager.getInstalledPackages(0).filter {
-            (it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) == 0
-        }
-    }
-
-    fun getUserPackageNames(context: Context): List<String> {
-        val packageManager = context.packageManager
-        val packs = mutableListOf<String>()
-        packageManager.getInstalledPackages(0).filter {
-            (it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) == 0
-        }.forEach {
-            packs.add(it.packageName)
-        }
-        return packs
-    }
-
-    fun getSystemPackageNames(context: Context): List<String> {
-        val packageManager = context.packageManager
-        val packs = mutableListOf<String>()
-        packageManager.getInstalledPackages(0).filter {
-            (it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-        }.forEach {
-            packs.add(it.packageName)
-        }
-        return packs
-    }
-
-    fun getPackageNames(context: Context): List<String> {
-        val packageManager = context.packageManager
-        val packs = mutableListOf<String>()
-        packageManager.getInstalledPackages(0).forEach {
-            packs.add(it.packageName)
-        }
-        return packs
     }
 
 

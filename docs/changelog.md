@@ -11,19 +11,24 @@
 - 新增 `docs/development.md`，记录构建、签名、测试、CI 和人工验收步骤。
 - 新增 2026-08-11 文档整理会话记录。
 - 新增 2026-08-12 主导航悬浮底栏会话记录。
+- 新增设置页 GitHub Releases 客户端更新入口，支持 latest Release 检查和固定 Release 浏览器入口。
 
 ### Changed
 
 - 用当前源码事实替换 `docs/context.md`、`docs/architecture.md`、`docs/decisions.md` 和 `docs/todo.md` 的模板占位内容。
 - 明确区分 `NetworkRepo` 当前主链路与旧 `Network/Repository` 遗留链路。
 - 把凭据存储、BODY 日志、广泛权限、明文流量、Release 签名和业务测试缺口列为可追踪待办。
-- 处理 R-002、R-004、R-005、R-013：网络日志默认关闭并脱敏，移除未使用的安装包权限，关闭明文流量并升级应用控制的 HTTP 链接，Release 缺少签名配置时失败，统一 Retrofit Base URL 尾部斜杠。
+- 处理 R-002、R-004、R-005、R-013：网络日志默认关闭并脱敏；移除客户端更新不需要的安装包权限；关闭明文流量并升级应用控制的 HTTP 链接，Release 缺少签名配置时失败，统一 Retrofit Base URL 尾部斜杠。
 - 将竖屏 `BottomNavigationView` 按 Miuix 和 iOS 酷安参考改为实色浮岛底栏，使用 `surfaceContainer`、36dp 外侧留白、8dp 视觉底部间距、1dp 细边、低对比选中胶囊、28dp 图标、12sp 标签和内容安全区；背景由独立容器单层绘制，保留横屏 `NavigationRailView`。
 - 将底栏入口调整为“首页 / 消息 / 我的 / 搜索”：原设置入口改名并复用原设置页，顶部首页搜索按钮移除，底栏搜索复用现有 `SearchActivity`。
 - 将主导航调整为“首页 / 关注 / 我的 / 搜索”：移除原消息页在主导航中的内容入口；关注页改为本地话题/数码合并列表，详情页关注动作写入独立 Room 数据库；我的页面保留本地收藏、浏览历史并新增设置二级入口。
 - 将 `SketchImageViewLoader` 的 GIF native 依赖切换为 `pl.droidsonroids.gif:android-gif-drawable:1.2.32`，并将 Android Gradle Plugin 升级到 8.5.1，以支持 16 KB 页面大小打包。
 - 更新设置关于页的维护者、当前仓库和 Fork/参考来源信息；反馈入口统一指向 `godmiracle/Coolapk`。
 - 将 Android `applicationId`、`namespace`、源码/测试包路径和 ProGuard 规则统一迁移到 `com.godmiracle.coolapk`；应用显示名称更新为“绿友”，包名和历史技术标识保持不变。
+- GitHub client 与 Coolapk 请求身份隔离，并固定 HTTP/1.1、关闭重定向；更新页只将固定 Release 页面交给系统浏览器，应用不再下载、缓存或安装客户端 APK。
+- Debug 构建增加 `.debug` applicationId 后缀，与正式包分离安装；正式包覆盖升级继续交由 Android 按同包名、同签名和更高 `versionCode` 判定。
+- 移除无当前路由的“检查应用更新”批量第三方应用更新链路、设备应用枚举、`QUERY_ALL_PACKAGES` 和批量更新资源；保留应用详情页的单个 APK 下载。
+- 将客户端 GitHub latest Release 检查收紧为严格手动触发，进入更新页、页面重建和从浏览器返回均不自动请求。
 
 ### Fixed
 
@@ -42,8 +47,9 @@
 - 整改底栏重复背景与底部距离：新增透明导航内容容器，浮岛背景只绘制一次；视觉底距从 26dp 收紧到 8dp，系统 inset 仍用于安全避让。
 - 修复底栏隐藏后 `ViewPager2` 仍永久保留“底栏高度 + 系统 inset”造成的内容截短；移除主容器底部 padding，浮岛隐藏时内容可继续延伸至手势区上方。
 - 统一底栏滚动状态：拖动或惯性滚动时隐藏，RecyclerView 进入空闲状态后展示，不再按上滑/下滑方向决定显示状态。
-- 移除首页顶部“应用”Tab；默认菜单、已有本地菜单记录和 Tab 编辑器均不再展示应用列表入口，保留应用详情/更新底层代码供深链或其他浏览路径使用。
+- 移除首页顶部“应用”Tab；默认菜单、已有本地菜单记录和 Tab 编辑器均不再展示应用列表入口，保留应用详情的单个下载路径并移除无入口的批量更新链路。
 - 关于页不再显示旧项目占位文案；完整页与工具栏弹窗均保留上游作者、Fork/参考来源和当前维护者信息。
 - Android 16 16 KB 模拟器曾复现 `libpl_droidsonroids_gif.so` 的 `RELRO segment not aligned`；修复后 Debug APK 通过 `zipalign -P 16`，AAB `bundletool dump config` 为 `PAGE_ALIGNMENT_16K`，APK/Bundle 生成的 APK 冷启动均无 `PageSizeMismatchDialog`，并通过 2 个 instrumentation tests（含 GIF native 加载回归）。
 - 无 Release keystore 时 `:app:assembleRelease` 已按预期由 `:app:verifyReleaseSigning` 阻止，未把 Debug 签名产物误当作 Release。
 - 包名迁移后清理增量产物重新构建成功，6 个 JVM 单元测试通过；新 APK 安装为 `com.godmiracle.coolapk` 并完成 Android 16 模拟器冷启动和主导航 UI 核对。
+- GitHub Releases 更新实现已通过 `:app:testDebugUnitTest`（33/33）、`:app:assembleDebug`、`:app:assembleDebugAndroidTest` 和 `:app:lintDebug`；OPPO `PGEM10` 已验证新 Debug 包 `com.godmiracle.coolapk.debug` 与旧正式包名并存、latest API 检查、更新页无应用内下载/安装按钮、Firefox Release 页面跳转，以及 connected instrumentation 14/14。旧版真机证据确认 Release `versionCode=463` 低于旧 Debug `versionCode=465` 时系统正确拒绝降级。

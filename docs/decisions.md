@@ -647,3 +647,66 @@ Gradle 当前产物名为 `c001apk_v1.1.0(463).apk`；GitHub Release 资产最�
 ### 验证边界
 
 本次修复用于后续 Tag 发布；当前 `v1.1.0` 的校验文件已单独替换为实际资产名并重新核验。CI 的 Action 版本告警（Node.js 20、AdoptOpenJDK 和 setup-java v4）仍需独立升级，不影响本次成功运行。
+
+## 2026-08-26 - 通过 GitHub Releases 提供客户端自更新
+
+### 决定
+
+在设置页新增独立的“检查本客户端更新”入口，使用无 Coolapk 凭据的 GitHub Retrofit/OkHttp client，请求固定仓库 `godmiracle/Coolapk` 的 latest Release。Release 只接受非草稿、非预发布、可解析的 semver tag，以及固定 GitHub Release 下载路径下带 `sha256:<64 hex>` digest 的 APK。下载写入应用私有 `cacheDir/updates/`，先做大小和 SHA-256 校验，再通过受限 FileProvider URI 交给 Android 系统安装器。
+
+应用不调用静默安装、不执行 shell、不把 APK 写入公共存储。Android 8+ 未获 `canRequestPackageInstalls()` 授权时，只引导用户打开本应用的未知来源设置并在返回后重新检查；生产构建在启动安装器前比较包名、较高 `longVersionCode` 和签名集合。为支持用户主动触发的安装流程，Manifest 重新声明 `REQUEST_INSTALL_PACKAGES`；该权限与既有用于枚举第三方应用的 `QUERY_ALL_PACKAGES` 分别记录，发布渠道仍需评估审核和隐私披露。
+
+### 原因
+
+现有“检查应用更新”只检查其他已安装应用，无法发现本客户端 GitHub Release。独立 client 可以避免把 Coolapk Cookie、设备 Token 或 `X-App-*` 身份带到 GitHub；固定资产来源、摘要和包校验可以在进入系统安装器前尽早拒绝错误或被替换的下载内容，同时保留 Android 的最终签名确认。
+
+### 验证边界
+
+版本解析、资产筛选、GitHub 请求 Header/Host 边界和 FileProvider/安装 Intent 已有 JVM/AndroidTest 覆盖；`assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`（33 个）和 `lintDebug` 已通过。当前真机 ADB 服务可启动但没有枚举到 OPPO `PGEM10`，GitHub API 直连探测也返回 HTTP 403，因此本轮未宣称真实 latest API、下载或系统安装器验收通过。Debug 包可验证流程边界，但正式 Release 签名通常不能覆盖 Debug 安装。
+
+## 2026-08-27 - 客户端更新改为 Release 浏览器下载并分离 Debug 包
+
+### 决定
+
+- 客户端更新只保留 GitHub latest Release 元数据检测和固定 `https://github.com/godmiracle/Coolapk/releases/latest` 浏览器入口。应用不再下载、缓存或安装客户端 APK，不声明 `REQUEST_INSTALL_PACKAGES`，也不通过 FileProvider 传递更新包。
+- GitHub API 使用独立、无 Coolapk 凭据的 client，固定 HTTP/1.1 并关闭重定向；只校验非 draft/prerelease 和 semver 合法的 Release。API 返回的 `html_url`、`browser_download_url`、大小和 digest 不直接传播给外部应用。
+- Debug 构建使用 `applicationIdSuffix = ".debug"`，得到 `com.godmiracle.coolapk.debug`；正式构建保持 `com.godmiracle.coolapk`。正式包覆盖安装交由 Android 按同包名、同签名和更高 `versionCode` 判定。
+
+### 原因与边界
+
+真机上应用内 OkHttp 访问 GitHub Release 资产失败，而系统浏览器可以打开 Release 页面；将下载交给浏览器能复用用户配置的网络路径。此前用 Debug 包 `versionCode=465` 安装正式 Release `versionCode=463` 时系统提示“下载包版本不高于当前版本”，这是 Android 的降级保护，不应通过放宽版本检查解决。Debug 与 Release 分离 applicationId 后，两者可以并存，避免签名和版本语义混淆；旧版同包名 Debug 包迁移到新 applicationId 需要卸载一次。
+
+### 验证边界
+
+离线 Debug 构建、AndroidTest APK、JVM 单测和 lint 已通过；新的 Debug 包名和 Manifest 合并结果已由产物检查确认。OPPO `PGEM10` 已验证新 APK 安装、与旧正式包名并存、更新页无下载/安装按钮、固定网页跳转和 connected instrumentation 14/14。不执行登录、消息、发帖、回复编辑或其他已移出匿名范围的测试。
+
+## 2026-08-27 - 为 GitHub 更新增加浏览器备用路径并固定 HTTP/1.1（历史决定，已被上文取代）
+
+### 决定
+
+当时的中间方案是同时保留应用内校验下载和“浏览器打开 Release”入口。该方案已由上文最终决定取代；当前只保留固定 Release 浏览器入口，GitHub API client 固定使用 HTTP/1.1 并关闭重定向。
+
+### 原因与边界
+
+当时的判断是国内网络对 GitHub API、Release 资产或 HTTP/2 协商的可达性可能不稳定，系统浏览器通常具备用户配置的网络路径。最终验证表明应用内资产直连仍可能失败，因此下载和安装责任统一交给浏览器与 Android 系统。
+
+### 验证边界
+
+旧版应用内链路的历史证据仍保留：latest API 检测成功，下载的 `c001apk_v1.1.0.463.apk` 设备端 SHA-256 与 Release 记录一致；当前安装 Debug 包为 `versionCode=465`，高于 Release 的 `versionCode=463`，系统提示“下载包版本不高于当前版本”属于预期降级保护。最终浏览器-only 实现已在 OPPO `PGEM10` 完成安装、API 检查、Firefox 跳转和 connected instrumentation 验证。
+
+## 2026-08-27 - 移除不可达的第三方批量更新并改为严格手动检查
+
+### 决定
+
+- 删除设置页“检查应用更新”开关、`isCheckUpdate` 配置、设备上第三方应用枚举、批量 `/v6/apk/checkUpdate` 请求、批量更新列表/页面及其资源。当前主导航不再提供应用列表入口，因此这条链路已不可达。
+- 保留应用详情页的单个应用详情与 `getAppDownloadLink`/`Utils.downloadApk` 路径；本次删除不影响用户从应用详情获取单个 APK。
+- “检查本客户端更新”只在用户点击“检查更新”时访问 GitHub latest Release；进入页面、页面重建和从浏览器返回都保持未检查状态，不做后台或隐式检查。
+- 由于旧批量更新已移除，Manifest 不再声明 `QUERY_ALL_PACKAGES`；客户端更新仍不声明 `REQUEST_INSTALL_PACKAGES`，下载和安装继续交给固定 Release 页面、浏览器和 Android 系统。
+
+### 原因与边界
+
+旧开关检查的是设备上其他应用，并不等于检查当前客户端；在应用列表入口已经移除后继续保留会造成无效配置、额外权限和不可达网络请求。客户端更新采用显式手动操作，用户可以控制 GitHub API 请求时机，国内网络不稳定时仍可以直接使用浏览器入口。该变更不恢复登录、消息、发帖、回复编辑或其他远程写入能力。
+
+### 验证边界
+
+源码扫描应确认旧批量更新符号、设置键、权限和资源不再存在，并确认应用详情单个下载符号仍存在；构建与真机验证结果以本次会话和 Rasen evidence 的最新记录为准。独立 review/提交交付仍需单独完成，不因本次源码改动自动宣称完成。

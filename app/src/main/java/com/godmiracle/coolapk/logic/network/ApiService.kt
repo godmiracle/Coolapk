@@ -4,9 +4,7 @@ import com.godmiracle.coolapk.logic.model.FeedContentResponse
 import com.godmiracle.coolapk.logic.model.HomeFeedResponse
 import com.godmiracle.coolapk.logic.model.LoadUrlResponse
 import com.godmiracle.coolapk.logic.model.TotalReplyResponse
-import com.godmiracle.coolapk.logic.model.UpdateCheckResponse
 import com.godmiracle.coolapk.logic.model.UserProfileResponse
-import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -93,12 +91,6 @@ interface ApiService {
         @Query("aid") aid: String,
         @Query("vc") vc: String,
     ): Call<Any>
-
-    @Multipart
-    @POST("/v6/apk/checkUpdate?coolmarket_beta=0")
-    fun getAppsUpdate(
-        @Part pkgs: MultipartBody.Part
-    ): Call<UpdateCheckResponse>
 
     @GET("/v6/topic/newTagDetail")
     fun getTopicLayout(

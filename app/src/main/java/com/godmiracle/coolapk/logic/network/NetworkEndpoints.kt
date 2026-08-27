@@ -9,6 +9,9 @@ import java.io.IOException
 internal object NetworkEndpoints {
     const val API_BASE_URL = "https://api.coolapk.com/"
     const val API2_BASE_URL = "https://api2.coolapk.com/"
+    const val GITHUB_API_BASE_URL = "https://api.github.com/"
+    const val GITHUB_RELEASE_LATEST_PAGE_URL =
+        "https://github.com/godmiracle/Coolapk/releases/latest"
 
     val all = listOf(API_BASE_URL, API2_BASE_URL)
     val trustedHosts = all.map { it.substringAfter("://").substringBefore('/') }.toSet()
