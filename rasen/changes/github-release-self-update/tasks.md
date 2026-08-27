@@ -29,4 +29,4 @@
 - [x] 5.1 补充/调整 JVM/Android instrumentation 测试并执行资源编译、Debug 构建、Unit Test、Instrumentation 和 Lint。
 - [x] 5.2 安装到 OPPO `PGEM10`，验证客户端检查只有点击按钮才请求、固定 Release 浏览器入口和 Debug/Release 包边界。
 - [x] 5.3 更新项目文档与 `docs/sessions/2026-08-27.md`，保存 Rasen evidence。
-- [ ] 5.4 完成 review-cycle、提交变更并报告 commit/设备/构建证据。
+- [x] 5.4 完成 review-cycle、提交变更并报告 commit/设备/构建证据。
