@@ -107,12 +107,12 @@ jobs:
         run: |
           release_apk_source="$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)"
           test -n "$release_apk_source"
-          release_name="$(basename "$release_apk_source" | sed -E 's/\\(([0-9]+)\\)/.\\1/')"
+          release_name="$(basename "$release_apk_source" | sed -E 's/\(([0-9]+)\)/.\1/')"
           release_apk="app/build/outputs/apk/release/$release_name"
           if [ "$release_apk_source" != "$release_apk" ]; then
             cp "$release_apk_source" "$release_apk"
           fi
-          sha256sum "$release_apk" | awk -v name="$release_name" '{print $1 "  " name}' > SHA256SUMS
+          sha256sum "$release_apk" | awk -v name="$(basename "$release_apk")" '{print $1 "  " name}' > SHA256SUMS
           gh release create "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
