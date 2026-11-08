@@ -166,8 +166,17 @@
   - 优先级：高
   - 可信度：实现依据上游 `c001apk_next` 快照 `d0c5843c8e366f92fe48ee5c2de8f0863c2fb052`；当前实时行为未验证
   - 涉及文件：`util/IosHeaders.kt`、`util/IosDeviceUtils.kt`、`util/AddCookiesInterceptor.kt`、评论列表与楼中楼只读链路
-  - 状态：代码和文档已更新；构建、测试、真机及实时接口验收待完成
+  - 状态：用户于 2026-11-09 手工确认评论区正常；分页、楼中楼和请求身份细项尚无单独验收记录
+  - 证据：用户反馈 v1.1.2 手工测试评论区正常；这不覆盖帖子图片全屏预览问题。
   - 验收标准：在 Android 设备上确认评论列表和楼中楼请求携带 iOS Header 并成功返回、分页正常显示；确认非可信 Host 不带设备身份；不得记录或分享完整 Token、UUID 或 Cookie。
+
+- [ ] R-017 验收帖子图片全屏预览
+  - 优先级：高
+  - 可信度：触摸事件被吞的路径由本地代码确认；设备行为待验证
+  - 涉及文件：`mojito/src/main/java/net/mikaelzero/mojito/MojitoView.java`、`SketchImageViewLoader/src/main/java/net/mikaelzero/mojito/view/sketch/SketchContentLoaderImpl.kt`
+  - 状态：多指事件转发已修改；构建和设备验收待完成
+  - 证据：用户反馈图片能进入预览但不能缩放；`MojitoView` 原先在多指状态且第一指已有纵向位移时直接消费 `ACTION_MOVE`，导致 Sketch 图片缩放器收不到缩放事件。
+  - 验收标准：确认双指捏合能放大和缩小、双击缩放正常；单指拖动关闭、横向切换及预览图片点击退出行为正常。
 
 ## 中优先级：架构和测试
 

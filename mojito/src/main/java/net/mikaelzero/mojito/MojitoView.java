@@ -533,9 +533,7 @@ public class MojitoView extends FrameLayout {
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (isMultiFinger && mMoveDownTranslateY != 0) {
-                    return true;
-                }
+                // 多指时跳过容器自己的拖动处理，仍需把事件分发给图片缩放器。
                 if (isAnimating || isMultiFinger) {
                     break;
                 }
