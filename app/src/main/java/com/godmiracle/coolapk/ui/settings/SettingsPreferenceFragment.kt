@@ -26,7 +26,6 @@ import com.godmiracle.coolapk.ui.settings.params.ParamsActivity
 import com.godmiracle.coolapk.util.CacheDataManager
 import com.godmiracle.coolapk.util.IntentUtil
 import com.godmiracle.coolapk.util.PrefManager
-import com.godmiracle.coolapk.util.TokenDeviceUtils.getDeviceCode
 import com.godmiracle.coolapk.util.TokenDeviceUtils.randHexString
 import com.godmiracle.coolapk.util.doOnMainThreadIdle
 import com.godmiracle.coolapk.util.setBottomPaddingSpace
@@ -193,12 +192,10 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
                 setNegativeButton(android.R.string.cancel, null)
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     PrefManager.SZLMID = editText.text.toString()
-                    PrefManager.xAppDevice = getDeviceCode(false)
                 }
                 if (BuildConfig.DEBUG) {
                     setNeutralButton(R.string.random_value) { _, _ ->
                         PrefManager.SZLMID = randHexString(16)
-                        PrefManager.xAppDevice = getDeviceCode(false)
                     }
                 }
             }.create().apply {

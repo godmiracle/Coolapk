@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import com.godmiracle.coolapk.ui.others.BugHandlerActivity
+import com.godmiracle.coolapk.util.IosDeviceUtils
 import com.godmiracle.coolapk.util.PrefManager
 import dagger.hilt.android.HiltAndroidApp
 import net.mikaelzero.mojito.Mojito
@@ -20,6 +21,7 @@ class MyApplication : Application() {
         super.onCreate()
 
         context = applicationContext
+        IosDeviceUtils.current()
 
         AppCompatDelegate.setDefaultNightMode(PrefManager.darkTheme)
 

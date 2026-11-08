@@ -64,15 +64,15 @@ GitHub API 的非 2xx、解析失败或 Release 元数据不符合约束时显�
 
 ### 请求身份对照
 
-- 社区资料将 `X-Requested-With: XMLHttpRequest`、`X-App-Token`、`X-App-Id`、版本号和 API 版本列为 JSON/接口请求的重要请求头；当前 `AddCookiesInterceptor` 已发送这些字段。
-- 社区资料的 V2 Token 示例使用整数 Unix 秒（等价于 `ToUnixTimeSeconds()`）。当前 `TokenDeviceUtils` 已改为 `System.currentTimeMillis() / 1000L`；自定义 Token 开关启用且值非空时，`AddCookiesInterceptor` 会使用该值覆盖自动生成值。
+- 社区资料列出的 `X-Requested-With`、`X-App-Token`、`X-App-Id`、版本号和 API 版本等字段仍可用于理解服务端要求，但当前客户端身份已按 `XiaoMengXinX/c001apk_next` 的 iOS 实现切换；下节记录当前源码实际发送的字段。
+- 旧 Android V2 Token 和 `customToken/xAppToken` 覆盖行为只作为历史实现记录；当前 API 请求不再调用 `TokenDeviceUtils` 生成 Android Token。
 - 社区资料把登录 Cookie 中的 `uid`、`username`、`token` 标为必要、把 `SESSID` 标为非必要。该表不能单独证明匿名浏览必须登录，是否需要登录态必须用同一接口做匿名/登录对照；调试时不得记录真实值。
 
 ### 历史设备对照记录（非本次验证）
 
 在 2026-08-12 的仓库会话记录中，`emulator-5554` 的 Android 16 模拟器采用 API1 Host、整数秒 Token，并保持默认 `13.4.1/2312121` 请求身份后：应用详情、首页 V8、动态详情和动态评论收到 `200 OK`，UI 层级确认首页动态内容和 `FeedActivity` 正文可见。此前的 `403` 由两个变量共同放大：首页/详情错误地走 API2，以及启动时把接口返回的线上应用版本写入第三方客户端的请求 Header。该段只保留为历史证据，不能当作当前实时 API 保证。
 
-需要区分两类验证：源码/测试可以证明请求身份和 Host 边界规则；历史设备记录曾确认 `X-App-Token` 存在并成功浏览。Cookie、Token、设备码仍只在脱敏日志中记录，不能把日志分享给他人。线上边缘策略可能继续变化，本轮未复验真实设备或实时接口。
+需要区分两类验证：源码可以证明当前请求身份格式和 Host 边界规则；2026-08 的历史设备记录验证的是旧 Android 身份，不能作为当前 iOS 身份的成功证据。当前 iOS 身份尚未在本轮通过构建、真实设备或实时接口复验。Cookie、Token、设备码仍只在脱敏日志中记录，不能把日志分享给他人。线上边缘策略可能继续变化。
 
 ### 同类实现对照
 
@@ -82,25 +82,24 @@ GitHub API 的非 2xx、解析失败或 Release 元数据不符合约束时显�
 
 ### API1/API2
 
-`AddCookiesInterceptor` 统一加入：
+`AddCookiesInterceptor` 只对 `api.coolapk.com` 和 `api2.coolapk.com` 的 HTTPS 请求应用 iOS 客户端身份。实现参考 [XiaoMengXinX/c001apk_next](https://github.com/XiaoMengXinX/c001apk_next)，对照快照为 `d0c5843c8e366f92fe48ee5c2de8f0863c2fb052`（2026-11-09）。当前发送：
 
-- `User-Agent`
+- `Accept: */*`、`Accept-Language`
+- iPhone `User-Agent`（`iCoolMarket/16.6.1-2610151`）
 - `X-Requested-With: XMLHttpRequest`
-- `X-Sdk-Int`、`X-Sdk-Locale`
-- `X-App-Id`、`X-App-Token`、`X-App-Version`、`X-App-Code`
-- `X-Api-Version`、`X-App-Device`、`X-Dark-Mode`
-- `X-App-Channel`、`X-App-Mode`、`X-App-Supported`
-- `Content-Type: application/x-www-form-urlencoded`
+- `X-Sdk-Int`（模拟 iOS 版本）、`X-Sdk-Locale: zh-HK`
+- `X-App-Id: com.coolapk.app`、`X-App-Version: 16.6.1`、`X-App-Code: 2610151`、`X-Api-Version: 16`
+- `X-App-Device`、`X-App-Token`
 
-登录时 Cookie 由 `uid`、`username`、`token` 组成；未登录时发送 `CookieUtil.SESSID`。`X-App-Token` 由 `TokenDeviceUtils` 基于时间、设备码、MD5、Base64 和 BCrypt 计算。上述 Header 只在三个 Coolapk HTTPS Host 保留，最终 Host 变化后由 network boundary 清理。
+`IosDeviceUtils` 为每个安装实例生成并持久化稳定 UUID 和一组 iPhone 型号档案，存于 `credentials.xml`；设置页可编辑档案或重新随机生成档案，重新生成不会改变 UUID。`X-App-Device` 按上游格式拼接设备字段后进行标准 Base64 编码、反转并去除开头的填充符。`X-App-Token` 按当前 Unix 秒、UUID 和 Bundle ID 通过上游的 MD5/Base64 公式生成，每秒变化。请求仅保留匿名 `CookieUtil.SESSID`，不发送账号 Cookie、CDID 或登录状态。
 
-### Account
+请求不再附加 Android 身份的 `X-Dark-Mode`、`X-App-Channel`、`X-App-Mode`、`X-App-Supported`；无请求体时移除 `Content-Type`，有请求体时由请求本身设置。Header 只会在两个 Coolapk HTTPS API Host 保留，最终 Host 变化后由 network boundary 清理。
 
-`LoginCookiesInterceptor` 依赖 `CookieUtil` 的一次性 flag 来决定当前请求属于：预取登录页、读取登录参数、验证码、密码登录或短信登录。对不可信 URL 不消费 flag；受信请求跨 Host 重定向时由最终 network boundary 清理凭证。修改登录顺序、并发请求或复用 flag 时必须重新验证。
+Coolapk 图片请求和以 Coolapk 域名开头的 WebView 页面会使用同一 iOS User-Agent；非 Coolapk 图片和以第三方域名开头的 WebView 页面保留原有 User-Agent 行为。
 
 ### 敏感信息
 
-Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY 日志不能提交到仓库、Issue、截图或聊天记录。登录摘要、接口 Token、设备身份、`xAppToken`/`xAppDevice` 和 `SZLMID` 存在 `credentials.xml`，普通 UI 偏好仍在 `settings.xml`；两套 Android 备份规则均排除 `credentials.xml`。网络 BODY 日志默认关闭；只有显式 Debug 开关开启时才输出，并由 `NetworkLogging` 脱敏。
+Cookie、Token、设备 ID、设备档案、STS 密钥和 BODY 日志不能提交到仓库、Issue、截图或聊天记录。当前 iOS 设备 UUID/档案和 WebView 使用的 `SZLMID` 存在 `credentials.xml`；普通 UI 偏好仍在 `settings.xml`；两套 Android 备份规则均排除 `credentials.xml`。网络 BODY 日志默认关闭；只有显式 Debug 开关开启时才输出，并由 `NetworkLogging` 脱敏。
 
 ### NetworkRepo 的错误与取消语义
 
@@ -179,7 +178,7 @@ Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY �
 ### 6.1 应用启动
 
 1. `MainActivity` 首次创建时调用 `getAppInfo("com.coolapk.market")`。
-2. `MainViewModel` 保持 `Constants`/`PrefManager` 中的稳定请求身份，不把远端应用详情版本写回 API 请求 Header。
+2. `IosDeviceUtils` 加载或创建持久化的匿名 iOS UUID/设备档案；`AddCookiesInterceptor` 按每次请求时间生成 iOS 请求身份，不把远端应用详情版本写回 API 请求 Header。
 3. 随后调用 `checkLoginInfo`，同步登录状态、用户摘要、会话 Cookie 和通知角标。
 4. 已登录用户在 `MainActivity.onResume` 中按五分钟间隔调用 `checkCount`。
 
@@ -212,6 +211,6 @@ Cookie、Token、账号、密码、验证码、设备码、STS 密钥和 BODY �
 1. 当前构建的 Git hash、Android 版本、网络类型和是否已登录。
 2. 请求最终 URL、HTTP 状态码、服务端 message 和是否发生重定向；日志必须脱敏。
 3. API1/API2/Account 是否选对，是否误用了旧 `Network` 路径。
-4. `PrefManager` 中的版本、设备、User-Agent、`CookieUtil.SESSID` 是否为空或过期。
+4. 设置页中的 iOS 设备档案、匿名 `CookieUtil.SESSID` 是否符合当前接口要求；不得在诊断记录中保留完整 Token、UUID 或 Cookie。
 5. 分页边界 `lastItem`、动态 ID、用户 ID、话题 ID 是否来自当前页面，而不是旧缓存。
 6. 只有完成真实接口请求和页面操作后，才能把问题归因于 UI 或服务端。

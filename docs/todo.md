@@ -162,6 +162,13 @@
   - 证据：`rasen/changes/github-release-self-update/evidence/verification-report.md`、`review-cycle-report.md`、`ship-log.md`、`docs/sessions/2026-08-27.md`；Release `v1.1.1` 的 APK、版本元数据和 `SHA256SUMS` 已核验。旧版设备证据中的 `versionCode=465` 对 `versionCode=463` 降级拒绝只作为 Android 行为基线，不作为当前应用内下载功能证据。
   - 验收标准：设置入口可打开；固定 GitHub latest Release 请求不携带 Coolapk 凭据；检测 `v1.1.0`；检测成功/失败/未检查时都可打开固定 Release 浏览器页面；应用内不再出现下载/安装动作；Debug 使用 `com.godmiracle.coolapk.debug` 并可与正式包并存；正式包升级仍遵守同包名、同签名和更高 `versionCode`。
 
+- [ ] R-016 验收 iOS 请求身份下的评论接口
+  - 优先级：高
+  - 可信度：实现依据上游 `c001apk_next` 快照 `d0c5843c8e366f92fe48ee5c2de8f0863c2fb052`；当前实时行为未验证
+  - 涉及文件：`util/IosHeaders.kt`、`util/IosDeviceUtils.kt`、`util/AddCookiesInterceptor.kt`、评论列表与楼中楼只读链路
+  - 状态：代码和文档已更新；构建、测试、真机及实时接口验收待完成
+  - 验收标准：在 Android 设备上确认评论列表和楼中楼请求携带 iOS Header 并成功返回、分页正常显示；确认非可信 Host 不带设备身份；不得记录或分享完整 Token、UUID 或 Cookie。
+
 ## 中优先级：架构和测试
 
 - [ ] R-006 合并或移除旧网络封装
@@ -186,13 +193,13 @@
   - 状态：待处理
   - 验收标准：覆盖正常/空值/非法 URL、分页结束、错误响应、重复刷新、数据库升级和设备参数变化。
 
-- [ ] R-009 确认 `customToken`/`xAppToken` 的预期行为
+- [ ] R-009 评估旧 Android Token 配置的清理策略
   - 优先级：中
-  - 可信度：已确认存在配置与请求链路不一致
+  - 可信度：旧设置键仍保留，但已不参与当前 API 请求
   - 涉及文件：`util/PrefManager.kt`、`util/AddCookiesInterceptor.kt`、`ui/settings/SettingsPreferenceFragment.kt`、`ui/settings/params/ParamsPreferenceFragment.kt`
-  - 状态：已实现“启用且非空时覆盖自动生成值”的行为，设置页人工验收和真实自定义 Token 联调待完成
-  - 证据：`AddCookiesInterceptor` 已接入 `PrefManager.customToken/xAppToken`；默认关闭或空值时仍使用自动生成 Token；`TokenDeviceUtilsTest` 已覆盖覆盖/回退分支。不得在日志、截图或聊天记录中粘贴真实 Token。
-  - 验收标准：明确自定义值是否应覆盖自动生成值；实现或删除设置入口；补充请求 Header 的单元/集成测试和迁移说明。
+  - 状态：API 请求已切换为 iOS 派生 Token；旧 Android Token 生成器、存储键和测试暂留，是否删除待单独评估
+  - 证据：当前 `AddCookiesInterceptor` 不再读取 `PrefManager.customToken/xAppToken` 或调用 `TokenDeviceUtils` 生成 API Token；设置参数页显示 iOS 派生 Token。
+  - 验收标准：确认是否清理历史凭证键及旧 Android Token 代码/测试；若清理，确认升级后不影响匿名 iOS UUID 与 WebView `SZLMID`。
 
 - [x] R-010 移除已废弃短信登录入口
   - 优先级：中

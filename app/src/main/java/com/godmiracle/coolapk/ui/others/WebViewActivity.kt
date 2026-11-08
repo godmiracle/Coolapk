@@ -31,6 +31,7 @@ import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.databinding.ActivityWebViewBinding
 import com.godmiracle.coolapk.ui.base.BaseActivity
 import com.godmiracle.coolapk.util.ClipboardUtil.copyText
+import com.godmiracle.coolapk.util.IosDeviceUtils
 import com.godmiracle.coolapk.util.PrefManager
 import com.godmiracle.coolapk.util.http2https
 import com.google.android.material.appbar.AppBarLayout.ScrollingViewBehavior
@@ -101,7 +102,7 @@ class WebViewActivity : BaseActivity<ActivityWebViewBinding>() {
                 javaScriptCanOpenWindowsAutomatically = true
                 loadsImagesAutomatically = true
                 allowFileAccess = false
-                userAgentString = PrefManager.USER_AGENT
+                IosDeviceUtils.webUserAgentFor(url)?.let { userAgentString = it }
                 if (SDK_INT >= 32) {
                     if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                         WebSettingsCompat.setAlgorithmicDarkeningAllowed(this, true)

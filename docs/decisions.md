@@ -2,6 +2,23 @@
 
 本文档记录当前代码已经体现的架构选择、文档化后的维护约束和本次分析形成的判断。除非明确写出“本次变更”，其余条目是对现状的整理，不代表本次修改了业务代码。
 
+## 2026-11-09 - API 请求身份切换为 iOS 客户端实现
+
+### 决定
+
+- API1/API2 使用参考 [XiaoMengXinX/c001apk_next](https://github.com/XiaoMengXinX/c001apk_next) 的 iOS Header、设备串、User-Agent 和 Token 算法；对照快照为 `d0c5843c8e366f92fe48ee5c2de8f0863c2fb052`。
+- 本地持久化匿名 UUID 和 iPhone 档案，Token 按 Unix 秒动态生成；仍只发送匿名 `SESSID`，不移植上游账号登录、CDID 注册或写入接口。
+- 继续沿用本地 API1/API2 HTTPS Host 凭证边界；旧 Android 参数键保留为兼容数据，但不再参与 API 身份生成。设置页改为编辑 iOS 档案和查看派生设备串/Token。
+
+### 原因
+
+用户明确指定上游 iOS 客户端身份作为成功案例。当前评论读取请求复用 API2 客户端的 `AddCookiesInterceptor`，因此替换身份实现即可覆盖评论列表和楼中楼请求，不需要更改评论路径、分页参数或 Retrofit 服务路由。
+
+### 验证与边界
+
+本次只完成源码静态核对和身份链路修改；没有执行构建、测试、真机或实时接口验证。iOS 身份是否能恢复评论接口仍需按 `docs/todo.md` 的 R-016 验收。历史 Android 请求成功记录不能当作本次实现的运行证据。
+
+
 ## 2026-08-11 - 建立项目文档基线
 
 ### 决定

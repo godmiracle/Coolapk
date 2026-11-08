@@ -51,6 +51,42 @@ object PrefManager {
         get() = credentialPref.getString("xAppDevice", "")!!
         set(value) = credentialPref.edit().putString("xAppDevice", value).apply()
 
+    var iosDeviceId: String
+        get() = credentialPref.getString("ios_device_id", "")!!
+        set(value) = credentialPref.edit().putString("ios_device_id", value).apply()
+
+    var iosModel: String
+        get() = credentialPref.getString("ios_model", "")!!
+        set(value) = credentialPref.edit().putString("ios_model", value).apply()
+
+    var iosHardwareId: String
+        get() = credentialPref.getString("ios_hardware_id", "")!!
+        set(value) = credentialPref.edit().putString("ios_hardware_id", value).apply()
+
+    var iosSalesModel: String
+        get() = credentialPref.getString("ios_sales_model", "")!!
+        set(value) = credentialPref.edit().putString("ios_sales_model", value).apply()
+
+    var iosSystemVersion: String
+        get() = credentialPref.getString("ios_system_version", "")!!
+        set(value) = credentialPref.edit().putString("ios_system_version", value).apply()
+
+    internal fun saveIosDevice(
+        id: String,
+        model: String,
+        hardwareId: String,
+        salesModel: String,
+        systemVersion: String,
+    ) {
+        credentialPref.edit()
+            .putString("ios_device_id", id)
+            .putString("ios_model", model)
+            .putString("ios_hardware_id", hardwareId)
+            .putString("ios_sales_model", salesModel)
+            .putString("ios_system_version", systemVersion)
+            .commit()
+    }
+
     var customToken: Boolean
         get() = credentialPref.getBoolean("customToken", false)
         set(value) = credentialPref.edit().putBoolean("customToken", value).apply()

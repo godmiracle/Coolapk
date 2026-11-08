@@ -39,7 +39,7 @@
 - 当前产品为匿名只读浏览加本地功能：本地数据包括话题/数码关注、浏览历史、动态收藏、首页菜单、搜索历史、用户黑名单和话题黑名单；最近 @用户和最近表情的编辑器存储已移除。
 - `DatabaseModule` 只对仍在使用的 `FeedFavorite`、`HomeMenu`、`LocalFollow` 和 `StringEntity` 数据库保留兼容迁移；账号、消息、发帖和回复相关迁移/测试不属于现行范围。
 - Manifest 包含主入口、Coolapk/自定义 Scheme 深链、WebView 独立进程、图片分享用 FileProvider 和网络状态权限；旧的第三方应用批量更新链路已移除，客户端更新不声明 `REQUEST_INSTALL_PACKAGES`，只通过系统浏览器打开 Release 页面。
-- API1、API2 客户端在最终网络发送边界检查 HTTPS 与受信任 Host；不可信 `@Url`/重定向会清理请求身份。当前不提供 Account 客户端、登录状态同步或消息请求；`WebViewActivity` 销毁时只释放资源，不主动结束进程。
+- API1、API2 客户端在最终网络发送边界检查 HTTPS 与受信任 Host；不可信 `@Url`/重定向会清理请求身份。API 请求身份采用参考 `XiaoMengXinX/c001apk_next` 的匿名 iOS UUID、设备档案、Header 和 Token；本轮源码已切换，真实接口仍待验收。当前不提供 Account 客户端、登录状态同步或消息请求；`WebViewActivity` 销毁时只释放资源，不主动结束进程。
 - GitHub Actions 在 `main` Push/手动触发时构建 Release/Debug 并上传 Actions 制品；推送 `v*` Tag 时将 Tag 作为 APK `versionName`，额外创建同名 GitHub Release，上传签名 APK 与 `SHA256SUMS`。`v1.1.0` Release 已验证，资产为 `c001apk_v1.1.0.463.apk` 和 `SHA256SUMS`；客户端更新流程读取同一仓库的 latest Release，并提供固定 Release 网页入口作为浏览器备用路径。CI 仍没有运行业务测试、lint 或真实设备更新验收。
 
 ### 源码覆盖但尚未证明

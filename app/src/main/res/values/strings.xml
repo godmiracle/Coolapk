@@ -86,6 +86,17 @@
     <string name="customToken">自定义Token</string>
     <string name="xAppToken">X-App-Token</string>
     <string name="xAppDevice">X-App-Device</string>
+    <string name="ios_device_identity">iOS 请求身份</string>
+    <string name="ios_request_headers">请求头</string>
+    <string name="ios_device_id">匿名设备 ID</string>
+    <string name="ios_device_id_summary">本机生成并持久化的 UUID（点击查看）</string>
+    <string name="ios_model">iPhone 型号</string>
+    <string name="ios_hardware_id">硬件型号</string>
+    <string name="ios_sales_model">销售型号</string>
+    <string name="ios_sales_model_empty">未设置</string>
+    <string name="ios_system_version">iOS 版本</string>
+    <string name="ios_token_rotates">按秒生成，点击查看当前值</string>
+    <string name="ios_profile_regenerated">已重新生成机型档案，设备 ID 保持不变</string>
     <string name="full_quality">默认原图</string>
     <string name="display">显示</string>
     <string name="auto_clear_key_word">自动清除关键词</string>

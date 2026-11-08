@@ -30,6 +30,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withC
 import com.bumptech.glide.request.transition.Transition
 import com.godmiracle.coolapk.R
 import com.godmiracle.coolapk.constant.Constants.USER_AGENT
+import com.godmiracle.coolapk.util.IosDeviceUtils
 import com.godmiracle.coolapk.util.ClipboardUtil.copyText
 import com.godmiracle.coolapk.view.FileTarget
 import com.godmiracle.coolapk.view.ninegridimageview.NineGridImageView
@@ -66,7 +67,10 @@ object ImageUtil {
         if (!url.isNullOrEmpty()) {
             val newUrl = GlideUrl(
                 url.http2https,
-                LazyHeaders.Builder().addHeader("User-Agent", USER_AGENT).build()
+                LazyHeaders.Builder().addHeader(
+                    "User-Agent",
+                    IosDeviceUtils.webUserAgentFor(url.http2https) ?: USER_AGENT
+                ).build()
             )
             Glide
                 .with(view).apply {
@@ -402,9 +406,13 @@ object ImageUtil {
     }
 
     private fun downloadPicture(context: Context, url: String?, fileName: String, isEnd: Boolean) {
+        val secureUrl = url?.http2https
         val newUrl = GlideUrl(
-            url?.http2https,
-            LazyHeaders.Builder().addHeader("User-Agent", USER_AGENT).build()
+            secureUrl,
+            LazyHeaders.Builder().addHeader(
+                "User-Agent",
+                IosDeviceUtils.webUserAgentFor(secureUrl) ?: USER_AGENT
+            ).build()
         )
         Glide.with(context).downloadOnly().load(newUrl).into(object : FileTarget() {
             override fun onLoadFailed(errorDrawable: Drawable?) {

@@ -25,6 +25,7 @@ internal object NetworkCredentialPolicy {
     internal val apiIdentityHeaders = listOf(
         "Cookie",
         "User-Agent",
+        "Accept-Language",
         "X-Requested-With",
         "X-Sdk-Int",
         "X-Sdk-Locale",

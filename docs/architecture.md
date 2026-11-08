@@ -133,12 +133,12 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 
 ### 4.2 请求身份与状态
 
-`AddCookiesInterceptor` 会根据 `PrefManager` 和 `CookieUtil` 注入：
+`AddCookiesInterceptor` 为 API1/API2 请求添加参考 `XiaoMengXinX/c001apk_next` 的 iOS 客户端身份：
 
-- `User-Agent`、`X-App-Id`、`X-App-Version`、`X-App-Code`、`X-Api-Version`。
-- `X-App-Device`、由设备码和时间计算的 `X-App-Token`。
-- locale、channel、mode、dark mode 等请求头。
-- 匿名请求使用会话 Cookie 和设备/API 请求身份；不读取或写入账号 UID、用户名和登录 Token。
+- `User-Agent`、`Accept-Language`、`X-Requested-With`、`X-Sdk-Int`、`X-Sdk-Locale`。
+- `X-App-Id`、`X-App-Version`、`X-App-Code`、`X-Api-Version`、`X-App-Device`、按 Unix 秒生成的 `X-App-Token`。
+- `IosDeviceUtils` 生成稳定的匿名 UUID，并将 UUID 与 iPhone 档案持久化到 `credentials.xml`；Token 每秒更新。
+- 匿名请求只发送 `CookieUtil.SESSID`；不读取或写入账号 UID、用户名、登录 Token 或 CDID。
 
 `AddCookiesInterceptor` 只在 API1/API2 的 Coolapk HTTPS Host 上添加匿名请求身份；外部 `@Url`、非 HTTPS URL 和跨 Host 重定向由 `NetworkCredentialPolicy` 清理请求身份。当前不存在登录拦截器或账号请求状态机。
 
@@ -167,7 +167,7 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 
 - 主题、主题色、纯黑模式、系统取色、字体比例、图片质量、表情显示。
 - `settings.xml` 保存普通 UI 偏好以及 Coolapk/API 版本等非凭证设置。
-- `credentials.xml` 仅用于兼容保存设备制造商/型号/Build/SDK、User-Agent、`SZLMID`、`xAppDevice`、`xAppToken` 和自定义 Token 开关；历史账号键启动时清理。
+- `credentials.xml` 保存 iOS 模拟 UUID/设备档案，以及供 WebView 使用的 `SZLMID`；旧 Android 设备参数和 `xAppToken`/`xAppDevice` 键仅作为兼容遗留数据保留，不再参与 API 请求身份生成；历史账号键启动时清理。
 
 首次访问时 `CredentialPreferencesMigration` 清理旧 `settings.xml` 中的账号键并保留设备/API 身份；普通 UI 偏好保留。`backup_rules.xml`、`data_extraction_rules.xml` 分别排除 `credentials.xml`，但该文件仍是未加密的普通 SharedPreferences。清除应用数据会同时清除历史账号键和设备参数。
 
@@ -240,7 +240,7 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 3. 显式开启 Debug BODY 日志时仍可能接触服务端请求或响应，当前实现会对常见 Cookie、Token、密码、验证码和 STS 字段脱敏。
 4. 明文流量开关已关闭；应用控制的 HTTP 初始链接、跳转、下载和外部打开路径会先升级为 HTTPS。
 5. 当前 Manifest 不声明 `QUERY_ALL_PACKAGES`；旧的第三方应用批量更新链路已移除。客户端更新不声明 `REQUEST_INSTALL_PACKAGES`，只通过系统浏览器进入 Release 页面；应用详情的单个 APK 下载仍走 Coolapk 的下载链接接口。
-6. 设备码和 Coolapk 版本参数可在设置中修改，改变后可能导致接口拒绝、服务端风控或数据错配。
+6. iOS 模拟设备档案可在设置中修改，改变后可能导致接口拒绝、服务端风控或数据错配；匿名 UUID 与档案保存在未加密的 `credentials.xml`。
 7. API、图片地址和返回字段依赖第三方服务，必须把线上验证与编译验证分开记录。
 8. 当前源码已有 Room/网络/WebView 回归测试；GitHub Actions 发布 Job 声明 `contents: write`，但只有 `v*` Tag 步骤执行 Release 写操作，签名配置来自 Secrets。`v1.1.0` 签名 Release 已验证；客户端 GitHub latest API 和浏览器跳转已在 OPPO `PGEM10` 上验证，应用不再负责流式下载或系统安装器调用，CI 仍不覆盖真实 API、分页、深链、图片保存和设备验收。
 
