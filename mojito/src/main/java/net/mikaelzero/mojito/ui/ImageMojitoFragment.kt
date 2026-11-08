@@ -302,6 +302,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             if (binding.loadingLayout.visibility == View.GONE) {
                 binding.loadingLayout.visibility = View.VISIBLE
             }
+            binding.loadingLayout.isClickable = true
             iProgress?.onStart(fragmentConfig.position)
         }
     }
@@ -314,6 +315,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             if (binding.loadingLayout.visibility == View.GONE) {
                 binding.loadingLayout.visibility = View.VISIBLE
             }
+            binding.loadingLayout.isClickable = true
             iProgress?.onProgress(fragmentConfig.position, progress)
         }
     }
@@ -375,6 +377,9 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             }
             iProgress?.onFailed(fragmentConfig.position)
             fragmentCoverLoader?.imageCacheHandle(isCache = false, hasTargetUrl = true)
+            // Failed progress views may hide their child while this full-screen parent stays visible.
+            // Let image gestures pass through until another request starts.
+            binding.loadingLayout.isClickable = false
         }
     }
 

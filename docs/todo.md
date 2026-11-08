@@ -172,10 +172,10 @@
 
 - [ ] R-017 验收帖子图片全屏预览
   - 优先级：高
-  - 可信度：触摸事件被吞的路径由本地代码确认；设备行为待验证
-  - 涉及文件：`mojito/src/main/java/net/mikaelzero/mojito/MojitoView.java`、`SketchImageViewLoader/src/main/java/net/mikaelzero/mojito/view/sketch/SketchContentLoaderImpl.kt`
-  - 状态：多指事件转发已修改；构建和设备验收待完成
-  - 证据：用户反馈图片能进入预览但不能缩放；`MojitoView` 原先在多指状态且第一指已有纵向位移时直接消费 `ACTION_MOVE`，导致 Sketch 图片缩放器收不到缩放事件。
+  - 可信度：加载失败后全屏层拦截触摸的根因及双指缩放修复已在 OPPO PMX110 / Android 17 真机验证；其余交互仍待验收
+  - 涉及文件：`mojito/src/main/java/net/mikaelzero/mojito/ui/ImageMojitoFragment.kt`、`mojito/src/main/java/net/mikaelzero/mojito/MojitoView.java`、`SketchImageViewLoader/src/main/java/net/mikaelzero/mojito/view/sketch/SketchContentLoaderImpl.kt`
+  - 状态：失败时禁用全屏加载层点击的修复已构建并在真机验证；双击、单指拖动关闭、横向切换和点击退出待验收
+  - 证据：此前的 `MojitoView` 多指转发调整不能单独解决问题。真机日志确认 `loadImageFail()` 后全屏 `loadingLayout` 的点击监听关闭了预览，导致图片缩放器收不到事件；禁用失败层点击后，双指放大缩放值由约 `2.39` 增至 `3.24`，反向捏合降至约 `2.75`。
   - 验收标准：确认双指捏合能放大和缩小、双击缩放正常；单指拖动关闭、横向切换及预览图片点击退出行为正常。
 
 ## 中优先级：架构和测试
