@@ -22,6 +22,8 @@
 
 `:app:assembleDebug` 已成功，验证源码和资源可编译打包。尚未执行 AGSL 设备渲染、浅/深色视觉复验、滚动帧率或 Android 16 系统行为测试；相关验收保持在 `docs/todo.md` 的 UI-GLASS-002。
 
+第二版在 2026-11-09 推送为 `5393caf` 后，GitHub Actions CI #23（run `42610169769`）Release 和 Debug 构建均成功。Actions Debug APK 的 SHA-256 与 artifact digest 一致，APK 签名、包名、`versionCode=473`、`minSdk=33` 和 `targetSdk=36` 已核验；真机安装与视觉检查尚未完成，因为当时 `adb devices -l` 未发现连接设备。
+
 ## 2026-11-09 - 修复图片加载失败后预览层拦截触摸
 
 ### 决定
