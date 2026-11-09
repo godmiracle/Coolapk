@@ -35,7 +35,10 @@ jobs:
           cache: gradle
 
       - name: Install Android SDK 37
-        run: sdkmanager "platforms;android-37.0"
+        run: |
+          if [ ! -f "$ANDROID_HOME/platforms/android-37.0/android.jar" ]; then
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0"
+          fi
 
       - name: Write key
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
