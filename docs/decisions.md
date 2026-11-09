@@ -2,6 +2,24 @@
 
 本文档记录当前代码已经体现的架构选择、文档化后的维护约束和本次分析形成的判断。除非明确写出“本次变更”，其余条目是对现状的整理，不代表本次修改了业务代码。
 
+## 2026-11-09 - 主导航采用 KSU/Miuix 风格液态玻璃渲染链
+
+### 决定
+
+- 竖屏主导航玻璃条和独立搜索圆钮在现有 `LiquidGlassFrameLayout` 内使用饱和度 1.5、4dp 轻模糊和 24dp 圆角折射；`AnimatedBottomNavigationView` 保留现有选中弹性动画，并将选中胶囊改为克制的纵向高光渐变。
+- 继续使用 XML/ViewBinding 和 sibling backdrop；不引入 `miuix-blur` Compose 依赖，因为其 backdrop API 不直接采样当前 ViewPager2 View 层级。
+- 将 `minSdk` 提升至 33（RuntimeShader），`compileSdk`/`targetSdk` 提升至 36；AGP 使用 8.9.1，Gradle Wrapper 保持 8.14.5。
+- 同步将 Kotlin/KSP 升至 2.2.20 / 2.2.20-2.0.4，以匹配 AGP 8.9.1 Data Binding 使用的 Kotlin metadata，并保持与 Gradle 8.14.5 的兼容组合；Room 升至 2.7.2，使用官方 Kotlin 2/KSP2 支持；Hilt 升至 2.57.2 并由 KAPT 处理，兼容 Kotlin 2.2 metadata。
+- Android 16 下继续由 `MainActivity` 将 system bar inset 应用到浮动导航容器，并使用已有 `OnBackPressedDispatcher`；全应用 API 36 行为验收另记待办。
+
+### 原因与边界
+
+旧玻璃条使用 18–20dp 模糊和固定描边高光，没有折射；Miuix/KSU 的视觉来自轻微模糊、色彩增强和圆角边缘折射的组合。当前 Miuix 实现以 Compose backdrop 为入口，不适合直接接入 XML/ViewPager2 背景采样，因此沿用当前容器并实现同一效果链。将 AGP 提升到 API 36 所需版本后，Kotlin 1.9.24 无法读取 Data Binding Kotlin 2.1 metadata，因此一并升级 Kotlin/KSP；Room 2.6.1 处理器不兼容该 KSP 组合，更新到支持 Kotlin 2/KSP2 的 2.7.2；Hilt 2.51.1 的处理器不支持 Kotlin 2.2 metadata，更新到 2.57.2 并从 KSP 改用 KAPT。`utilcode` 传递引入 Kotlin 1.3 Android Extensions runtime，与现代 Parcelize runtime 重复，因此仅从该依赖排除旧 runtime。渲染链失败时回退基础模糊，避免影响主导航可用性。
+
+### 验证
+
+`:app:assembleDebug` 已成功，验证源码和资源可编译打包。尚未执行 AGSL 设备渲染、浅/深色视觉复验、滚动帧率或 Android 16 系统行为测试；相关验收保持在 `docs/todo.md` 的 UI-GLASS-002。
+
 ## 2026-11-09 - 修复图片加载失败后预览层拦截触摸
 
 ### 决定

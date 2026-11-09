@@ -100,7 +100,7 @@ Fragment/ViewModel
 
 ### 3.4 原生 LiquidGlass 页面 Chrome
 
-当前 LiquidGlass 采用共享的 LiquidGlassFrameLayout，继续服务于 XML/ViewBinding/Data Binding 页面，不引入 Compose 或第二套模糊容器。容器包含一个内部非无障碍 backdrop 层和原样保留的前景子 View；backdrop 从同一 Window 内的内容 sibling 取样，内容未布局、已 detach 或 source 不可用时使用主题色 fallback。容器自身不消费系统 inset，source 的滚动、attach、页面切换和配置变化只触发刷新并在销毁时清理监听。
+当前 LiquidGlass 采用共享的 LiquidGlassFrameLayout，继续服务于 XML/ViewBinding/Data Binding 页面，不引入 Compose 或第二套容器。容器包含一个内部非无障碍 backdrop 层和原样保留的前景子 View；backdrop 从同一 Window 内的内容 sibling 取样，内容未布局、已 detach 或 source 不可用时使用主题色 fallback。主导航和搜索按钮使用 KSU/Miuix 风格的 `saturation(1.5) → blur(4dp) → rounded lens(24dp)` 效果链；其他页面 Chrome 保持基础 RenderEffect 模糊。RuntimeShader 只作用于背景采样层，图标、文字和操作控件保持清晰。容器自身不消费系统 inset，source 的滚动、layout、attach、页面切换和配置变化只触发刷新并在销毁时清理监听。最低 API 33 对应 RuntimeShader 平台要求。
 
 页面 slot 只覆盖稳定的操作 Chrome：
 

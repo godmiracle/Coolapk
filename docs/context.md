@@ -80,8 +80,8 @@
 
 | 约束 | 现状 |
 |---|---|
-| 平台 | Android，`minSdk 31`（Android 12+），`target/compileSdk 34` |
-| 构建 | Kotlin 1.9.24、Java 17、AGP 8.5.1、Gradle Wrapper 8.14.5 |
+| 平台 | Android，`minSdk 33`（Android 13+），`target/compileSdk 36` |
+| 构建 | Kotlin 2.2.20、KSP 2.2.20-2.0.4、Hilt 2.57.2（KAPT）、Room 2.7.2、Java 17、AGP 8.9.1、Gradle Wrapper 8.14.5 |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64`；未启用 `x86`/`armeabi` |
 | UI | 继续沿用 XML + ViewBinding/Data Binding；没有证据表明要迁移 Compose |
 | 服务端 | 依赖 `api.coolapk.com`、`api2.coolapk.com` 和相关图片地址；客户端更新只读 `api.github.com`/`github.com` 的固定仓库 Release，网络受限时交给系统浏览器，不再接入 Account/OSS 写入服务 |
@@ -124,11 +124,11 @@
 
 本轮在既有 XML/ViewBinding 架构内，将共享原生 LiquidGlassFrameLayout 扩展到 BasePager、User、Feed 和 Search 的页面级操作 Chrome。玻璃层只取同一 Window 内的内容 sibling，前景 Toolbar、Tab、输入框和 Material 控件保持清晰；Feed 排序栏恢复为普通不透明表面，不能采样或模糊回复列表。普通卡片、RecyclerView item、评论/回复、头像、封面、图片、加载/错误、Preference、WebView、BottomSheet 和 Dialog 不作为玻璃对象。当前匿名只读范围不保留 FAB、登录、消息、发布或回复编辑入口。
 
-实现不引入 Compose 或外部 AndroidLiquidGlass 依赖，最低平台继续为 Android 12/API 31，目标 SDK 34。LiquidGlassFrameLayout 直接使用 RenderEffect，具备主题色/透明度、模糊、圆角、边框、高光、source 刷新、fallback 和 attach/detach 清理。
+当前主导航和搜索按钮使用 KSU/Miuix 风格效果链：饱和度 1.5、4dp 轻模糊、24dp 圆角边缘折射；最低平台/API 33，同时将 compileSdk/targetSdk 提升到 36。项目仍以 XML/ViewBinding 为主，RuntimeShader 在共享 LiquidGlassFrameLayout 内实现，不引入 Compose 依赖；其他页面 Chrome 可继续使用基础 RenderEffect 模糊。容器保留主题色 fallback、source 刷新和 attach/detach 监听清理。
 
 已连接设备为 OPPO PGEM10、Android API 36、arm64-v8a、1080×2376、手势导航。当前 Debug 包使用独立的 `com.godmiracle.coolapk.debug` applicationId；正式包 `com.godmiracle.coolapk` 可与其并存。消息/登录/发布/回复编辑不再作为真机业务流验证对象。
 
-当前仍未完成 API 31/32、三键导航、放大字体、TalkBack、全页面动作矩阵、同设备 before/after 三轮长滚动帧统计和完整 Feed instrumentation。一次较长的首页滑动曾观察到返回 Launcher，随后短距离滑动复测未重现且当前前台保持 MainActivity；该现象保留为设备验收风险，不宣称已完全排除。
+当前最低平台已是 API 33；API 33 真机、三键导航、放大字体、TalkBack、全页面动作矩阵、同设备 before/after 三轮长滚动帧统计和完整 Feed instrumentation 仍未完成。一次较长的首页滑动曾观察到返回 Launcher，随后短距离滑动复测未重现且当前前台保持 MainActivity；该现象保留为设备验收风险，不宣称已完全排除。
 
 ### 自动化续测结果
 

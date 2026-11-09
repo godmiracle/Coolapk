@@ -12,6 +12,10 @@
         <attr name="glassBorderWidth" format="dimension" />
         <attr name="glassHighlightColor" format="color|reference" />
         <attr name="glassHighlightWidth" format="dimension" />
+        <attr name="glassLiquidEnabled" format="boolean" />
+        <attr name="glassVibrancy" format="float" />
+        <attr name="glassRefractionHeight" format="dimension" />
+        <attr name="glassRefractionAmount" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="NestedScrollableHost">

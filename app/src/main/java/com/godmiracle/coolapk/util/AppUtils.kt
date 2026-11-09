@@ -47,7 +47,7 @@ object AppUtils {
 
     fun getTargetSdkVersion(context: Context, packageName: String): Int {
         return runCatching {
-            context.packageManager.getPackageInfo(packageName, 0).applicationInfo.targetSdkVersion
+            context.packageManager.getPackageInfo(packageName, 0).applicationInfo?.targetSdkVersion ?: -1
         }.getOrDefault(-1)
     }
 
@@ -56,20 +56,20 @@ object AppUtils {
             context.packageManager.getPackageInfo(
                 packageName,
                 0
-            ).applicationInfo.loadLabel(context.packageManager).toString()
+            ).applicationInfo?.loadLabel(context.packageManager)?.toString() ?: "未获取到"
         } catch (e: java.lang.Exception) {
             "未获取到"
         }
     }
 
     fun getAppName(context: Context, packageInfo: PackageInfo): String {
-        return packageInfo.applicationInfo.loadLabel(context.packageManager).toString()
+        return packageInfo.applicationInfo?.loadLabel(context.packageManager)?.toString() ?: "未获取到"
     }
 
 
     fun getAppVersionName(context: Context, packageName: String): String {
         return try {
-            context.packageManager.getPackageInfo(packageName, 0).versionName
+            context.packageManager.getPackageInfo(packageName, 0).versionName ?: "未安装"
         } catch (e: Exception) {
             "未安装"
         }

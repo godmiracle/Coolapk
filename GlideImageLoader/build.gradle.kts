@@ -1,7 +1,7 @@
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
@@ -9,6 +9,13 @@ plugins {
 }
 
 group = "com.github.mikaelzero"
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 setupLibraryModule {
     namespace = "net.mikaelzero.mojito.loader.glide"
     defaultConfig {
@@ -51,15 +58,8 @@ inline fun <reified T : BaseExtension> Project.setupBaseModule(crossinline block
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }
-        kotlinOptions {
-            jvmTarget = "17"
-        }
         (this as T).block()
     }
-}
-
-fun BaseExtension.kotlinOptions(block: KotlinJvmOptions.() -> Unit) {
-    (this as ExtensionAware).extensions.configure("kotlinOptions", block)
 }
 
 dependencies {

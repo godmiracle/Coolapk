@@ -4,10 +4,13 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.RenderEffect
+import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -23,9 +26,9 @@ import kotlin.math.min
 /**
  * XML/View 系统中的共享 GlassSurface 实现。
  *
- * Android 12 / API 31 及以上会把指定内容 sibling 重新绘制到独立层并施加
- * RenderEffect 模糊，前景子 View（文字、图标和按钮）保持锐利。source 不可用时
- * 仍绘制主题着色表面，保证 XML inflation 和页面切换阶段不会出现黑块或崩溃。
+ * Android 13 / API 33 及以上会把指定内容 sibling 重新绘制到独立层，并可选施加
+ * 饱和度、RenderEffect 模糊和 RuntimeShader 折射；前景子 View（文字、图标和按钮）
+ * 保持锐利。source 不可用时仍绘制主题着色表面，避免页面切换阶段出现黑块。
  */
 class LiquidGlassFrameLayout @JvmOverloads constructor(
     context: Context,
@@ -71,6 +74,11 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
     private var borderWidthOverridden = false
     private var highlightColorOverridden = false
     private var highlightWidthOverridden = false
+    private var liquidGlassEnabled = false
+    private var vibrancy = 1.5f
+    private var refractionHeightPx = dp(24f)
+    private var refractionAmountPx = dp(24f)
+    private var liquidLayerPaddingPx = 0
 
     init {
         setWillNotDraw(false)
@@ -121,6 +129,7 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
     fun setCornerRadiusDp(radiusDp: Float) {
         cornerRadiusOverridden = true
         cornerRadiusPx = dp(radiusDp).coerceAtLeast(0f)
+        updateBackdropEffect()
         invalidateOutline()
         invalidate()
     }
@@ -183,6 +192,11 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
         refreshBackdrop()
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        updateBackdropEffect()
+    }
+
     private fun applyStyledAttributes() {
         val typedArray = context.obtainStyledAttributes(
             attributeSet,
@@ -239,6 +253,22 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
                     highlightWidthPx
                 ).coerceAtLeast(0f)
             }
+            liquidGlassEnabled = typedArray.getBoolean(
+                R.styleable.GlassSurface_glassLiquidEnabled,
+                liquidGlassEnabled
+            )
+            vibrancy = typedArray.getFloat(
+                R.styleable.GlassSurface_glassVibrancy,
+                vibrancy
+            ).coerceAtLeast(1f)
+            refractionHeightPx = typedArray.getDimension(
+                R.styleable.GlassSurface_glassRefractionHeight,
+                refractionHeightPx
+            ).coerceAtLeast(0f)
+            refractionAmountPx = typedArray.getDimension(
+                R.styleable.GlassSurface_glassRefractionAmount,
+                refractionAmountPx
+            ).coerceAtLeast(0f)
             if (xmlBackdropSourceId == View.NO_ID) {
                 xmlBackdropSourceId = typedArray.getResourceId(
                     R.styleable.GlassSurface_glassBackdropSource,
@@ -258,8 +288,37 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
         backdropView.surfaceColor = surfaceColor
         backdropView.surfaceAlpha = surfaceAlpha
         backdropView.setBlurRadiusPx(blurRadiusPx)
+        updateBackdropEffect()
         invalidateOutline()
         invalidate()
+    }
+
+    private fun updateBackdropEffect() {
+        updateLiquidLayerBounds()
+        backdropView.setLiquidGlassEffect(
+            enabled = liquidGlassEnabled,
+            panelWidth = width.toFloat(),
+            panelHeight = height.toFloat(),
+            cornerRadiusPx = cornerRadiusPx,
+            refractionHeightPx = refractionHeightPx,
+            refractionAmountPx = refractionAmountPx,
+            vibrancy = vibrancy
+        )
+    }
+
+    private fun updateLiquidLayerBounds() {
+        val padding = if (liquidGlassEnabled) {
+            (refractionAmountPx + dp(8f)).toInt()
+        } else {
+            0
+        }
+        if (padding == liquidLayerPaddingPx) return
+        val params = backdropView.layoutParams as? LayoutParams ?: return
+        liquidLayerPaddingPx = padding
+        params.width = LayoutParams.MATCH_PARENT
+        params.height = LayoutParams.MATCH_PARENT
+        params.setMargins(-padding, -padding, -padding, -padding)
+        backdropView.layoutParams = params
     }
 
     private fun bindSourceListeners() {
@@ -373,6 +432,14 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
         private val sourceLocation = IntArray(2)
         private val backdropLocation = IntArray(2)
         private var blurRadiusPx = 0f
+        private var liquidGlassEnabled = false
+        private var panelWidthPx = 0f
+        private var panelHeightPx = 0f
+        private var cornerRadiusPx = 0f
+        private var refractionHeightPx = 0f
+        private var refractionAmountPx = 0f
+        private var vibrancy = 1.5f
+        private var liquidShader: RuntimeShader? = null
 
         init {
             setWillNotDraw(false)
@@ -381,19 +448,90 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
 
         fun setBlurRadiusPx(radiusPx: Float) {
             blurRadiusPx = radiusPx.coerceAtLeast(0f)
-            setRenderEffect(
-                if (blurRadiusPx > 0f) {
-                    RenderEffect.createBlurEffect(
-                        blurRadiusPx,
-                        blurRadiusPx,
-                        Shader.TileMode.CLAMP
-                    )
-                } else {
-                    null
-                }
-            )
+            updateRenderEffect()
             invalidate()
         }
+
+        fun setLiquidGlassEffect(
+            enabled: Boolean,
+            panelWidth: Float,
+            panelHeight: Float,
+            cornerRadiusPx: Float,
+            refractionHeightPx: Float,
+            refractionAmountPx: Float,
+            vibrancy: Float
+        ) {
+            liquidGlassEnabled = enabled
+            panelWidthPx = panelWidth
+            panelHeightPx = panelHeight
+            this.cornerRadiusPx = cornerRadiusPx
+            this.refractionHeightPx = refractionHeightPx
+            this.refractionAmountPx = refractionAmountPx
+            this.vibrancy = vibrancy
+            if (enabled && liquidShader == null) {
+                liquidShader = try {
+                    RuntimeShader(LiquidGlassRenderEffect.SHADER)
+                } catch (_: RuntimeException) {
+                    null
+                }
+            }
+            updateRenderEffect()
+            invalidate()
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            updateRenderEffect()
+        }
+
+        private fun updateRenderEffect() {
+            val effect = if (
+                liquidGlassEnabled && panelWidthPx > 0f && panelHeightPx > 0f
+            ) {
+                liquidShader?.let { shader ->
+                    try {
+                        LiquidGlassRenderEffect.configureShader(
+                            shader = shader,
+                            panelOffsetX = (width - panelWidthPx) / 2f,
+                            panelOffsetY = (height - panelHeightPx) / 2f,
+                            panelWidth = panelWidthPx,
+                            panelHeight = panelHeightPx,
+                            cornerRadiusPx = cornerRadiusPx,
+                            refractionHeightPx = refractionHeightPx,
+                            refractionAmountPx = refractionAmountPx,
+                            chromaticAberration = 0f,
+                            maskOutside = false
+                        )
+                        val saturation = RenderEffect.createColorFilterEffect(
+                            ColorMatrixColorFilter(
+                                ColorMatrix().apply { setSaturation(vibrancy) }
+                            )
+                        )
+                        val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
+                        val saturatedBackdrop = createBlurEffect()?.let { blur ->
+                            RenderEffect.createChainEffect(saturation, blur)
+                        } ?: saturation
+                        RenderEffect.createChainEffect(lens, saturatedBackdrop)
+                    } catch (_: RuntimeException) {
+                        null
+                    }
+                }
+            } else {
+                null
+            }
+            setRenderEffect(effect ?: createBlurEffect())
+        }
+
+        private fun createBlurEffect(): RenderEffect? =
+            if (blurRadiusPx > 0f) {
+                RenderEffect.createBlurEffect(
+                    blurRadiusPx,
+                    blurRadiusPx,
+                    Shader.TileMode.CLAMP
+                )
+            } else {
+                null
+            }
 
         override fun onDraw(canvas: Canvas) {
             val sourceView = source
@@ -432,5 +570,99 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
             surfacePaint.color = (surfaceColor and 0x00FFFFFF) or
                 ((alpha * 255).toInt().coerceIn(0, 255) shl 24)
         }
+    }
+}
+
+/**
+ * View-system port of KernelSU's Miuix glass effect chain: vibrancy, a light backdrop blur,
+ * then rounded-edge refraction. The shader samples the padded sibling backdrop so refraction
+ * remains continuous at the surface edge.
+ */
+internal object LiquidGlassRenderEffect {
+    const val SHADER = """
+        uniform shader content;
+        uniform float2 panelOffset;
+        uniform float2 panelSize;
+        uniform float cornerRadius;
+        uniform float refractionHeight;
+        uniform float refractionAmount;
+        uniform float chromaticAberration;
+        uniform float maskOutside;
+
+        float sdRoundedRect(float2 point, float2 halfSize, float radius) {
+            float2 corner = abs(point) - (halfSize - float2(radius));
+            float outside = length(max(corner, 0.0)) - radius;
+            float inside = min(max(corner.x, corner.y), 0.0);
+            return outside + inside;
+        }
+
+        float2 gradSdRoundedRect(float2 point, float2 halfSize, float radius) {
+            float2 corner = abs(point) - (halfSize - float2(radius));
+            float2 gradient;
+            if (corner.x >= 0.0 || corner.y >= 0.0) {
+                float2 outside = max(corner, 0.0);
+                gradient = outside / max(length(outside), 0.0001);
+            } else {
+                float gradientX = step(corner.y, corner.x);
+                gradient = float2(gradientX, 1.0 - gradientX);
+            }
+            return sign(point) * gradient;
+        }
+
+        float circleMap(float value) {
+            float clamped = clamp(value, 0.0, 1.0);
+            return 1.0 - sqrt(max(0.0, 1.0 - clamped * clamped));
+        }
+
+        half4 main(float2 coord) {
+            float2 halfSize = panelSize * 0.5;
+            float2 centered = coord - panelOffset - halfSize;
+            float radius = min(cornerRadius, min(halfSize.x, halfSize.y));
+            float distance = sdRoundedRect(centered, halfSize, radius);
+
+            if (maskOutside > 0.5 && distance > 0.0) {
+                return half4(0.0);
+            }
+            if (distance > 0.0 || refractionHeight <= 0.0 || -distance >= refractionHeight) {
+                return content.eval(coord);
+            }
+
+            float edgeProgress = 1.0 - (-distance / refractionHeight);
+            float displacement = circleMap(edgeProgress) * refractionAmount;
+            float2 normal = gradSdRoundedRect(centered, halfSize, radius);
+            float2 refracted = coord + displacement * normal;
+            half4 base = content.eval(refracted);
+            if (chromaticAberration <= 0.0) {
+                return base;
+            }
+
+            float dispersion = chromaticAberration * clamp(edgeProgress, 0.0, 1.0);
+            float2 colorOffset = normal * abs(displacement) * dispersion;
+            half4 red = content.eval(refracted + colorOffset);
+            half4 blue = content.eval(refracted - colorOffset);
+            return half4(red.r, base.g, blue.b, base.a);
+        }
+    """
+
+    fun configureShader(
+        shader: RuntimeShader,
+        panelOffsetX: Float,
+        panelOffsetY: Float,
+        panelWidth: Float,
+        panelHeight: Float,
+        cornerRadiusPx: Float,
+        refractionHeightPx: Float,
+        refractionAmountPx: Float,
+        chromaticAberration: Float,
+        maskOutside: Boolean
+    ) {
+        shader.setFloatUniform("panelOffset", panelOffsetX, panelOffsetY)
+        shader.setFloatUniform("panelSize", panelWidth, panelHeight)
+        shader.setFloatUniform("cornerRadius", cornerRadiusPx)
+        shader.setFloatUniform("refractionHeight", refractionHeightPx)
+        // Negative displacement pulls edge samples inward, like the KernelSU lens effect.
+        shader.setFloatUniform("refractionAmount", -refractionAmountPx)
+        shader.setFloatUniform("chromaticAberration", chromaticAberration)
+        shader.setFloatUniform("maskOutside", if (maskOutside) 1f else 0f)
     }
 }

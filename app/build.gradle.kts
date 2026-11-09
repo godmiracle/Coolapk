@@ -1,4 +1,5 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.konan.properties.Properties
 import java.io.ByteArrayOutputStream
 
@@ -12,10 +13,13 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-apply(plugin = "kotlin-kapt")
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
 
 kapt {
-    generateStubs = true
     correctErrorTypes = true
 }
 
@@ -104,12 +108,12 @@ val verifyReleaseSigning = tasks.register("verifyReleaseSigning") {
 
 android {
     namespace = "com.godmiracle.coolapk"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.godmiracle.coolapk"
-        minSdk = 31
-        targetSdk = 34
+        minSdk = 33
+        targetSdk = 36
         versionCode = gitCommitCount
         versionName = appVersionName
 
@@ -152,9 +156,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding = true
@@ -213,7 +214,7 @@ dependencies {
     implementation(libs.google.android.flexbox)
     implementation(libs.google.android.material)
     implementation(libs.google.dagger.hilt.android)
-    ksp(libs.google.dagger.hilt.android.compiler)
+    kapt(libs.google.dagger.hilt.android.compiler)
     implementation(libs.rikkax.borderview)
     implementation(libs.rikkax.material.preference)
     implementation(libs.rikkax.material)
@@ -235,6 +236,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
-    implementation(libs.utilcode)
+    implementation(libs.utilcode) {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-android-extensions-runtime")
+    }
 
 }

@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Shader
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
@@ -153,6 +155,12 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         compactLabeledItemContent()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshIndicatorColors()
+        invalidate()
+    }
+
     override fun onDetachedFromWindow() {
         indicatorAnimator?.cancel()
         settleAnimator?.cancel()
@@ -276,6 +284,19 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         indicatorPaint.color = withAlpha(primary, 26)
         val isNight = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
             Configuration.UI_MODE_NIGHT_YES
+        indicatorPaint.shader = LinearGradient(
+            0f,
+            0f,
+            0f,
+            dp(64f),
+            intArrayOf(
+                withAlpha(Color.WHITE, if (isNight) 30 else 54),
+                withAlpha(primary, if (isNight) 46 else 34),
+                withAlpha(primary, if (isNight) 54 else 40)
+            ),
+            floatArrayOf(0f, 0.42f, 1f),
+            Shader.TileMode.CLAMP
+        )
         indicatorHighlightPaint.color = withAlpha(Color.WHITE, if (isNight) 64 else 112)
     }
 

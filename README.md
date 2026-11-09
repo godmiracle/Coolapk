@@ -46,7 +46,7 @@
 
 ## 构建与运行
 
-环境要求：Android Studio、Android SDK，以及可用的 Java 17+ 环境；应用最低支持 Android 12（API 31）。首次构建需要访问公共 Maven 仓库。
+环境要求：支持 Android API 36 的 Android Studio/Android Gradle Plugin、Android SDK，以及可用的 Java 17+ 环境；应用最低支持 Android 13（API 33），compileSdk/targetSdk 为 36。首次构建需要访问公共 Maven 仓库。
 
 ```bash
 # 构建 Debug APK

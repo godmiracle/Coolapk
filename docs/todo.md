@@ -44,7 +44,7 @@
 - [x] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
   - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/res/layout/fragment_home.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、`app/src/main/java/com/godmiracle/coolapk/ui/home/HomeFragment.kt`、`app/src/main/java/com/godmiracle/coolapk/view/LiquidGlassFrameLayout.kt`
-  - 状态：已完成液态玻璃代码落地、Android 17 模拟器验收和 Android 16 真机验收；竖屏为三项玻璃底栏 + 右下角独立搜索圆钮，首页顶部无搜索、仅保留 Tab/菜单玻璃区；滚动中隐藏、停止后展示、深色模式和搜索点击均已验证。应用最低基线已提升到 Android 12 / API 31，不再维护 Android 7–11。
+  - 状态：原 API 31 实现已完成 Android 16 真机验收；2026-11-09 最低基线进一步提升至 API 33，当前 KSU 风格折射效果待构建和设备视觉复验。竖屏为三项玻璃底栏 + 右下角独立搜索圆钮；横屏仍使用 NavigationRailView。
   - 证据：`LiquidGlassFrameLayout` 直接使用 `RenderEffect` 对指定背景 View 做模糊并保留前景控件清晰，不再包含旧系统半透明回退分支；应用层同步移除了 API 24–30 的状态栏、下载、版本号、Tooltip、图库保存和旧文件复制分支；竖屏通过 `nav_menu_portrait.xml` 移除底栏搜索菜单项，顶部布局不包含搜索控件，搜索由独立 `SearchActivity` 点击入口承载；横屏继续使用原 `NavigationRailView` 和四项菜单。Debug APK 构建成功并安装到 OPPO `PGEM10` 真机（Android 16 / API 36、arm64-v8a），`MainActivity` 冷启动状态为 `COLD/ok`；真机浅色/深色截图通过；首页真实动态长滑时底栏和搜索按钮移出屏幕，停止后恢复到 `[84,2112][1032,2304]`；点击搜索后当前 Activity 为 `SearchActivity`；最近 300 行真机日志未发现 `FATAL EXCEPTION` 或 `AndroidRuntime`。`:app:testDebugUnitTest` 共 22 个用例全部通过，`:app:lintDebug` 成功且未发现 `NewApi`/`UnsupportedApiCall`；本次清理后 APK 的 `minSdkVersion=31`，液态玻璃调用无需旧系统 API 守卫。
   - 验收标准：竖屏真机/模拟器确认浮岛不覆盖系统手势区，底栏隐藏后内容不被永久截短且末项仍可安全滚动到位，点击和入口行为与改动前一致；深色模式和主题色下保持可读性。
 
@@ -104,7 +104,7 @@
   - 可信度：已确认当前未完成
   - 涉及文件：`docs/development.md`、登录/网络/动态/图片相关模块
   - 状态：等待人工验证
-  - 验收标准：在 Android 12+ 真机和当前 Android 设备各完成启动、首页、动态、评论只读展示、搜索、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图；不包含已移除的登录、发布、回复编辑和消息路径。
+  - 验收标准：在 Android 13+ 真机和 Android 16 设备各完成启动、首页、动态、评论只读展示、搜索、深链和 WebView 最小路径，并记录构建 hash、响应状态和截图；不包含已移除的登录、发布、回复编辑和消息路径。
 
 - [ ] R-002 评估 Debug BODY 网络日志和凭据暴露
   - 优先级：高
@@ -256,11 +256,18 @@
 - [ ] 将 LiquidGlass 原生层扩展到适合的页面级操作 Chrome
   - 优先级：中
   - 涉及文件：LiquidGlassFrameLayout、BasePager、User、Feed、Search 及相关 XML/主题资源
-  - 状态：匿名只读范围清理和 Feed 回复可读性修正已落地；完整验收仍待 API 31/32、三键导航、放大字体、TalkBack、全页面动作和性能前后对比
+  - 状态：匿名只读范围清理和 Feed 回复可读性修正已落地；最低版本后来提升到 API 33，完整验收仍待 API 33、三键导航、放大字体、TalkBack、全页面动作和性能前后对比
  - 证据：rasen/changes/liquid-glass-native-surface-expansion/evidence/device-validation.md、window-boundary.md；设备截图和 UI hierarchy 位于本次本机临时验证目录
   - 自动化补充：匿名清理后 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`（26 个）和 `lintDebug` 通过，GlassSurface 定向真机 instrumentation 1/1 通过；历史 connected 22/22 结果不计入本轮清理后的覆盖。Search 基线与当前 Glass 版本三次独立长滑的加权 jank 为 23.21% 与 23.00%，未形成一致性回归，但全页面性能前后对比仍待完成
   - 边界：不包裹普通列表项、评论/回复、Feed 排序栏、头像、图片、加载/错误、Preference、WebView、BottomSheet/Dialog；Feed 回复编辑、登录、消息和远程写入入口已移除
   - 备注：一次长距离首页滑动曾观察到 Launcher，短距离复测未重现，需在完整滚动性能验收中继续关注
+
+- [ ] UI-GLASS-002 将主导航玻璃升级为 KSU/Miuix 风格折射并迁移到 Android 16 工具链
+  - 优先级：中
+  - 涉及文件：`LiquidGlassFrameLayout`、`AnimatedBottomNavigationView`、主题资源、Android/Kotlin 构建配置
+  - 状态：实现已落地，Android 16 Debug APK 构建成功，`git diff --check` 通过；API 33 真机兼容、Android 16 视觉验收和滚动性能复测待执行
+  - 验收标准：API 33+ 检查浅色/深色、选中项移动、内容滚动和页面切换；Android 16 检查系统导航手势区/三键导航、前景图标文字清晰度及玻璃区域折射连续性；对比旧版本检查长列表滚动帧率
+  - 边界：Android 16 大屏下方向/可调整性策略、阿拉伯及南亚文字高度、定时任务行为属于全应用 targetSdk 迁移续验
 
 - [x] ANON-001 清理匿名只读范围内的账号、消息和编辑器残留
   - 优先级：高

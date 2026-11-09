@@ -19,8 +19,8 @@
     <dimen name="glass_surface_highlight_width">0.75dp</dimen>
     <dimen name="glass_surface_top_blur_radius">14dp</dimen>
     <dimen name="glass_surface_top_corner_radius">26dp</dimen>
-    <dimen name="glass_surface_navigation_blur_radius">18dp</dimen>
+    <dimen name="glass_surface_navigation_blur_radius">4dp</dimen>
     <dimen name="glass_surface_navigation_corner_radius">30dp</dimen>
-    <dimen name="glass_surface_action_blur_radius">20dp</dimen>
+    <dimen name="glass_surface_action_blur_radius">4dp</dimen>
     <dimen name="glass_surface_action_corner_radius">28dp</dimen>
 </resources>
