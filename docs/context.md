@@ -24,7 +24,7 @@
 
 当前最重要的目标不是扩展功能，而是先建立可维护、可验证的工程基线：
 
-- 让新贡献者能在与项目兼容的 Android Studio/Gradle 环境中完成构建；CI 基线为 JDK 17，本轮本地按要求使用 Android Studio JDK 21 和现有 SDK。
+- 让新贡献者能在与项目兼容的 Android Studio/Gradle 环境中完成构建；CI 基线为 JDK 21，本轮本地使用 Android Studio JDK 21 和现有 SDK。
 - 识别当前主链路和历史遗留链路，避免修错代码入口。
 - 对设备/API 身份、WebView、应用下载等仍存在的高风险路径建立人工验收清单；已移除的登录和图片上传不再安排验收。
 - 逐步补充业务测试和 CI 验证，降低外部 API 变化带来的回归风险。
@@ -81,7 +81,7 @@
 | 约束 | 现状 |
 |---|---|
 | 平台 | Android，`minSdk 33`（Android 13+）、`targetSdk 36`、`compileSdk 37` |
-| 构建 | Kotlin 2.4.20、KSP 2.3.12、Hilt 2.60.1（KAPT）、Room 2.7.2、Java 17、AGP 9.1.1、Gradle Wrapper 9.3.1 |
+| 构建 | Kotlin 2.4.20、KSP 2.3.12、Hilt 2.60.1（KAPT）、Room 2.7.2、JDK 21（编译目标 Java 17）、AGP 9.1.1、Gradle Wrapper 9.3.1 |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64`；未启用 `x86`/`armeabi` |
 | UI | 继续沿用 XML + ViewBinding/Data Binding；没有证据表明要迁移 Compose |
 | 服务端 | 依赖 `api.coolapk.com`、`api2.coolapk.com` 和相关图片地址；客户端更新只读 `api.github.com`/`github.com` 的固定仓库 Release，网络受限时交给系统浏览器，不再接入 Account/OSS 写入服务 |

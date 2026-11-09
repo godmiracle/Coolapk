@@ -47,7 +47,7 @@
 
 ## 构建与运行
 
-环境要求：Android SDK Platform 37.0、Android Gradle Plugin 9.1.1、Gradle Wrapper 9.3.1，以及 Java 17+；应用最低支持 Android 13（API 33），targetSdk 为 36。首次构建需要访问公共 Maven 仓库。
+环境要求：Android SDK Platform 37.0、Android Gradle Plugin 9.1.1、Gradle Wrapper 9.3.1，以及 JDK 21；应用最低支持 Android 13（API 33），targetSdk 为 36。首次构建需要访问公共 Maven 仓库。
 
 ```bash
 # 构建 Debug APK

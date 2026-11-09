@@ -27,11 +27,11 @@ jobs:
       - name: Gradle wrapper validation
         uses: gradle/actions/wrapper-validation@v3
 
-      - name: set up JDK 17
+      - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'adopt'
+          java-version: '21'
+          distribution: 'temurin'
           cache: gradle
 
       - name: Install Android SDK 37

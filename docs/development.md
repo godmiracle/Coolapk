@@ -4,14 +4,14 @@
 
 1. 阅读 `README.md`、`AGENTS.md`、`docs/context.md`、`docs/architecture.md`、`docs/decisions.md` 和 `docs/todo.md`。
 2. 确认工作区是否有用户未提交修改；不要用 `git reset --hard` 或大范围格式化清理。
-3. 确认 Android Studio/Gradle 工具链和设备状态；CI 基线使用 JDK 17，本地也可以按当前约定使用 Android Studio 自带 JDK 21，但必须记录实际版本。
+3. 确认 Android Studio/Gradle 工具链和设备状态；CI 基线和本地构建均使用 JDK 21，并记录实际版本。
 4. 不要把 `local.properties`、签名文件、Cookie、Token、密码、验证码或 OSS STS 信息加入 Git。
 
 ## 2. 环境要求
 
 | 项目 | 要求 |
 |---|---|
-| JDK | 项目 Java/Kotlin 编译目标为 17；CI 使用 JDK 17，本轮本地验证使用 Android Studio JDK 21 |
+| JDK | 项目 Java/Kotlin 编译目标为 17；Miuix 依赖需要 JDK 21，CI 和本轮本地验证均使用 JDK 21 |
 | Android SDK | compileSdk 37（SDK Platform 37.0），targetSdk 36；运行设备最低 Android 13 / API 33 |
 | Android Gradle Plugin | 9.1.1 |
 | Gradle | 使用仓库 Wrapper 9.3.1；Kotlin 2.4.20、KSP 2.3.12、Hilt 2.60.1 |
@@ -150,7 +150,7 @@ KEY_PASSWORD=本地别名密码
 `.github/workflows/ci.yml`：
 
 1. `main` 分支 Push、`v*` Tag Push 或手动触发时运行。
-2. 使用 JDK 17、Gradle Wrapper validation 和 Gradle 缓存。
+2. 使用 JDK 21、Gradle Wrapper validation 和 Gradle 缓存。
 3. `main` 或 `v*` Tag 构建在配置 `SIGN_KEYSTORE_BASE64` 等 Secrets 后，会写入临时 `local.properties`。
 4. 构建并上传 Release APK、Release mapping、Debug APK；Tag 构建把完整 Tag 传给 `-PversionName`。
 5. `v*` Tag 构建还会调用 `gh release create --verify-tag --generate-notes`，自动创建同名 GitHub Release 并上传 APK、`SHA256SUMS`。
@@ -161,7 +161,7 @@ KEY_PASSWORD=本地别名密码
 
 ### Gradle 报 Java Runtime 不存在
 
-确认实际使用的 JDK 可用：本轮本地命令应指向 Android Studio JDK 21，CI 仍使用 JDK 17；`java -version` 和 `javac -version` 都必须成功。只找到 `/usr/bin/java` 不代表当前系统已安装可用 JDK。
+确认实际使用的 JDK 可用：本轮本地命令应指向 Android Studio JDK 21，CI 也使用 JDK 21；`java -version` 和 `javac -version` 都必须成功。只找到 `/usr/bin/java` 不代表当前系统已安装可用 JDK。
 
 ### Release 可以构建但不能发布
 
