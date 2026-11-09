@@ -1,5 +1,7 @@
 package com.godmiracle.coolapk.view
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
@@ -34,7 +36,9 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
     private val animationStartBounds = RectF()
     private val animationTargetBounds = RectF()
     private val itemBounds = Rect()
-    private var glassIndicatorSurface: View? = null
+    private var glassIndicatorSurface: LiquidGlassFrameLayout? = null
+    private var glassProgressAnimator: ValueAnimator? = null
+    private var glassProgress = 0f
     private var hasIndicatorBounds = false
     private var indicatorAnimator: ValueAnimator? = null
     private var settleAnimator: ValueAnimator? = null
@@ -60,8 +64,9 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
     }
 
     /** Connects the separate glass pill drawn between the backdrop and navigation items. */
-    fun setGlassIndicatorSurface(surface: View?) {
+    fun setGlassIndicatorSurface(surface: LiquidGlassFrameLayout?) {
         glassIndicatorSurface = surface
+        surface?.setLiquidGlassProgress(glassProgress)
         surface?.visibility = View.INVISIBLE
         post { synchronizeSelectionWithoutAnimation() }
     }
@@ -72,6 +77,9 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         val target = findIndicatorBounds(itemId) ?: return
         indicatorAnimator?.cancel()
         settleAnimator?.cancel()
+        glassProgressAnimator?.cancel()
+        glassProgress = 0f
+        glassIndicatorSurface?.setLiquidGlassProgress(glassProgress)
         indicatorBounds.set(target)
         hasIndicatorBounds = true
         indicatorScaleX = 1f
@@ -97,6 +105,7 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
             animationStartBounds.set(indicatorBounds)
             animationTargetBounds.set(target)
             indicatorAnimator?.cancel()
+            animateGlassProgress(1f, GLASS_PROGRESS_IN_DURATION_MS)
             indicatorAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = INDICATOR_MOVE_DURATION_MS
                 interpolator = indicatorMotionInterpolator
@@ -110,6 +119,13 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
                     updateGlassIndicatorSurface()
                     invalidate()
                 }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (indicatorAnimator === animation) {
+                            animateGlassProgress(0f, GLASS_PROGRESS_OUT_DURATION_MS)
+                        }
+                    }
+                })
                 start()
             }
             animateSettleRebound()
@@ -124,7 +140,21 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         indicatorAnimator?.cancel()
         settleAnimator?.cancel()
+        glassProgressAnimator?.cancel()
         super.onDetachedFromWindow()
+    }
+
+    private fun animateGlassProgress(target: Float, durationMs: Long) {
+        glassProgressAnimator?.cancel()
+        glassProgressAnimator = ValueAnimator.ofFloat(glassProgress, target).apply {
+            duration = durationMs
+            interpolator = LinearInterpolator()
+            addUpdateListener { animator ->
+                glassProgress = animator.animatedValue as Float
+                glassIndicatorSurface?.setLiquidGlassProgress(glassProgress)
+            }
+            start()
+        }
     }
 
     private fun animateSettleRebound() {
@@ -268,5 +298,7 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
     private companion object {
         const val INDICATOR_MOVE_DURATION_MS = 320L
         const val SETTLE_REBOUND_DURATION_MS = 260L
+        const val GLASS_PROGRESS_IN_DURATION_MS = 90L
+        const val GLASS_PROGRESS_OUT_DURATION_MS = 220L
     }
 }

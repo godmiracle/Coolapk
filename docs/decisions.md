@@ -7,7 +7,7 @@
 ### 决定
 
 - 竖屏主导航外层和独立搜索圆钮在现有 `LiquidGlassFrameLayout` 内使用饱和度 1.5、4dp 轻模糊和 24dp 圆角折射；外层采样留白至少 40dp，表面填充 0.4，并使用低透明度边缘线和 4dp 平台阴影。
-- `AnimatedBottomNavigationView` 保留现有选中弹性动画，将当前胶囊边界同步到独立 56dp `LiquidGlassFrameLayout`，使用 10dp 高、14dp 位移的圆角 lens 和 0.1 明暗表面色；选中项仍由 Material 控件绘制并保持原有点击/无障碍语义。
+- `AnimatedBottomNavigationView` 保留现有选中弹性动画，将当前胶囊边界同步到独立 56dp `LiquidGlassFrameLayout`；静止时只显示 0.1 明暗表面色，移动/按压时才按进度启用 10dp 高、14dp 位移的圆角 lens 和高光，并在落位后淡出。选中项仍由 Material 控件绘制并保持原有点击/无障碍语义。
 - 继续使用 XML/ViewBinding 和 sibling backdrop；不引入 `miuix-blur` Compose 依赖，因为其 backdrop API 不直接采样当前 ViewPager2 View 层级。
 - 实现按 KernelSU 源码公开的结构和参数独立移植到当前 View 容器，没有复制其 GPL 项目中的底栏源代码；KernelSU 上游底栏源文件标记的 lens 公式参考 Apache-2.0 的 AndroidLiquidGlass。
 - 将 `minSdk` 提升至 33（RuntimeShader），`compileSdk`/`targetSdk` 提升至 36；AGP 使用 8.9.1，Gradle Wrapper 保持 8.14.5。

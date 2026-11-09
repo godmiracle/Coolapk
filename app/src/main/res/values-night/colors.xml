@@ -7,6 +7,6 @@
     <color name="glass_border_fallback">#7FFFFFFF</color>
     <color name="glass_highlight_fallback">#4DFFFFFF</color>
     <color name="glass_navigation_border_color">#26FFFFFF</color>
-    <color name="glass_navigation_highlight_color">#1FFFFFFF</color>
+    <color name="glass_navigation_highlight_color">#17FFFFFF</color>
     <color name="glass_navigation_indicator_tint">#FFFFFFFF</color>
 </resources>

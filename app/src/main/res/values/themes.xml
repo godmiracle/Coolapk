@@ -41,6 +41,8 @@
         <item name="glassSurfaceAlpha">0.40</item>
         <item name="glassBlurRadius">@dimen/glass_surface_navigation_blur_radius</item>
         <item name="glassCornerRadius">@dimen/glass_surface_navigation_corner_radius</item>
+        <item name="glassBorderWidth">0dp</item>
+        <item name="glassHighlightWidth">0.75dp</item>
         <item name="glassBorderColor">@color/glass_navigation_border_color</item>
         <item name="glassHighlightColor">@color/glass_navigation_highlight_color</item>
         <item name="glassLiquidEnabled">true</item>
@@ -54,8 +56,8 @@
         <item name="glassSurfaceAlpha">0.10</item>
         <item name="glassBlurRadius">0dp</item>
         <item name="glassCornerRadius">28dp</item>
-        <item name="glassBorderWidth">0.5dp</item>
-        <item name="glassHighlightWidth">0.5dp</item>
+        <item name="glassBorderWidth">0dp</item>
+        <item name="glassHighlightWidth">0.75dp</item>
         <item name="glassVibrancy">1.0</item>
         <item name="glassRefractionHeight">10dp</item>
         <item name="glassRefractionAmount">14dp</item>
@@ -65,6 +67,8 @@
         <item name="glassSurfaceAlpha">0.40</item>
         <item name="glassBlurRadius">@dimen/glass_surface_action_blur_radius</item>
         <item name="glassCornerRadius">@dimen/glass_surface_action_corner_radius</item>
+        <item name="glassBorderWidth">0dp</item>
+        <item name="glassHighlightWidth">0.75dp</item>
         <item name="glassBorderColor">@color/glass_navigation_border_color</item>
         <item name="glassHighlightColor">@color/glass_navigation_highlight_color</item>
         <item name="glassLiquidEnabled">true</item>

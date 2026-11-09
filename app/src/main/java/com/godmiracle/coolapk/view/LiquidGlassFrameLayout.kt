@@ -78,6 +78,7 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
     private var vibrancy = 1.5f
     private var refractionHeightPx = dp(24f)
     private var refractionAmountPx = dp(24f)
+    private var liquidGlassProgress = 1f
     private var liquidLayerPaddingPx = 0
 
     init {
@@ -138,6 +139,15 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
         surfaceColorOverridden = true
         surfaceColor = color
         backdropView.surfaceColor = color
+        refreshBackdrop()
+    }
+
+    fun setLiquidGlassProgress(progress: Float) {
+        val nextProgress = progress.coerceIn(0f, 1f)
+        if (liquidGlassProgress == nextProgress) return
+        liquidGlassProgress = nextProgress
+        updateBackdropEffect()
+        updateHighlightColor()
         refreshBackdrop()
     }
 
@@ -284,7 +294,7 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
         borderPaint.strokeWidth = borderWidthPx
         highlightPaint.strokeWidth = highlightWidthPx
         borderPaint.color = colorWithDefaultAlpha(borderColor, if (isNightMode()) 120 else 178)
-        highlightPaint.color = colorWithDefaultAlpha(highlightColor, if (isNightMode()) 74 else 142)
+        updateHighlightColor()
         backdropView.surfaceColor = surfaceColor
         backdropView.surfaceAlpha = surfaceAlpha
         backdropView.setBlurRadiusPx(blurRadiusPx)
@@ -300,10 +310,16 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
             panelWidth = width.toFloat(),
             panelHeight = height.toFloat(),
             cornerRadiusPx = cornerRadiusPx,
-            refractionHeightPx = refractionHeightPx,
-            refractionAmountPx = refractionAmountPx,
+            refractionHeightPx = refractionHeightPx * liquidGlassProgress,
+            refractionAmountPx = refractionAmountPx * liquidGlassProgress,
             vibrancy = vibrancy
         )
+    }
+
+    private fun updateHighlightColor() {
+        val baseColor = colorWithDefaultAlpha(highlightColor, if (isNightMode()) 74 else 142)
+        val alpha = (Color.alpha(baseColor) * liquidGlassProgress).toInt().coerceIn(0, 255)
+        highlightPaint.color = (baseColor and 0x00FFFFFF) or (alpha shl 24)
     }
 
     private fun updateLiquidLayerBounds() {
