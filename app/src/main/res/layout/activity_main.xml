@@ -13,87 +13,20 @@
     <FrameLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginStart="@dimen/liquid_glass_navigation_outer_start"
-        android:layout_marginEnd="@dimen/liquid_glass_navigation_outer_end"
-        android:layout_marginBottom="@dimen/miuix_floating_navigation_bottom_padding"
+        android:layout_height="104dp"
         android:background="@android:color/transparent"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:elevation="0dp"
         app:layout_anchor="@id/viewPager"
         app:layout_anchorGravity="bottom">
 
-        <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
-            android:id="@+id/bottomNavSurface"
-            style="@style/Widget.Coolapk.GlassSurface.Navigation"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/floatingNavigation"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/liquid_glass_navigation_search_gap"
             android:background="@android:color/transparent"
-            android:elevation="4dp">
-
-            <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
-                android:id="@+id/bottomNavIndicatorSurface"
-                style="@style/Widget.Coolapk.GlassSurface.NavigationIndicator"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_gravity="start|top"
-                android:background="@android:color/transparent"
-                android:importantForAccessibility="no"
-                android:visibility="invisible" />
-
-            <com.godmiracle.coolapk.view.AnimatedBottomNavigationView
-                android:id="@+id/bottomNav"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:elevation="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="@dimen/miuix_floating_navigation_inner_padding"
-                android:paddingEnd="@dimen/miuix_floating_navigation_inner_padding"
-                android:stateListAnimator="@null"
-                app:itemActiveIndicatorStyle="@null"
-                app:itemBackground="@android:color/transparent"
-                app:itemHorizontalTranslationEnabled="false"
-                app:itemIconSize="24dp"
-                app:itemIconTint="@color/miuix_floating_navigation_item_tint"
-                app:itemPaddingBottom="0dp"
-                app:itemPaddingTop="0dp"
-                app:itemRippleColor="@color/miuix_floating_navigation_ripple"
-                app:itemTextColor="@color/miuix_floating_navigation_item_tint"
-                app:itemTextAppearanceActive="@style/MiuixFloatingNavigationLabelActive"
-                app:itemTextAppearanceActiveBoldEnabled="false"
-                app:itemTextAppearanceInactive="@style/MiuixFloatingNavigationLabelInactive"
-                app:labelVisibilityMode="labeled"
-                app:menu="@menu/nav_menu_portrait" />
-
-        </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
-
-        <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
-            android:id="@+id/searchActionSurface"
-            style="@style/Widget.Coolapk.GlassSurface.Action"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="end|center_vertical"
-            android:background="@android:color/transparent"
-            android:clickable="true"
-            android:contentDescription="@string/search"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:elevation="4dp">
-
-            <ImageView
-                android:id="@+id/searchActionIcon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center"
-                android:contentDescription="@string/search"
-                android:src="@drawable/ic_search"
-                android:tint="?attr/colorOnSurface" />
-
-        </com.godmiracle.coolapk.view.LiquidGlassFrameLayout>
-
+            android:clipChildren="false"
+            android:clipToPadding="false" />
     </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

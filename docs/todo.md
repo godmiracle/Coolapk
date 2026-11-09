@@ -44,7 +44,7 @@
 - [x] UI-001 将竖屏主导航改为 Apple 风格悬浮底栏
   - 优先级：中
   - 涉及文件：`app/src/main/res/layout/activity_main.xml`、`app/src/main/res/layout/fragment_home.xml`、`app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt`、`app/src/main/java/com/godmiracle/coolapk/ui/home/HomeFragment.kt`、`app/src/main/java/com/godmiracle/coolapk/view/LiquidGlassFrameLayout.kt`
-  - 状态：原 API 31 实现已完成 Android 16 真机验收；2026-11-09 最低基线进一步提升至 API 33，当前 KSU 风格折射效果待构建和设备视觉复验。竖屏为三项玻璃底栏 + 右下角独立搜索圆钮；横屏仍使用 NavigationRailView。
+  - 状态：原 API 31 实现已完成 Android 16 真机验收；2026-11-09 后续方案改为四项 KernelSU 玻璃底栏与独立搜索，滚动时常驻。当前实现和后续验收以 UI-GLASS-002 为准；横屏仍使用 NavigationRailView。
   - 证据：`LiquidGlassFrameLayout` 直接使用 `RenderEffect` 对指定背景 View 做模糊并保留前景控件清晰，不再包含旧系统半透明回退分支；应用层同步移除了 API 24–30 的状态栏、下载、版本号、Tooltip、图库保存和旧文件复制分支；竖屏通过 `nav_menu_portrait.xml` 移除底栏搜索菜单项，顶部布局不包含搜索控件，搜索由独立 `SearchActivity` 点击入口承载；横屏继续使用原 `NavigationRailView` 和四项菜单。Debug APK 构建成功并安装到 OPPO `PGEM10` 真机（Android 16 / API 36、arm64-v8a），`MainActivity` 冷启动状态为 `COLD/ok`；真机浅色/深色截图通过；首页真实动态长滑时底栏和搜索按钮移出屏幕，停止后恢复到 `[84,2112][1032,2304]`；点击搜索后当前 Activity 为 `SearchActivity`；最近 300 行真机日志未发现 `FATAL EXCEPTION` 或 `AndroidRuntime`。`:app:testDebugUnitTest` 共 22 个用例全部通过，`:app:lintDebug` 成功且未发现 `NewApi`/`UnsupportedApiCall`；本次清理后 APK 的 `minSdkVersion=31`，液态玻璃调用无需旧系统 API 守卫。
   - 验收标准：竖屏真机/模拟器确认浮岛不覆盖系统手势区，底栏隐藏后内容不被永久截短且末项仍可安全滚动到位，点击和入口行为与改动前一致；深色模式和主题色下保持可读性。
 
@@ -264,8 +264,8 @@
 
 - [ ] UI-GLASS-002 将主导航玻璃升级为 KSU/Miuix 风格折射并迁移到 Android 16 工具链
   - 优先级：中
-  - 涉及文件：`LiquidGlassFrameLayout`、`AnimatedBottomNavigationView`、主题资源、Android/Kotlin 构建配置
-  - 状态：第三版实现已落地，代码提交 `9a1f2fb` 的 GitHub Actions CI #24（run `42613876956`）Release/Debug 均成功；Release APK 的包名、签名、versionCode=475、minSdk=33、targetSdk=36 已核验，并以同签名 `adb install -r` 安装到 OPPO PMX110，保留原应用数据。设备 API=37，冷启动后 `MainActivity` 正常显示，静止态底栏截图已核验，最近 1000 行 `AndroidRuntime:E` 无输出。底栏点击动画未能在本轮可靠验收：ADB 点按使 ColorOS/LSPosed 系统界面取得焦点，Coolapk 进程未异常退出；API 33/Android 16 设备矩阵、点击动画复验和性能复测仍待执行
+  - 涉及文件：`view/ksu/`、`MainActivity`、主布局、Android/Kotlin 构建配置、底栏真机测试
+  - 状态：直接适配 KernelSU 上游底栏及 Miuix Blur 0.9.4；用户选择滚动时始终显示。独立测试包在 OPPO PMX110 / API 37 上通过底栏手势及实际页面 inset 共 2 项测试，完成滚动常驻和静止重绘检查；原生 Compose 背景对照与按压截图已记录。一次首页长滑为 372 帧，系统新口径卡顿 2 帧、legacy 口径 251 帧，尚无可比基线。API 33 / Android 16、三键导航、浅色与滚动性能对比仍待完成，正式包 Actions 与安装结果另记会话。
   - 验收标准：API 33+ 检查浅色/深色、选中项移动、内容滚动和页面切换；Android 16 检查系统导航手势区/三键导航、前景图标文字清晰度及玻璃区域折射连续性；对比旧版本检查长列表滚动帧率
   - 边界：Android 16 大屏下方向/可调整性策略、阿拉伯及南亚文字高度、定时任务行为属于全应用 targetSdk 迁移续验
 

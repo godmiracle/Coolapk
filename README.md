@@ -25,6 +25,7 @@
 ## 技术栈
 
 - Kotlin、Android XML Layout、ViewBinding/Data Binding、Fragment、RecyclerView 和 ViewPager2
+- 主导航使用 Jetpack Compose 与 Miuix Blur 的液态玻璃组件
 - ViewModel、LiveData/Flow、协程和 Hilt
 - Retrofit、OkHttp、Gson
 - Room、SharedPreferences
@@ -46,7 +47,7 @@
 
 ## 构建与运行
 
-环境要求：支持 Android API 36 的 Android Studio/Android Gradle Plugin、Android SDK，以及可用的 Java 17+ 环境；应用最低支持 Android 13（API 33），compileSdk/targetSdk 为 36。首次构建需要访问公共 Maven 仓库。
+环境要求：Android SDK Platform 37.0、Android Gradle Plugin 9.1.1、Gradle Wrapper 9.3.1，以及 Java 17+；应用最低支持 Android 13（API 33），targetSdk 为 36。首次构建需要访问公共 Maven 仓库。
 
 ```bash
 # 构建 Debug APK
@@ -90,5 +91,6 @@ git push origin v1.0.0
 ## 来源与许可证
 
 - `TokenDeviceUtils` 部分实现参考 [CoolbbsYou](https://github.com/WaitFme/CoolbbsYou)。
+- 主导航基于 [KernelSU](https://github.com/tiann/KernelSU) 底栏源码和 Miuix Blur；上游版本、来源与许可证见 [`third_party/licenses/NOTICE.md`](third_party/licenses/NOTICE.md)。
 - 项目保留 [HDYOU/c001apk](https://github.com/HDYOU/c001apk) 的 Fork/参考来源及原项目贡献者信息，详见应用内“关于”。
 - 本项目及其依赖、第三方代码和资源以各自许可证为准。

@@ -12,9 +12,9 @@
 | 项目 | 要求 |
 |---|---|
 | JDK | 项目 Java/Kotlin 编译目标为 17；CI 使用 JDK 17，本轮本地验证使用 Android Studio JDK 21 |
-| Android SDK | 项目声明 compile/target 36；运行设备最低 Android 13 / API 33；本机 SDK Platform 为 36.1 |
-| Android Gradle Plugin | 8.9.1（API 36 所需最低稳定版本） |
-| Gradle | 使用仓库 Wrapper 8.14.5，满足 AGP 8.9.1 的 Gradle 8.11.1 最低要求；本机另有已校验的 Gradle 8.7 用户缓存 |
+| Android SDK | compileSdk 37（SDK Platform 37.0），targetSdk 36；运行设备最低 Android 13 / API 33 |
+| Android Gradle Plugin | 9.1.1 |
+| Gradle | 使用仓库 Wrapper 9.3.1；Kotlin 2.4.20、KSP 2.3.12、Hilt 2.60.1 |
 | 网络 | 首次构建需要 Google Maven、Maven Central、JitPack、Sonatype |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64` |
 | 16 KB | `android-gif-drawable` 使用 1.2.32；AAB 构建应保持 `PAGE_ALIGNMENT_16K`，并在 16 KB 模拟器上做启动回归 |
@@ -57,13 +57,7 @@ bash gradlew :app:lintDebug
 
 如果 `./gradlew` 没有执行权限，可把命令开头替换为 `bash gradlew`。如果 Wrapper 尚未下载，先确认网络和 Gradle 缓存；不要把下载的 Gradle 分发包提交进仓库。
 
-手动获取 Gradle 分发包时，先校验 SHA-256，再放入 Gradle Wrapper 用户缓存；不要修改 Wrapper 版本，也不要把 ZIP 复制到仓库。当前 8.7 分发包的校验值为：
-
-```text
-544c35d6bd849ae8a5ed0bcea39ba677dc40f49df7d1835561582da2009b961d
-```
-
-本轮已验证 `/Users/v/Downloads/gradle-8.7-bin.zip` 与该值一致并放入用户缓存；当前项目的 `gradle-wrapper.properties` 由维护者设置为 Gradle 8.14.5，Wrapper 已实际识别该版本。Android Studio 项目应保持使用 `gradle-wrapper.properties`，不需要把 ZIP 解压到 Android Studio 安装目录。
+手动获取 Gradle 分发包时，应核对官方 SHA-256 并放入 Gradle Wrapper 用户缓存；Android Studio 项目继续使用仓库的 `gradle-wrapper.properties`，不需要把 ZIP 复制到仓库或安装目录。
 
 ## 4. Release 签名和版本
 

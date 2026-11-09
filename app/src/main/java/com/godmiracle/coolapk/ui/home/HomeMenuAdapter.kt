@@ -15,7 +15,7 @@ class HomeMenuAdapter(
 
     class ViewHolder(view: View, checkedColor: Int, uncheckedColor: Int) :
         RecyclerView.ViewHolder(view) {
-        val menu: CheckableChipView = view.findViewById<CheckableChipView?>(R.id.menu).also {
+        val menu: CheckableChipView = requireNotNull(view.findViewById<CheckableChipView>(R.id.menu)).also {
             it.textColorPair = checkedColor to uncheckedColor
         }
     }

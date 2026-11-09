@@ -2,6 +2,7 @@
 <resources>
     <dimen name="miuix_floating_navigation_outer_padding">36dp</dimen>
     <dimen name="miuix_floating_navigation_bottom_padding">8dp</dimen>
+    <dimen name="ksu_navigation_bottom_without_insets">28dp</dimen>
     <dimen name="miuix_floating_navigation_inner_padding">12dp</dimen>
     <dimen name="miuix_floating_navigation_height">64dp</dimen>
     <dimen name="miuix_floating_navigation_corner_radius">28dp</dimen>

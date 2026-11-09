@@ -7,4 +7,5 @@ plugins {
     alias(libs.plugins.rikka.tools.materialthemebuilder) apply false
     alias(libs.plugins.kotlin.kapt) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
+    alias(libs.plugins.kotlin.compose) apply false
 }

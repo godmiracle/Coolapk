@@ -34,7 +34,7 @@
 ### 已确认
 
 - 主应用模块、三个本地图片相关 library module 和 Gradle 多模块配置存在。
-- 主导航页面为首页、关注、我的，右侧搜索项启动独立搜索页；关注页是本地话题/数码关注聚合，“我的”包含本地收藏、浏览历史和设置入口，首页 Tab 可通过 Room 配置。
+- 主导航页面为首页、关注、发现、我的，右侧搜索项启动独立搜索页；关注页是本地话题/数码关注聚合，“我的”包含本地收藏、浏览历史和设置入口，首页 Tab 可通过 Room 配置。
 - 当前 ViewModel 普遍注入 `logic.repository.NetworkRepo`，网络主链路使用 Hilt 提供的 API1、API2 Retrofit 服务；`NetworkRepo` 通过可取消的 Call adapter 处理响应、错误和协程取消。
 - 当前产品为匿名只读浏览加本地功能：本地数据包括话题/数码关注、浏览历史、动态收藏、首页菜单、搜索历史、用户黑名单和话题黑名单；最近 @用户和最近表情的编辑器存储已移除。
 - `DatabaseModule` 只对仍在使用的 `FeedFavorite`、`HomeMenu`、`LocalFollow` 和 `StringEntity` 数据库保留兼容迁移；账号、消息、发帖和回复相关迁移/测试不属于现行范围。
@@ -80,8 +80,8 @@
 
 | 约束 | 现状 |
 |---|---|
-| 平台 | Android，`minSdk 33`（Android 13+），`target/compileSdk 36` |
-| 构建 | Kotlin 2.2.20、KSP 2.2.20-2.0.4、Hilt 2.57.2（KAPT）、Room 2.7.2、Java 17、AGP 8.9.1、Gradle Wrapper 8.14.5 |
+| 平台 | Android，`minSdk 33`（Android 13+）、`targetSdk 36`、`compileSdk 37` |
+| 构建 | Kotlin 2.4.20、KSP 2.3.12、Hilt 2.60.1（KAPT）、Room 2.7.2、Java 17、AGP 9.1.1、Gradle Wrapper 9.3.1 |
 | ABI | `arm64-v8a`、`armeabi-v7a`、`x86_64`；未启用 `x86`/`armeabi` |
 | UI | 继续沿用 XML + ViewBinding/Data Binding；没有证据表明要迁移 Compose |
 | 服务端 | 依赖 `api.coolapk.com`、`api2.coolapk.com` 和相关图片地址；客户端更新只读 `api.github.com`/`github.com` 的固定仓库 Release，网络受限时交给系统浏览器，不再接入 Account/OSS 写入服务 |
@@ -109,7 +109,7 @@
 | `app/src/main/java/com/godmiracle/coolapk/util/PrefManager.kt` | 普通 UI 设置与设备/API 请求身份状态；清理历史账号键 |
 | `app/src/main/java/com/godmiracle/coolapk/util/CredentialPreferencesMigration.kt` | 清理历史账号键并保留设备/API 身份的兼容迁移 |
 | `app/src/main/java/com/godmiracle/coolapk/util/NetWorkUtil.kt` | 外部链接标准化和内部页面路由 |
-| `app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt` | 首页/关注/我的主导航和搜索动作 |
+| `app/src/main/java/com/godmiracle/coolapk/ui/main/MainActivity.kt` | 首页/关注/发现/我的主导航和搜索动作 |
 | `app/src/main/java/com/godmiracle/coolapk/ui/feed/` | 动态详情、评论、投票、问答和只读楼中楼展示 |
 | `.github/workflows/ci.yml` | GitHub Actions 构建与制品上传 |
 | `gradle/libs.versions.toml` | 依赖版本目录 |
@@ -124,7 +124,7 @@
 
 本轮在既有 XML/ViewBinding 架构内，将共享原生 LiquidGlassFrameLayout 扩展到 BasePager、User、Feed 和 Search 的页面级操作 Chrome。玻璃层只取同一 Window 内的内容 sibling，前景 Toolbar、Tab、输入框和 Material 控件保持清晰；Feed 排序栏恢复为普通不透明表面，不能采样或模糊回复列表。普通卡片、RecyclerView item、评论/回复、头像、封面、图片、加载/错误、Preference、WebView、BottomSheet 和 Dialog 不作为玻璃对象。当前匿名只读范围不保留 FAB、登录、消息、发布或回复编辑入口。
 
-当前主导航和搜索按钮使用 KSU/Miuix 风格效果链：饱和度 1.5、4dp 轻模糊、24dp 圆角边缘折射；主导航选中项另有 56dp 玻璃胶囊层，使用 10dp/14dp 折射参数并跟随原选中动画移动。最低平台/API 33，同时将 compileSdk/targetSdk 提升到 36。项目仍以 XML/ViewBinding 为主，RuntimeShader 在共享 LiquidGlassFrameLayout 内实现，不引入 Compose 依赖；其他页面 Chrome 可继续使用基础 RenderEffect 模糊。容器保留主题色 fallback、source 刷新和 attach/detach 监听清理。
+当前竖屏主导航使用 KernelSU 底栏源码及 Miuix Blur 0.9.4，Compose 容器通过 `ViewBackdrop` 采样原有 ViewPager2；滚动时底栏始终显示。其他页面仍使用 XML/ViewBinding 和共享 `LiquidGlassFrameLayout`。最低平台为 API 33，compileSdk 为 37、targetSdk 为 36。
 
 已连接设备为 OPPO PGEM10、Android API 36、arm64-v8a、1080×2376、手势导航。当前 Debug 包使用独立的 `com.godmiracle.coolapk.debug` applicationId；正式包 `com.godmiracle.coolapk` 可与其并存。消息/登录/发布/回复编辑不再作为真机业务流验证对象。
 

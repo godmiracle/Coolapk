@@ -1,7 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.konan.properties.Properties
-import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,6 +10,7 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
@@ -60,13 +60,10 @@ materialThemeBuilder {
 }
 
 fun String.execute(currentWorkingDir: File = file("./")): String {
-    val byteOut = ByteArrayOutputStream()
-    rootProject.exec {
+    return providers.exec {
         workingDir = currentWorkingDir
         commandLine = split("\\s".toRegex())
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
+    }.standardOutput.asText.get().trim()
 }
 
 val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
@@ -108,7 +105,7 @@ val verifyReleaseSigning = tasks.register("verifyReleaseSigning") {
 
 android {
     namespace = "com.godmiracle.coolapk"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.godmiracle.coolapk"
@@ -160,6 +157,7 @@ android {
     buildFeatures {
         viewBinding = true
         dataBinding = true
+        compose = true
         buildConfig = true
     }
     defaultConfig {
@@ -193,6 +191,14 @@ configurations.configureEach {
 }
 
 dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.ui)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.room.testing)

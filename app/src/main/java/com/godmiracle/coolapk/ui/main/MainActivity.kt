@@ -1,8 +1,14 @@
 package com.godmiracle.coolapk.ui.main
 
 import android.os.Bundle
+import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,36 +27,46 @@ import com.godmiracle.coolapk.ui.my.MyFragment
 import com.godmiracle.coolapk.ui.search.SearchActivity
 import com.godmiracle.coolapk.util.ActivityCollector
 import com.godmiracle.coolapk.util.IntentUtil
-import com.godmiracle.coolapk.view.AnimatedBottomNavigationView
-import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.godmiracle.coolapk.view.ksu.KsuBottomNavigation
+import com.godmiracle.coolapk.view.ksu.ViewBackdrop
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
 import dagger.hilt.android.AndroidEntryPoint
+import com.google.android.material.R as MaterialR
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContainer {
 
-    private val navViewBehavior by lazy { HideBottomViewOnScrollBehavior<FrameLayout>() }
     override var controller: IOnBottomClickListener? = null
-    private lateinit var navView: NavigationBarView
-    private var animatedBottomNav: AnimatedBottomNavigationView? = null
-    private var navigationChromeVisible = true
+    private var navView: NavigationBarView? = null
+    private var glassBackdrop: ViewBackdrop? = null
+    private var selectedTabIndex by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ActivityCollector.addActivity(this)
 
-        navView = binding.bottomNav as NavigationBarView
-        animatedBottomNav = binding.bottomNav as? AnimatedBottomNavigationView
+        navView = binding.bottomNav as? NavigationBarView
 
-        // 竖屏布局提供玻璃底栏，横屏布局继续使用原有 NavigationRailView。
-        binding.bottomNavSurface?.setBackdropSource(binding.viewPager)
-        binding.bottomNavIndicatorSurface?.setBackdropSource(binding.viewPager)
-        animatedBottomNav?.setGlassIndicatorSurface(binding.bottomNavIndicatorSurface)
-        binding.searchActionSurface?.apply {
-            setBackdropSource(binding.viewPager)
-            setOnClickListener {
-                IntentUtil.startActivity<SearchActivity>(this@MainActivity) {}
+        // 竖屏使用 KernelSU 的 Compose 玻璃底栏；横屏继续使用原有 NavigationRailView。
+        binding.floatingNavigation?.let { composeView ->
+            val backdrop = ViewBackdrop(
+                source = binding.viewPager,
+                backgroundColor = Color(
+                    MaterialColors.getColor(this, MaterialR.attr.colorSurface, android.graphics.Color.BLACK)
+                ),
+            )
+            glassBackdrop = backdrop
+            backdrop.attach()
+            composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            composeView.setContent {
+                KsuBottomNavigation(
+                    selectedIndex = selectedTabIndex,
+                    backdrop = backdrop,
+                    onSelected = ::selectTab,
+                    onReselected = { index -> if (index == 0) controller?.onReturnTop() },
+                    onSearch = { IntentUtil.startActivity<SearchActivity>(this@MainActivity) {} },
+                )
             }
         }
 
@@ -75,11 +91,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             }
 
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                    glassBackdrop?.refresh()
+                }
+
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    binding.bottomNavSurface?.refreshBackdrop()
-                    binding.bottomNavIndicatorSurface?.refreshBackdrop()
-                    binding.searchActionSurface?.refreshBackdrop()
+                    selectedTabIndex = when (position) {
+                        1 -> 2
+                        2 -> 1
+                        else -> position
+                    }
+                    glassBackdrop?.refresh()
                     when (position) {
                         0 -> onBackPressedCallback.isEnabled = false
                         else -> onBackPressedCallback.isEnabled = true
@@ -89,32 +112,27 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             isUserInputEnabled = false
         }
 
-        navView.apply {
+        navView?.apply {
             setOnItemSelectedListener {
-                if (it.itemId != R.id.navigation_search) {
-                    animatedBottomNav?.animateSelection(it.itemId)
-                }
                 when (it.itemId) {
                     R.id.navigation_home -> {
-                        if (binding.viewPager.currentItem == 0)
-                            controller?.onReturnTop()
-                        else
-                            binding.viewPager.setCurrentItem(0, true)
+                        if (binding.viewPager.currentItem == 0) controller?.onReturnTop()
+                        else selectTab(0)
                         true
                     }
 
                     R.id.navigation_discover -> {
-                        binding.viewPager.setCurrentItem(1, true)
+                        selectTab(2)
                         true
                     }
 
                     R.id.navigation_follow -> {
-                        binding.viewPager.setCurrentItem(2, true)
+                        selectTab(1)
                         true
                     }
 
                     R.id.navigation_me -> {
-                        binding.viewPager.setCurrentItem(3, true)
+                        selectTab(3)
                         true
                     }
 
@@ -129,21 +147,23 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             setOnClickListener { /*Do nothing*/ }
         }
 
-        animatedBottomNav?.post {
-            animatedBottomNav?.synchronizeSelectionWithoutAnimation()
-        }
-
-        (binding.bottomNavContainer.layoutParams as? CoordinatorLayout.LayoutParams)?.let {
-            it.behavior = navViewBehavior
-            binding.bottomNavContainer.layoutParams = it
+        if (binding.bottomNavContainer.layoutParams is CoordinatorLayout.LayoutParams) {
             fixNavigationContainerInsets(binding.bottomNavContainer)
         }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { view, windowInsets ->
-            if (view is BottomNavigationView)
-                view.updatePadding(bottom = 0)
-            windowInsets
-        }
+    }
 
+    private fun selectTab(index: Int) {
+        val position = when (index) {
+            0 -> 0
+            1 -> 2
+            2 -> 1
+            3 -> 3
+            else -> return
+        }
+        selectedTabIndex = index
+        if (binding.viewPager.currentItem != position) {
+            binding.viewPager.setCurrentItem(position, true)
+        }
     }
 
     private val onBackPressedCallback = object : OnBackPressedCallback(false) {
@@ -151,80 +171,42 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             if (binding.viewPager.currentItem != 0) {
                 this.isEnabled = false
                 showNavigationView()
-                navView.selectedItemId = navView.menu.getItem(0).itemId
+                val rail = navView
+                if (rail != null) rail.selectedItemId = rail.menu.getItem(0).itemId
+                else selectTab(0)
             }
         }
     }
 
     fun showNavigationView() {
-        if (binding.bottomNavContainer.layoutParams is CoordinatorLayout.LayoutParams &&
-            navViewBehavior.isScrolledDown
-        )
-            navViewBehavior.slideUp(binding.bottomNavContainer, true)
-        animateNavigationChrome(visible = true)
-    }
-
-    fun hideNavigationView() {
-        if (binding.bottomNavContainer.layoutParams is CoordinatorLayout.LayoutParams &&
-            navViewBehavior.isScrolledUp
-        )
-            navViewBehavior.slideDown(binding.bottomNavContainer, true)
-        animateNavigationChrome(visible = false)
+        glassBackdrop?.refresh()
     }
 
     /**
-     * 滚动过程中隐藏浮动底栏，列表进入空闲状态后再展示，避免根据滑动方向产生不一致的状态。
+     * 底栏始终显示；列表停止滚动时更新其背后的采样内容。
      */
     fun onContentScrollStateChanged(newState: Int) {
-        when (newState) {
-            RecyclerView.SCROLL_STATE_DRAGGING,
-            RecyclerView.SCROLL_STATE_SETTLING -> hideNavigationView()
-
-            RecyclerView.SCROLL_STATE_IDLE -> showNavigationView()
+        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+            glassBackdrop?.refresh()
         }
     }
 
-    /**
-     * BiliPai 的底栏显隐同时包含位移、透明度和从底部的轻微缩放；
-     * Material 的 HideBottomViewOnScrollBehavior 继续负责位移，这里补齐另外两层。
-     * 横屏使用 NavigationRailView，不改变其原有显隐边界。
-     */
-    private fun animateNavigationChrome(visible: Boolean) {
-        if (animatedBottomNav == null) return
-
-        val container = binding.bottomNavContainer
-        if (!container.isLaidOut) {
-            container.post { animateNavigationChrome(visible) }
-            return
+    /** 为常驻浮动底栏留出列表尾部空间，内容滚动时仍可透过玻璃显示。 */
+    fun applyFloatingNavigationContentInset(view: View) {
+        if (binding.floatingNavigation == null) return
+        val originalBottom = view.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
+            val rootInsets = ViewCompat.getRootWindowInsets(target) ?: insets
+            val systemBottom = rootInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            val gap = resources.getDimensionPixelSize(
+                if (systemBottom > 0) R.dimen.miuix_floating_navigation_bottom_padding
+                else R.dimen.ksu_navigation_bottom_without_insets
+            )
+            val barHeight = resources.getDimensionPixelSize(R.dimen.miuix_floating_navigation_height)
+            target.updatePadding(bottom = originalBottom + systemBottom + gap + barHeight)
+            insets
         }
-        if (navigationChromeVisible == visible) return
-        navigationChromeVisible = visible
-
-        container.animate().cancel()
-        container.pivotX = container.width / 2f
-        container.pivotY = container.height.toFloat()
-        if (visible) {
-            if (container.alpha <= 0.01f) {
-                container.alpha = 0f
-                container.scaleX = 0.92f
-                container.scaleY = 0.92f
-            }
-            container.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(255L)
-                .setInterpolator(android.view.animation.OvershootInterpolator(0.7f))
-                .start()
-        } else {
-            container.animate()
-                .alpha(0f)
-                .scaleX(0.92f)
-                .scaleY(0.92f)
-                .setDuration(160L)
-                .setInterpolator(android.view.animation.AccelerateInterpolator(1.5f))
-                .start()
-        }
+        ViewCompat.requestApplyInsets(view)
     }
 
     // from LibChecker
@@ -239,11 +221,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
             val navigationBarsInsets =
                 ViewCompat.getRootWindowInsets(view)
                     ?.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(bottom = 0)
-
-            val bottomMargin =
-                resources.getDimensionPixelSize(R.dimen.miuix_floating_navigation_bottom_padding) +
-                    (navigationBarsInsets?.bottom ?: 0)
+            val inset = navigationBarsInsets?.bottom ?: 0
+            // 容器为放大动画留出 20dp；可见底栏保持 KSU 的系统栏上方 8dp 间距。
+            val offsetDp = if (inset > 0) -12f else 8f
+            val bottomMargin = (inset + offsetDp * resources.displayMetrics.density)
+                .toInt().coerceAtLeast(0)
             (view.layoutParams as? CoordinatorLayout.LayoutParams)?.let { layoutParams ->
                 if (layoutParams.bottomMargin != bottomMargin) {
                     layoutParams.bottomMargin = bottomMargin
@@ -255,6 +237,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
     }
 
     override fun onDestroy() {
+        glassBackdrop?.detach()
+        glassBackdrop = null
         super.onDestroy()
         ActivityCollector.removeActivity(this)
     }

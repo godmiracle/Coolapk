@@ -34,6 +34,9 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
+      - name: Install Android SDK 37
+        run: sdkmanager "platforms;android-37.0"
+
       - name: Write key
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         run: |

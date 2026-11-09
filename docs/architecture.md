@@ -100,7 +100,7 @@ Fragment/ViewModel
 
 ### 3.4 原生 LiquidGlass 页面 Chrome
 
-当前 LiquidGlass 采用共享的 LiquidGlassFrameLayout，继续服务于 XML/ViewBinding/Data Binding 页面，不引入 Compose 或第二套容器。容器包含一个内部非无障碍 backdrop 层和原样保留的前景子 View；backdrop 从同一 Window 内的内容 sibling 取样，内容未布局、已 detach 或 source 不可用时使用主题色 fallback。主导航外层和搜索按钮使用 KSU/Miuix 风格的 `saturation(1.5) → blur(4dp) → rounded lens(24dp)` 效果链；选中项单独使用 56dp 玻璃胶囊，静止时仅显示低透明度明暗填色，选中移动时才把 `lens(10dp, 14dp)` 和高光进度从 0 动画到 1 并淡出。导航外沿采用单层低透明度高光，不叠加强描边；其他页面 Chrome 保持基础 RenderEffect 模糊。RuntimeShader 只作用于背景采样层，图标、文字和操作控件保持清晰。容器自身不消费系统 inset，source 的滚动、layout、attach、页面切换和配置变化只触发刷新并在销毁时清理监听。最低 API 33 对应 RuntimeShader 平台要求。
+页面级 LiquidGlass 继续由共享 `LiquidGlassFrameLayout` 服务 XML/ViewBinding/Data Binding 页面，backdrop 从同一 Window 内的内容 sibling 取样并在 source 不可用时使用主题色。竖屏主导航单独使用 ComposeView、KernelSU 的 `FloatingBottomBar` 与 Miuix Blur 0.9.4；`ViewBackdrop` 将 ViewPager2 绘制到 Miuix backdrop 并处理坐标与缩放，滚动、布局和页面切换时刷新，销毁时清理监听。外层和选中胶囊沿用上游的模糊、折射、色散、高光、弹簧和拖动逻辑；搜索按钮使用同一 backdrop。最低 API 33 对应 RuntimeShader 平台要求。
 
 页面 slot 只覆盖稳定的操作 Chrome：
 
@@ -202,7 +202,7 @@ CoordinatorLayout 中的 FAB 保持直接使用 Material 控件，不包裹玻�
 
 ### 6.1 主导航
 
-`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载 `HomeFragment`、嵌入式 `FollowPagerFragment` 和 `MyFragment`，底部导航的“首页 / 关注 / 我的”切换这三个页面；右侧“搜索”是动作项，启动现有 `SearchActivity`，不占用新的 ViewPager 页面。竖屏底栏以 Miuix 风格实色浮岛 overlay 在内容之上，系统导航 inset 只用于浮岛容器的 bottom margin，`ViewPager2` 不永久预留浮岛高度，避免底栏隐藏后留下内容空区；各列表继续自行处理系统底部安全区和末尾 footer。列表滚动状态统一为“拖动/惯性滚动时隐藏、进入空闲状态后展示”，基础列表和自定义列表均通过 `MainActivity` 的状态入口执行。关注页内部使用 `LocalFollowFragment` 观察 `local_follow.db`，不加载原消息聚合内容；我的页面提供本地收藏、浏览历史和 `SettingsActivity` 二级入口。首页内部再使用可配置的 Tab/ViewPager2，默认及已保存菜单不再展示“应用”Tab。
+`MainActivity` 使用不可左右滑动的 `ViewPager2` 承载首页、关注、发现和我的页面；右侧“搜索”启动现有 `SearchActivity`，不占用 ViewPager 页面。竖屏浮动玻璃底栏覆盖在内容之上，系统导航 inset 用于底部间距；按用户选择，列表滚动时底栏始终显示。嵌入页面的滚动容器增加底栏和系统栏高度的底部留白，确保末项能滚到浮岛上方；横屏保留 `NavigationRailView`。关注页使用 `LocalFollowFragment` 观察 `local_follow.db`；我的页面提供本地收藏、浏览历史和设置入口。首页内部仍使用可配置的 Tab/ViewPager2。
 
 ### 6.2 外链路由
 

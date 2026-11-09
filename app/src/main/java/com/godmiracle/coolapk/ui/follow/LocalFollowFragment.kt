@@ -31,6 +31,7 @@ class LocalFollowFragment : Fragment(R.layout.fragment_local_follow) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentLocalFollowBinding.bind(view)
+        (activity as? MainActivity)?.applyFloatingNavigationContentInset(binding.recyclerView)
 
         adapter = LocalFollowAdapter(::openFollow, ::removeFollow)
         binding.recyclerView.apply {

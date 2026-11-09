@@ -55,6 +55,7 @@ class HomeTopicFragment : BaseFragment<FragmentHomeTopicBinding>(),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as? MainActivity)?.applyFloatingNavigationContentInset(binding.recyclerView)
 
         if (!viewModel.isInit) {
             initObserve()

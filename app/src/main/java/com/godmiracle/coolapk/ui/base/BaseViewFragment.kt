@@ -49,6 +49,7 @@ abstract class BaseViewFragment<VM : BaseViewModel> : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as? MainActivity)?.applyFloatingNavigationContentInset(binding.recyclerView)
         if (!viewModel.isInit) {
             initView()
             initRefresh()
