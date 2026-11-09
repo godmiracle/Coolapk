@@ -12,4 +12,7 @@
     <color name="glass_surface_fallback">#FFF5F5F5</color>
     <color name="glass_border_fallback">#B3FFFFFF</color>
     <color name="glass_highlight_fallback">#66FFFFFF</color>
+    <color name="glass_navigation_border_color">#18000000</color>
+    <color name="glass_navigation_highlight_color">#24FFFFFF</color>
+    <color name="glass_navigation_indicator_tint">#FF000000</color>
 </resources>

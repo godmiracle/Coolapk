@@ -124,7 +124,7 @@
 
 本轮在既有 XML/ViewBinding 架构内，将共享原生 LiquidGlassFrameLayout 扩展到 BasePager、User、Feed 和 Search 的页面级操作 Chrome。玻璃层只取同一 Window 内的内容 sibling，前景 Toolbar、Tab、输入框和 Material 控件保持清晰；Feed 排序栏恢复为普通不透明表面，不能采样或模糊回复列表。普通卡片、RecyclerView item、评论/回复、头像、封面、图片、加载/错误、Preference、WebView、BottomSheet 和 Dialog 不作为玻璃对象。当前匿名只读范围不保留 FAB、登录、消息、发布或回复编辑入口。
 
-当前主导航和搜索按钮使用 KSU/Miuix 风格效果链：饱和度 1.5、4dp 轻模糊、24dp 圆角边缘折射；最低平台/API 33，同时将 compileSdk/targetSdk 提升到 36。项目仍以 XML/ViewBinding 为主，RuntimeShader 在共享 LiquidGlassFrameLayout 内实现，不引入 Compose 依赖；其他页面 Chrome 可继续使用基础 RenderEffect 模糊。容器保留主题色 fallback、source 刷新和 attach/detach 监听清理。
+当前主导航和搜索按钮使用 KSU/Miuix 风格效果链：饱和度 1.5、4dp 轻模糊、24dp 圆角边缘折射；主导航选中项另有 56dp 玻璃胶囊层，使用 10dp/14dp 折射参数并跟随原选中动画移动。最低平台/API 33，同时将 compileSdk/targetSdk 提升到 36。项目仍以 XML/ViewBinding 为主，RuntimeShader 在共享 LiquidGlassFrameLayout 内实现，不引入 Compose 依赖；其他页面 Chrome 可继续使用基础 RenderEffect 模糊。容器保留主题色 fallback、source 刷新和 attach/detach 监听清理。
 
 已连接设备为 OPPO PGEM10、Android API 36、arm64-v8a、1080×2376、手势导航。当前 Debug 包使用独立的 `com.godmiracle.coolapk.debug` applicationId；正式包 `com.godmiracle.coolapk` 可与其并存。消息/登录/发布/回复编辑不再作为真机业务流验证对象。
 

@@ -2,16 +2,9 @@ package com.godmiracle.coolapk.view
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.content.res.Configuration
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.LinearGradient
-import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.Shader
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Interpolator
@@ -20,7 +13,7 @@ import android.view.animation.PathInterpolator
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlin.math.PI
 import kotlin.math.exp
-import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -37,18 +30,11 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : BottomNavigationView(context, attrs, defStyleAttr) {
 
-    private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.FILL
-    }
-    private val indicatorHighlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = dp(0.75f)
-    }
     private val indicatorBounds = RectF()
     private val animationStartBounds = RectF()
     private val animationTargetBounds = RectF()
-    private val highlightBounds = RectF()
     private val itemBounds = Rect()
+    private var glassIndicatorSurface: View? = null
     private var hasIndicatorBounds = false
     private var indicatorAnimator: ValueAnimator? = null
     private var settleAnimator: ValueAnimator? = null
@@ -68,10 +54,16 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         // background layer we want, otherwise it leaves a white rectangular surface behind
         // the menu and breaks the floating-bar chrome used by BiliPai.
         background = null
-        refreshIndicatorColors()
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             post { synchronizeSelectionWithoutAnimation() }
         }
+    }
+
+    /** Connects the separate glass pill drawn between the backdrop and navigation items. */
+    fun setGlassIndicatorSurface(surface: View?) {
+        glassIndicatorSurface = surface
+        surface?.visibility = View.INVISIBLE
+        post { synchronizeSelectionWithoutAnimation() }
     }
 
     /** 同步当前选中项，不触发首次进入时的回弹。 */
@@ -84,6 +76,7 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         hasIndicatorBounds = true
         indicatorScaleX = 1f
         indicatorScaleY = 1f
+        updateGlassIndicatorSurface()
         invalidate()
     }
 
@@ -114,6 +107,7 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
                         to = animationTargetBounds,
                         progress = progress
                     )
+                    updateGlassIndicatorSurface()
                     invalidate()
                 }
                 start()
@@ -122,43 +116,9 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         }
     }
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        if (!hasIndicatorBounds || indicatorBounds.isEmpty) return
-
-        val centerX = indicatorBounds.centerX()
-        val centerY = indicatorBounds.centerY()
-        val radius = min(indicatorBounds.width(), indicatorBounds.height()) / 2f
-        canvas.save()
-        canvas.scale(indicatorScaleX, indicatorScaleY, centerX, centerY)
-        canvas.drawRoundRect(indicatorBounds, radius, radius, indicatorPaint)
-
-        val highlightInset = dp(0.8f)
-        highlightBounds.set(
-            indicatorBounds.left + highlightInset,
-            indicatorBounds.top + highlightInset,
-            indicatorBounds.right - highlightInset,
-            indicatorBounds.bottom - highlightInset
-        )
-        val highlightRadius = min(highlightBounds.width(), highlightBounds.height()) / 2f
-        canvas.drawRoundRect(
-            highlightBounds,
-            highlightRadius,
-            highlightRadius,
-            indicatorHighlightPaint
-        )
-        canvas.restore()
-    }
-
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         compactLabeledItemContent()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        refreshIndicatorColors()
-        invalidate()
     }
 
     override fun onDetachedFromWindow() {
@@ -177,6 +137,7 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
                 val transform = resolveSettleTransform(progress)
                 indicatorScaleX = transform.first
                 indicatorScaleY = transform.second
+                updateGlassIndicatorSurface()
                 invalidate()
             }
             start()
@@ -208,6 +169,29 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
             lerp(from.right, to.right, progress),
             lerp(from.bottom, to.bottom, progress)
         )
+    }
+
+    private fun updateGlassIndicatorSurface() {
+        val surface = glassIndicatorSurface ?: return
+        if (!hasIndicatorBounds || indicatorBounds.isEmpty) {
+            surface.visibility = View.INVISIBLE
+            return
+        }
+
+        val width = indicatorBounds.width().roundToInt().coerceAtLeast(1)
+        val height = indicatorBounds.height().roundToInt().coerceAtLeast(1)
+        surface.layoutParams?.let { params ->
+            if (params.width != width || params.height != height) {
+                params.width = width
+                params.height = height
+                surface.layoutParams = params
+            }
+        }
+        surface.translationX = indicatorBounds.left
+        surface.translationY = indicatorBounds.top
+        surface.scaleX = indicatorScaleX
+        surface.scaleY = indicatorScaleY
+        surface.visibility = View.VISIBLE
     }
 
     private fun findIndicatorBounds(itemId: Int): RectF? {
@@ -275,45 +259,6 @@ class AnimatedBottomNavigationView @JvmOverloads constructor(
         if (selectedItemId != View.NO_ID) return selectedItemId
         return if (menu.size() > 0) menu.getItem(0).itemId else View.NO_ID
     }
-
-    private fun refreshIndicatorColors() {
-        val primary = resolveThemeColor(
-            com.google.android.material.R.attr.colorPrimary,
-            0xff6750a4.toInt()
-        )
-        indicatorPaint.color = withAlpha(primary, 26)
-        val isNight = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
-            Configuration.UI_MODE_NIGHT_YES
-        indicatorPaint.shader = LinearGradient(
-            0f,
-            0f,
-            0f,
-            dp(64f),
-            intArrayOf(
-                withAlpha(Color.WHITE, if (isNight) 30 else 54),
-                withAlpha(primary, if (isNight) 46 else 34),
-                withAlpha(primary, if (isNight) 54 else 40)
-            ),
-            floatArrayOf(0f, 0.42f, 1f),
-            Shader.TileMode.CLAMP
-        )
-        indicatorHighlightPaint.color = withAlpha(Color.WHITE, if (isNight) 64 else 112)
-    }
-
-    private fun resolveThemeColor(attribute: Int, fallback: Int): Int {
-        val typedValue = TypedValue()
-        if (!context.theme.resolveAttribute(attribute, typedValue, true)) return fallback
-        return when {
-            typedValue.resourceId != 0 -> runCatching {
-                resources.getColor(typedValue.resourceId, context.theme)
-            }.getOrDefault(fallback)
-
-            else -> typedValue.data
-        }
-    }
-
-    private fun withAlpha(color: Int, alpha: Int): Int =
-        (color and 0x00ffffff) or (alpha.coerceIn(0, 255) shl 24)
 
     private fun lerp(start: Float, stop: Float, progress: Float): Float =
         start + (stop - start) * progress

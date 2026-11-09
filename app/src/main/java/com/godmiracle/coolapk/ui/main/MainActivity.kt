@@ -45,6 +45,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
 
         // 竖屏布局提供玻璃底栏，横屏布局继续使用原有 NavigationRailView。
         binding.bottomNavSurface?.setBackdropSource(binding.viewPager)
+        binding.bottomNavIndicatorSurface?.setBackdropSource(binding.viewPager)
+        animatedBottomNav?.setGlassIndicatorSurface(binding.bottomNavIndicatorSurface)
         binding.searchActionSurface?.apply {
             setBackdropSource(binding.viewPager)
             setOnClickListener {
@@ -76,6 +78,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IOnBottomClickContaine
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
                     binding.bottomNavSurface?.refreshBackdrop()
+                    binding.bottomNavIndicatorSurface?.refreshBackdrop()
                     binding.searchActionSurface?.refreshBackdrop()
                     when (position) {
                         0 -> onBackPressedCallback.isEnabled = false

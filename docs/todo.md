@@ -265,7 +265,7 @@
 - [ ] UI-GLASS-002 将主导航玻璃升级为 KSU/Miuix 风格折射并迁移到 Android 16 工具链
   - 优先级：中
   - 涉及文件：`LiquidGlassFrameLayout`、`AnimatedBottomNavigationView`、主题资源、Android/Kotlin 构建配置
-  - 状态：实现已落地，Android 16 Debug APK 构建成功，`git diff --check` 通过；API 33 真机兼容、Android 16 视觉验收和滚动性能复测待执行
+  - 状态：第二版实现已落地；首次 Android 17/API 37 真机复测确认首版选中态仍是静态渐变且边缘线过重，现已改为独立玻璃胶囊并降低描边；新版本构建、Actions 和真机视觉复验待完成
   - 验收标准：API 33+ 检查浅色/深色、选中项移动、内容滚动和页面切换；Android 16 检查系统导航手势区/三键导航、前景图标文字清晰度及玻璃区域折射连续性；对比旧版本检查长列表滚动帧率
   - 边界：Android 16 大屏下方向/可调整性策略、阿拉伯及南亚文字高度、定时任务行为属于全应用 targetSdk 迁移续验
 

@@ -6,15 +6,17 @@
 
 ### 决定
 
-- 竖屏主导航玻璃条和独立搜索圆钮在现有 `LiquidGlassFrameLayout` 内使用饱和度 1.5、4dp 轻模糊和 24dp 圆角折射；`AnimatedBottomNavigationView` 保留现有选中弹性动画，并将选中胶囊改为克制的纵向高光渐变。
+- 竖屏主导航外层和独立搜索圆钮在现有 `LiquidGlassFrameLayout` 内使用饱和度 1.5、4dp 轻模糊和 24dp 圆角折射；外层采样留白至少 40dp，表面填充 0.4，并使用低透明度边缘线和 4dp 平台阴影。
+- `AnimatedBottomNavigationView` 保留现有选中弹性动画，将当前胶囊边界同步到独立 56dp `LiquidGlassFrameLayout`，使用 10dp 高、14dp 位移的圆角 lens 和 0.1 明暗表面色；选中项仍由 Material 控件绘制并保持原有点击/无障碍语义。
 - 继续使用 XML/ViewBinding 和 sibling backdrop；不引入 `miuix-blur` Compose 依赖，因为其 backdrop API 不直接采样当前 ViewPager2 View 层级。
+- 实现按 KernelSU 源码公开的结构和参数独立移植到当前 View 容器，没有复制其 GPL 项目中的底栏源代码；KernelSU 上游底栏源文件标记的 lens 公式参考 Apache-2.0 的 AndroidLiquidGlass。
 - 将 `minSdk` 提升至 33（RuntimeShader），`compileSdk`/`targetSdk` 提升至 36；AGP 使用 8.9.1，Gradle Wrapper 保持 8.14.5。
 - 同步将 Kotlin/KSP 升至 2.2.20 / 2.2.20-2.0.4，以匹配 AGP 8.9.1 Data Binding 使用的 Kotlin metadata，并保持与 Gradle 8.14.5 的兼容组合；Room 升至 2.7.2，使用官方 Kotlin 2/KSP2 支持；Hilt 升至 2.57.2 并由 KAPT 处理，兼容 Kotlin 2.2 metadata。
 - Android 16 下继续由 `MainActivity` 将 system bar inset 应用到浮动导航容器，并使用已有 `OnBackPressedDispatcher`；全应用 API 36 行为验收另记待办。
 
 ### 原因与边界
 
-旧玻璃条使用 18–20dp 模糊和固定描边高光，没有折射；Miuix/KSU 的视觉来自轻微模糊、色彩增强和圆角边缘折射的组合。当前 Miuix 实现以 Compose backdrop 为入口，不适合直接接入 XML/ViewPager2 背景采样，因此沿用当前容器并实现同一效果链。将 AGP 提升到 API 36 所需版本后，Kotlin 1.9.24 无法读取 Data Binding Kotlin 2.1 metadata，因此一并升级 Kotlin/KSP；Room 2.6.1 处理器不兼容该 KSP 组合，更新到支持 Kotlin 2/KSP2 的 2.7.2；Hilt 2.51.1 的处理器不支持 Kotlin 2.2 metadata，更新到 2.57.2 并从 KSP 改用 KAPT。`utilcode` 传递引入 Kotlin 1.3 Android Extensions runtime，与现代 Parcelize runtime 重复，因此仅从该依赖排除旧 runtime。渲染链失败时回退基础模糊，避免影响主导航可用性。
+旧玻璃条使用固定高对比描边高光，没有独立的选中胶囊；KernelSU 的 Miuix 底栏则把外层表面和选中胶囊分别绘制，并给两者应用不同参数的折射及柔和 bloom 高光。当前 Miuix 实现以 Compose backdrop 为入口，不适合直接接入 XML/ViewPager2 背景采样，因此沿用当前容器实现相同层级关系、参数和动画边界。将 AGP 提升到 API 36 所需版本后，Kotlin 1.9.24 无法读取 Data Binding Kotlin 2.1 metadata，因此一并升级 Kotlin/KSP；Room 2.6.1 处理器不兼容该 KSP 组合，更新到支持 Kotlin 2/KSP2 的 2.7.2；Hilt 2.51.1 的处理器不支持 Kotlin 2.2 metadata，更新到 2.57.2 并从 KSP 改用 KAPT。`utilcode` 传递引入 Kotlin 1.3 Android Extensions runtime，与现代 Parcelize runtime 重复，因此仅从该依赖排除旧 runtime。渲染链失败时回退基础模糊，避免影响主导航可用性。
 
 ### 验证
 

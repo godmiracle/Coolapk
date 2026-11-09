@@ -38,19 +38,35 @@
     </style>
 
     <style name="Widget.Coolapk.GlassSurface.Navigation" parent="Widget.Coolapk.GlassSurface">
-        <item name="glassSurfaceAlpha">0.28</item>
+        <item name="glassSurfaceAlpha">0.40</item>
         <item name="glassBlurRadius">@dimen/glass_surface_navigation_blur_radius</item>
         <item name="glassCornerRadius">@dimen/glass_surface_navigation_corner_radius</item>
+        <item name="glassBorderColor">@color/glass_navigation_border_color</item>
+        <item name="glassHighlightColor">@color/glass_navigation_highlight_color</item>
         <item name="glassLiquidEnabled">true</item>
         <item name="glassVibrancy">1.5</item>
         <item name="glassRefractionHeight">24dp</item>
         <item name="glassRefractionAmount">24dp</item>
     </style>
 
+    <style name="Widget.Coolapk.GlassSurface.NavigationIndicator" parent="Widget.Coolapk.GlassSurface.Navigation">
+        <item name="glassSurfaceColor">@color/glass_navigation_indicator_tint</item>
+        <item name="glassSurfaceAlpha">0.10</item>
+        <item name="glassBlurRadius">0dp</item>
+        <item name="glassCornerRadius">28dp</item>
+        <item name="glassBorderWidth">0.5dp</item>
+        <item name="glassHighlightWidth">0.5dp</item>
+        <item name="glassVibrancy">1.0</item>
+        <item name="glassRefractionHeight">10dp</item>
+        <item name="glassRefractionAmount">14dp</item>
+    </style>
+
     <style name="Widget.Coolapk.GlassSurface.Action" parent="Widget.Coolapk.GlassSurface">
-        <item name="glassSurfaceAlpha">0.32</item>
+        <item name="glassSurfaceAlpha">0.40</item>
         <item name="glassBlurRadius">@dimen/glass_surface_action_blur_radius</item>
         <item name="glassCornerRadius">@dimen/glass_surface_action_corner_radius</item>
+        <item name="glassBorderColor">@color/glass_navigation_border_color</item>
+        <item name="glassHighlightColor">@color/glass_navigation_highlight_color</item>
         <item name="glassLiquidEnabled">true</item>
         <item name="glassVibrancy">1.5</item>
         <item name="glassRefractionHeight">24dp</item>

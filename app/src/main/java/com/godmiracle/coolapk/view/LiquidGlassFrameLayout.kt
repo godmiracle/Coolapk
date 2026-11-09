@@ -308,7 +308,7 @@ class LiquidGlassFrameLayout @JvmOverloads constructor(
 
     private fun updateLiquidLayerBounds() {
         val padding = if (liquidGlassEnabled) {
-            (refractionAmountPx + dp(8f)).toInt()
+            maxOf(refractionAmountPx + dp(8f), dp(40f)).toInt()
         } else {
             0
         }

@@ -18,6 +18,8 @@
         android:layout_marginEnd="@dimen/liquid_glass_navigation_outer_end"
         android:layout_marginBottom="@dimen/miuix_floating_navigation_bottom_padding"
         android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="0dp"
         app:layout_anchor="@id/viewPager"
         app:layout_anchorGravity="bottom">
@@ -29,7 +31,17 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="@dimen/liquid_glass_navigation_search_gap"
             android:background="@android:color/transparent"
-            android:elevation="0dp">
+            android:elevation="4dp">
+
+            <com.godmiracle.coolapk.view.LiquidGlassFrameLayout
+                android:id="@+id/bottomNavIndicatorSurface"
+                style="@style/Widget.Coolapk.GlassSurface.NavigationIndicator"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_gravity="start|top"
+                android:background="@android:color/transparent"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
 
             <com.godmiracle.coolapk.view.AnimatedBottomNavigationView
                 android:id="@+id/bottomNav"
@@ -69,7 +81,7 @@
             android:contentDescription="@string/search"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:elevation="0dp">
+            android:elevation="4dp">
 
             <ImageView
                 android:id="@+id/searchActionIcon"
